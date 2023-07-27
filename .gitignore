@@ -1,0 +1,6 @@
+/.vscode
+/HiPSter
+/__pycache__
+/epoch=1831-step=128240.ckpt
+/epoch=2611-step=182840.ckpt
+/lightning_logs
