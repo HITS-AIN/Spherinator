@@ -1,0 +1,20 @@
+name: spherinator
+channels:
+  - conda-forge
+dependencies:
+  - jupytext
+  - matplotlib
+  - numpy
+  - onnx
+  - onnxruntime
+  - pandas
+  - pip
+  - pip:
+    - tensorrt
+  - python=3.10
+  - pytorch-gpu
+  - pytorch-lightning
+  - scikit-image
+  - scikit-learn
+  - scipy
+  - torchvision
