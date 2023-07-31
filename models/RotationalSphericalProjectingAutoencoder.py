@@ -59,7 +59,9 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
         x = self.deconv6(x)
         return x
 
-    def forward(self, x, rotation):
+    def forward(self, x, rotation = 0.0):
+        print(x.shape)
+        print(rotation)
         coordinates, input = self.encode(x, rotation)
         return input, self.decode(self.scale_to_unity(coordinates)), coordinates
 
