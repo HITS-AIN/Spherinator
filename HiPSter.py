@@ -1,12 +1,15 @@
-import os
-from shutil import rmtree
-from datetime import datetime
-import healpy
-import torch
-import RotationalSphericalProjectingAutoencoder
-from PIL import Image
 import math
+import os
+from datetime import datetime
+from shutil import rmtree
+
+import healpy
 import numpy
+import torch
+from PIL import Image
+
+from models import RotationalSphericalProjectingAutoencoder
+
 
 class HiPSter():
     def __init__(self, output_folder, title, max_order=3, crop_size=64, output_size=128):
@@ -89,7 +92,7 @@ class HiPSter():
         
 if __name__ == "__main__":
     hipster = HiPSter("HiPSter", "GZ", max_order=4, crop_size=64, output_size=64)
-    model = RotationalSphericalProjectingAutoencoder.RotationalSphericalProjectingAutoencoder()
+    model = train.RotationalSphericalProjectingAutoencoder()
     checkpoint = torch.load("epoch=14-step=4185.ckpt")
     model.load_state_dict(checkpoint["state_dict"])
     hipster.generate_HiPS(model)
