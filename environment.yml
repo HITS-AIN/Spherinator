@@ -13,7 +13,7 @@ dependencies:
     - tensorrt
   - python=3.10
   - pytorch-gpu
-  - pytorch-lightning
+  - lightning
   - scikit-image
   - scikit-learn
   - scipy
