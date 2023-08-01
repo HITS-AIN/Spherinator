@@ -1,0 +1,6 @@
+training:
+  max_epochs: -1
+  accelerator: gpu
+  devices: 1
+  precision: 16-mixed
+  limit_train_batches: 0.5

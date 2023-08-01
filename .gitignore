@@ -1,5 +1,4 @@
 __pycache__
-.vscode
 *.ckpt
 HiPSter
 lightning_logs

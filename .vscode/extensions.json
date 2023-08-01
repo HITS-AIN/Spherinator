@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "alefragnani.numbered-bookmarks"
+        "donjayamanne.python-extension-pack",
+        "mhutchie.git-graph",
+        "ms-python.pylint",
+        "ms-toolsai.jupyter",
+    ]
+}
