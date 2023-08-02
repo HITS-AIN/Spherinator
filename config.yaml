@@ -1,5 +1,9 @@
-training:
-  max_epochs: -1
+seed_everything: 42
+data:
+  data_dir: /hits/basement/ain/Data/KaggleGalaxyZoo/images_training_rev1
+  extension: jpg
+trainer:
+  max_epochs: 100
   accelerator: gpu
   devices: 1
   precision: 16-mixed

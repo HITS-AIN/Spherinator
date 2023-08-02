@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     model = models.RotationalSphericalProjectingAutoencoder()
 
-    trainer = pl.Trainer(**config['training'])
+    trainer = pl.Trainer(**config['trainer'])
     trainer.fit(model, datamodule=data)
 
     trainer.test(dataloaders=data)

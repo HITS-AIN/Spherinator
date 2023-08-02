@@ -1,5 +1,4 @@
 from lightning.pytorch.cli import LightningCLI
-from lightning.pytorch.demos.boring_classes import DemoModel, BoringDataModule
 
 import GalaxyZooDataModule
 import models
