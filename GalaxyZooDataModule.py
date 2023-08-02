@@ -12,8 +12,11 @@ class GalaxyZooDataModule(pl.LightningDataModule):
         super().__init__()
         self.data_dir = data_dir
         self.transform = transforms.Compose([
-            Preprocessing.DielemanTransformation(rotation_range=[0,360],
-                translation_range=[4./424,4./424], scaling_range=[1/1.1,1.1], flip=0.5),
+            Preprocessing.DielemanTransformation(
+                rotation_range=[0,360],
+                translation_range=[4./424,4./424],
+                scaling_range=[1/1.1,1.1],
+                flip=0.5),
             Preprocessing.CropAndScale((424,424), (424,424))
         ])
         self.batch_size = batch_size

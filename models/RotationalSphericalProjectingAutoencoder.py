@@ -32,12 +32,10 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
         x = transforms.functional.rotate(x, rotation, expand=False)
         x = transforms.functional.center_crop(x, (256,256)) # crop
         input = transforms.functional.resize(x,(64,64), antialias=False) #scale
-
         x = F.relu(self.conv1(input))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
         x = F.relu(self.conv4(x))
-        #x = F.relu(self.conv5(x))
         x = x.view(-1,256*4*4)
         x = F.tanh(self.fc1(x))
         x = self.fc2(x)
@@ -51,7 +49,6 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
         x = F.tanh(self.fc3(x))
         x = F.tanh(self.fc4(x))
         x = x.view(-1, 256, 4, 4)
-        #x = F.relu(self.deconv1(x))
         x = F.relu(self.deconv2(x))
         x = F.relu(self.deconv3(x))
         x = F.relu(self.deconv4(x))
@@ -67,13 +64,6 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
 
     def SphericalLoss(self, input, output, coordinates):#, rotation=0):
         coord_regularization = torch.square(1 - torch.sum(torch.square(coordinates), dim=1)) * 1e-4
-       # if (rotation != 0):
-       #     output = transforms.functional.rotate(output, rotation, expand=False)
-        #output = transforms.functional.center_crop(output, (64,64))
-        #rot = transforms.functional.rotate(input, rotation, expand=False)
-        #crop = transforms.functional.center_crop(rot, (256,256)) # crop
-        #scale = transforms.functional.resize(crop,(64,64), antialias=False) #scale
-
         loss = torch.sqrt(torch.sum(torch.square(input.reshape(-1,3*64*64)-output.reshape(-1,3*64*64)), dim=-1)) + coord_regularization
         return loss
 
@@ -83,20 +73,49 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
         return [self.optimizer], [{'scheduler': self.scheduler, 'interval': 'epoch', 'monitor': 'train_loss'}]
 
     def training_step(self, train_batch, batch_idx):
-        images = train_batch['image']#.type(dtype=torch.float32)
+        images = train_batch['image']
         rotations = 36
         losses = torch.zeros(images.shape[0], rotations)
         for i in range(rotations):
             input, reconstruction, coordinates = self.forward(images, 360.0/rotations*i)
             losses[:,i] =  self.SphericalLoss(input, reconstruction, coordinates)
-
-
-        #input, reconstruction, coordinates = self.forward(images, rotation)
-        #rotations = 1
-        #losses = torch.zeros(images.shape[0], rotations)
-        #for i in range(rotations): # calculate loss for n rotations and minimize
-        #losses = self.SphericalLoss(images, reconstruction, coordinates, rotations)
         loss = torch.mean(torch.min(losses, dim=1)[0])
         self.log('train_loss', loss)
         self.log('learning_rate', self.optimizer.state_dict()['param_groups'][0]['lr'])
         return loss
+
+    def project_dataset(self, dataloader, rotation_steps):
+        result_coordinates = torch.zeros((0, 3))
+        result_rotations = torch.zeros((0))
+        for batch in dataloader:
+            print(".", end="")
+            losses = torch.zeros((batch['id'].shape[0],rotation_steps))
+            coords = torch.zeros((batch['id'].shape[0],rotation_steps,3))
+            for r in range(rotation_steps):
+                 input, reconstruction, coordinates = self.forward(batch['image'], 360.0/rotation_steps*r)
+                 input = input.detach()
+                 reconstruction = reconstruction.detach()
+                 coordinates = coordinates.detach()
+                 losses[:,r] = self.SphericalLoss(input, reconstruction, coordinates)
+                 coords[:,r] = self.scale_to_unity(coordinates)
+                 del input
+                 del reconstruction
+                 del coordinates
+                 self.zero_grad()
+            min = torch.argmin(losses, dim=1)
+            result_coordinates = torch.cat((result_coordinates, coords[torch.arange(batch['id'].shape[0]),min]))
+            result_rotations = torch.cat((result_rotations, 360.0/rotation_steps*min))
+            del losses
+            del coords
+            del min
+            gc.collect()
+        return result_coordinates, result_rotations
+
+if __name__ == "__main__":
+    torch.manual_seed(2341)# 2341 2344
+    data = GalaxyZooDataModule()
+    model = RotationalSphericalProjectingAutoencoder()
+    checkpoint = torch.load("gz_epoch514-step124115.ckpt")
+    model.load_state_dict(checkpoint["state_dict"])
+    trainer = pl.Trainer(max_epochs=-1) #accelerator="gpu", devices=1
+    trainer.fit(model, data)

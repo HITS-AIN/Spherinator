@@ -2,6 +2,7 @@ name: spherinator
 channels:
   - conda-forge
 dependencies:
+  - healpy
   - jupytext
   - matplotlib
   - numpy

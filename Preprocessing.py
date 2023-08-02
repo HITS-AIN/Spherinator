@@ -19,6 +19,10 @@ class DielemanTransformation():
         zoom = numpy.exp(numpy.random.uniform(numpy.log(self.scaling_range[0]), numpy.log(self.scaling_range[1])))
         resize = TF.resize(transformed_image, (int(input_image.shape[1]*zoom),int(input_image.shape[2]*zoom)), antialias=True)
         x['image'] = self.flip.__call__(resize)
+        del input_image
+        del transformed_image
+        del zoom
+        del resize
         return x
 
 # TODO: add documentation
