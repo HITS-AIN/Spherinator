@@ -18,3 +18,4 @@ dependencies:
   - scikit-learn
   - scipy
   - torchvision
+  - wandb
