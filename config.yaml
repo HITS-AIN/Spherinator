@@ -1,0 +1,12 @@
+seed_everything: 42
+data:
+  data_dir: /hits/basement/ain/Data/KaggleGalaxyZoo/images_training_rev1
+  extension: jpg
+  batch_size: 64
+trainer:
+  max_epochs: 100
+  accelerator: gpu
+  devices: 1
+  precision: 32
+  limit_train_batches: 0.5
+  # logger: wandb

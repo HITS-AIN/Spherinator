@@ -1,24 +1,25 @@
-import os
-from shutil import rmtree
-from datetime import datetime
-import healpy
-import RotationalSphericalProjectingAutoencoder
-import DataSets
-
-import Preprocessing
-from PIL import Image
 import math
-import numpy
+import os
+from datetime import datetime
+from shutil import rmtree
 
+import healpy
+import numpy
 import torch
 import torchvision.transforms as transforms
+from PIL import Image
 from torch.utils.data import DataLoader
+
+import DataSets
+import Preprocessing
+from models import RotationalSphericalProjectingAutoencoder
+
 
 class HiPSter():
     """_
     Provides all functions to automatically generate a HiPS representation for a machine learning model
     that projects images on a sphere.
-    """    
+    """
 
     def __init__(self, output_folder, title, max_order=3, crop_size=64, output_size=128):
         """Initializes the HiPSter
@@ -37,20 +38,20 @@ class HiPSter():
         self.max_order = max_order
         self.crop_size = crop_size
         self.output_size = output_size
-    
+
     def generate_HiPS(self, model):
         """Generates a HiPS tiling following https://www.ivoa.net/documents/HiPS/20170519/REC-HIPS-1.0-20170519.pdf
 
         Args:
             model (PT.module): A model that allows to call decode(x) for a three dimensional vector x. The resulting reconstructions are used to generate the tiles for HiPS.
-        """        
+        """
         if os.path.exists(os.path.join(self.output_folder, self.title, "model")): #delete existing folder
             answer = input("path exists, delete? Yes,[No]")
             if answer == "Yes":
                 rmtree(os.path.join(self.output_folder, self.title, "model"))
             else:
                 return
-        
+
         print("creating folders:")
         if not os.path.exists(self.output_folder):
             os.mkdir(self.output_folder)
@@ -148,17 +149,17 @@ class HiPSter():
                 f.write(str(healpy.vec2pix(2**4, coordinates[i,0], coordinates[i,1], coordinates[i,2], nest=True))+",")
                 f.write("http://localhost:8083"+dataset.__getitem__(i)['filename']+"\n")
             f.flush()
-        
+
         print("done!")
 
     def generate_dataset_projection(self, model, dataset):
         return 0
-        
+
 if __name__ == "__main__":
     hipster = HiPSter("HiPSter", "GZ", max_order=5, crop_size=64, output_size=64)
-    model = RotationalSphericalProjectingAutoencoder.RotationalSphericalProjectingAutoencoder()
+    model = RotationalSphericalProjectingAutoencoder()
     #checkpoint = torch.load("efigi_epoch2148-step150430.ckpt")
-    checkpoint = torch.load("gz_epoch514-step124115.ckpt")    
+    checkpoint = torch.load("gz_epoch514-step124115.ckpt")
     model.load_state_dict(checkpoint["state_dict"])
 
     #hipster.generate_HiPS(model)
@@ -172,7 +173,7 @@ if __name__ == "__main__":
                                        )
 
     dataloader = DataLoader(dataset, batch_size=1024, shuffle=False, num_workers=16)
-    
+
     #hipster.generate_Catalog(model, dataloader)
 
     #TODO: currently you manually have to call 'python3 -m http.server 8082' to start a simple web server providing access to the tiles.

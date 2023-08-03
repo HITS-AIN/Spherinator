@@ -1,0 +1,6 @@
+{
+    "python.analysis.typeCheckingMode": "basic",
+    "python.formatting.provider": "black",
+    "files.trimTrailingWhitespace": true,
+    "files.trimFinalNewlines": true
+}
