@@ -1,5 +1,6 @@
+import torch_xla
 from lightning.pytorch.cli import LightningCLI
-from lightning.pytorch.demos.boring_classes import DemoModel, BoringDataModule
+from lightning.pytorch.demos.boring_classes import BoringDataModule, DemoModel
 
 
 def cli_main():
