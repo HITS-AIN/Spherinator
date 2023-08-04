@@ -65,11 +65,6 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
         loss = torch.sqrt(torch.sum(torch.square(input.reshape(-1,3*64*64)-output.reshape(-1,3*64*64)), dim=-1)) + coord_regularization
         return loss
 
-    def configure_optimizers(self):
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=1.e-3)
-        self.scheduler = ReduceLROnPlateau(optimizer=self.optimizer, mode="min", factor=0.1, patience=500, cooldown=500, min_lr=1.e-5, verbose=True)
-        return [self.optimizer], [{'scheduler': self.scheduler, 'interval': 'epoch', 'monitor': 'train_loss'}]
-
     def training_step(self, train_batch, batch_idx):
         images = train_batch['image']
         rotations = 36
@@ -79,7 +74,7 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
             losses[:,i] =  self.SphericalLoss(input, reconstruction, coordinates)
         loss = torch.mean(torch.min(losses, dim=1)[0])
         self.log('train_loss', loss)
-        self.log('learning_rate', self.optimizer.state_dict()['param_groups'][0]['lr'])
+        #self.log('learning_rate', self.optimizer.state_dict()['param_groups'][0]['lr'])
         return loss
 
     def project_dataset(self, dataloader, rotation_steps):
