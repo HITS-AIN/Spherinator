@@ -7,7 +7,7 @@ import data.Preprocessing as Preprocessing
 
 class GalaxyZooDataModule(pl.LightningDataModule):
 
-    def __init__(self, data_dir: str = "./", batch_size: int = 32, extension: str = "jpg"):
+    def __init__(self, data_dir: str = "./", batch_size: int = 32, extension: str = "jpg", shuffle: bool = True, num_workers: int = 16):
         super().__init__()
         self.data_dir = data_dir
         self.train_transform = transforms.Compose([
@@ -23,6 +23,8 @@ class GalaxyZooDataModule(pl.LightningDataModule):
         ])
         self.batch_size = batch_size
         self.extension = extension
+        self.shuffle = shuffle
+        self.num_workers = num_workers
 
     def setup(self, stage: str):
         data_full = DataSets.GalaxyZooDataset(data_directory=self.data_dir,
@@ -37,7 +39,7 @@ class GalaxyZooDataModule(pl.LightningDataModule):
         self.data_predict = data_full
 
     def train_dataloader(self):
-        return DataLoader(self.data_train, batch_size=self.batch_size, shuffle=True, num_workers=16) #TODO: move this to the config
+        return DataLoader(self.data_train, batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers)
 
     def val_dataloader(self):
         return DataLoader(self.data_val, batch_size=self.batch_size)
