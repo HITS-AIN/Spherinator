@@ -17,7 +17,7 @@ class DielemanTransformation():
         input_image = x['image']
         transformed_image = self.random_affine.__call__(input_image)
         zoom = numpy.exp(numpy.random.uniform(numpy.log(self.scaling_range[0]), numpy.log(self.scaling_range[1])))
-        resize = TF.resize(transformed_image, (int(input_image.shape[1]*zoom),int(input_image.shape[2]*zoom)), antialias=True)
+        resize = TF.resize(transformed_image, [int(input_image.shape[1]*zoom),int(input_image.shape[2]*zoom)], antialias=True)
         x['image'] = self.flip.__call__(resize)
         del input_image
         del transformed_image
@@ -34,12 +34,12 @@ class KrizhevskyColorTransformation():
     def __call__(self, x):
         """
         Performs a random brightness scaling based on the specied weights and standard deviation following the PCA based idea by Alex Krizhevsky et al. 2012 as used by Dieleman et al. 2015.
-        
+
         Parameters
         ----------
         x : dictonary
             A dictonary conatining the data items returned from the data set. They key 'image' refers to an array of RGB values in the range between 0 and 1.
-        
+
         Returns
         -------
         dictonary
@@ -58,15 +58,13 @@ class CropAndScale():
     def __init__(self, crop_size, scale_size):
         self.crop_size = crop_size
         self.scale_size = scale_size
-    
+
     def __call__(self, x):
         transformed_image = x['image']
         crop = TF.center_crop(transformed_image, self.crop_size)
         resize = TF.resize(crop, self.scale_size, antialias=False)
         x['image'] = resize
         return x
-
-
 
 # TODO: document this
 class ViewpointTransformation():
@@ -93,7 +91,7 @@ class ViewpointTransformation():
                 four_crop = TF.five_crop(resize, self.target_size)[:-1] # ignor the center crop -1
                 for i in range (len(four_crop)):
                     #new_x = copy.copy(x) # non flipped crop
-                    #new_x['image'] 
+                    #new_x['image']
                     result[n] = TF.rotate(four_crop[i], ViewpointTransformation.ROTATIONS[i])
                     n = n+1
                     #result.append(new_x)
