@@ -1,11 +1,11 @@
+import gc
 import lightning.pytorch as pl
 import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms as transforms
+import torchvision.transforms.functional as functional
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-
 
 class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
 
@@ -29,9 +29,9 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
         self.deconv6 = nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=(5,5), stride=1, padding=2)
 
     def encode(self, x, rotation):
-        x = transforms.functional.rotate(x, rotation, expand=False)
-        x = transforms.functional.center_crop(x, (256,256)) # crop
-        input = transforms.functional.resize(x,(64,64), antialias=False) #scale
+        x = functional.rotate(x, rotation, expand=False)
+        x = functional.center_crop(x, [256,256]) # crop
+        input = functional.resize(x, [64,64], antialias=False) #scale
         x = F.relu(self.conv1(input))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
@@ -60,7 +60,7 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
         coordinates, input = self.encode(x, rotation)
         return input, self.decode(self.scale_to_unity(coordinates)), coordinates
 
-    def SphericalLoss(self, input, output, coordinates):#, rotation=0):
+    def SphericalLoss(self, input, output, coordinates):
         coord_regularization = torch.square(1 - torch.sum(torch.square(coordinates), dim=1)) * 1e-4
         loss = torch.sqrt(torch.sum(torch.square(input.reshape(-1,3*64*64)-output.reshape(-1,3*64*64)), dim=-1)) + coord_regularization
         return loss
