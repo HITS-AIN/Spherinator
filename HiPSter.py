@@ -1,17 +1,16 @@
 import math
 import os
+import numpy
 from datetime import datetime
 from shutil import rmtree
-
 import healpy
-import numpy
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
 from torch.utils.data import DataLoader
 
-import DataSets
-import Preprocessing
+import data.DataSets as DataSets
+import data.Preprocessing as Preprocessing
 from models import RotationalSphericalProjectingAutoencoder
 
 

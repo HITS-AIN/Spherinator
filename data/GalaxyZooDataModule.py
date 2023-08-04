@@ -2,8 +2,8 @@ import lightning.pytorch as pl
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-import DataSets
-import Preprocessing
+import data.DataSets as DataSets
+import data.Preprocessing as Preprocessing
 
 class GalaxyZooDataModule(pl.LightningDataModule):
 

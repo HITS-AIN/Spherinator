@@ -1,7 +1,7 @@
 import torch
 from lightning.pytorch.cli import LightningCLI
 
-import GalaxyZooDataModule
+import data.GalaxyZooDataModule as GalaxyZooDataModule
 import models
 
 torch.set_float32_matmul_precision('high')
