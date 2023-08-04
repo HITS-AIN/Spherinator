@@ -1,0 +1,12 @@
+seed_everything: 42
+data:
+  data_dir: /hits/basement/ain/Data/efigi-1.6/png
+  extension: png
+  batch_size: 64
+trainer:
+  max_epochs: -1
+  accelerator: gpu
+  devices: 4
+  precision: 32
+  #limit_train_batches: 0.5
+  # logger: wandb
