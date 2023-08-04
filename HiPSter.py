@@ -39,49 +39,29 @@ class HiPSter():
         self.crop_size = crop_size
         self.output_size = output_size
 
-    def generate_HiPS(self, model):
-        """Generates a HiPS tiling following https://www.ivoa.net/documents/HiPS/20170519/REC-HIPS-1.0-20170519.pdf
-
-        Args:
-            model (PT.module): A model that allows to call decode(x) for a three dimensional vector x. The resulting reconstructions are used to generate the tiles for HiPS.
-        """
-        if os.path.exists(os.path.join(self.output_folder, self.title, "model")): #delete existing folder
+    def check_folders(self, base_folder):
+        if os.path.exists(os.path.join(self.output_folder, self.title, base_folder)): #delete existing folder
             answer = input("path exists, delete? Yes,[No]")
             if answer == "Yes":
-                rmtree(os.path.join(self.output_folder, self.title, "model"))
+                rmtree(os.path.join(self.output_folder, self.title, base_folder))
             else:
-                return
+                exit(1)
 
+    def create_folders(self, base_folder):
         print("creating folders:")
         if not os.path.exists(self.output_folder):
             os.mkdir(self.output_folder)
         if not os.path.exists(os.path.join(self.output_folder, self.title)):
             os.mkdir(os.path.join(self.output_folder, self.title))
-        os.mkdir(os.path.join(self.output_folder, self.title, "model"))
+        os.mkdir(os.path.join(self.output_folder, self.title, base_folder))
         for i in range(self.max_order+1):
-            os.mkdir(os.path.join(self.output_folder, self.title, "model", "Norder"+str(i)))
+            os.mkdir(os.path.join(self.output_folder, self.title, base_folder, "Norder"+str(i)))
             for j in range(int(math.floor(12*4**i/10000))+1):
-                os.mkdir(os.path.join(self.output_folder, self.title, "model", "Norder"+str(i), "Dir"+str(j*10000)))
+                os.mkdir(os.path.join(self.output_folder, self.title, base_folder, "Norder"+str(i), "Dir"+str(j*10000)))
 
-        print("creating tiles:")
-        for i in range(self.max_order+1):
-            print ("\n  order "+str(i)+" ["+str(12*4**i).rjust(int(math.log10(12*4**self.max_order))+1," ")+" tiles]:", end="")
-            for j in range(12*4**i):
-                if j % (int(12*4**i/100)+1) == 0:
-                    print(".", end="")
-                vector = healpy.pix2vec(2**i,j,nest=True)
-                vector = torch.tensor(vector).reshape(1,3).type(dtype=torch.float32)
-                data = model.decode(vector)[0]
-                data = torch.swapaxes(data, 0, 2)
-                image = Image.fromarray((numpy.clip(data.detach().numpy(),0,1)*255).astype(numpy.uint8))
-                if image.width > self.crop_size or image.height > self.crop_size: # do a center crop
-                    image = image.crop((image.width/2-self.crop_size/2,image.height/2-self.crop_size/2,image.width/2+self.crop_size/2,image.height/2+self.crop_size/2))
-                if image.width != self.output_size or image.height != self.output_size: # rescale to output resolution
-                    image = image.resize((self.output_size, self.output_size))
-                image.save(os.path.join(self.output_folder, self.title, "model", "Norder"+str(i), "Dir"+str(int(math.floor(j/10000))*10000), "Npix"+str(j)+".jpg"))
-
-        print("\ncreating meta-data:")
-        with open(os.path.join(self.output_folder, self.title, "model", "properties"), 'w') as f: # create the properties file
+    def create_HiPS_properties(self, base_folder):
+        print("creating meta-data:")
+        with open(os.path.join(self.output_folder, self.title, base_folder, "properties"), 'w') as f: # create the properties file
             f.write("creator_did          = ivo://HITS/hipster\n") # TODO: add all keywords support and write proper information
             f.write("obs_title            = "+self.title+"\n")
             f.write("obs_description      = blablabla\n")
@@ -98,7 +78,9 @@ class HiPSter():
             f.write("hips_frame           = equatorial\n")
             f.flush()
 
-        with open(os.path.join(self.output_folder, self.title, "model", "index.html"), 'w') as f: # create the html file to start aladin lite
+    def create_index_file(self, base_folder):
+        print("creating index.html:")
+        with open(os.path.join(self.output_folder, self.title, base_folder, "index.html"), 'w') as f: # create the html file to start aladin lite
             f.write("<!DOCTYPE html>\n")
             f.write("<html>\n")
             f.write("<head>\n")
@@ -114,21 +96,51 @@ class HiPSter():
             f.write("	    A.init.then(() => {\n")
             f.write("            aladin = A.aladin('#aladin-lite-div');\n")
             # TODO: check this current hack for the tile location!!!
-            f.write("            aladin.setImageSurvey(aladin.createImageSurvey('http://localhost:8082/"+self.output_folder+"/"+self.title+"/model', 'sphere projection of data from"+self.title+"', 'http://localhost:8082/"+self.output_folder+"', 'equatorial', "+str(self.max_order)+", {imgFormat: 'jpg'})); \n")
+            f.write("            aladin.setImageSurvey(aladin.createImageSurvey('http://localhost:8082/"+self.output_folder+"/"+self.title+"/"+base_folder+"', 'sphere projection of data from"+self.title+"', 'http://localhost:8082/"+self.output_folder+"/"+self.title+"/"+base_folder+"', 'equatorial', "+str(self.max_order)+", {imgFormat: 'jpg'})); \n")
             f.write("            aladin.setFoV(180.0); \n")
             f.write("        });\n")
             f.write("    </script>\n")
             f.write("</body>\n")
             f.write("</html>")
             f.flush()
+
+    def generate_HiPS(self, model):
+        """Generates a HiPS tiling following https://www.ivoa.net/documents/HiPS/20170519/REC-HIPS-1.0-20170519.pdf
+
+        Args:
+            model (PT.module): A model that allows to call decode(x) for a three dimensional vector x. The resulting reconstructions are used to generate the tiles for HiPS.
+        """
+        self.check_folders("model")
+        self.create_folders("model")
+
+        print("creating tiles:")
+        for i in range(self.max_order+1):
+            print ("\n  order "+str(i)+" ["+str(12*4**i).rjust(int(math.log10(12*4**self.max_order))+1," ")+" tiles]:", end="")
+            for j in range(12*4**i):
+                if j % (int(12*4**i/100)+1) == 0:
+                    print(".", end="")
+                vector = healpy.pix2vec(2**i,j,nest=True)
+                vector = torch.tensor(vector).reshape(1,3).type(dtype=torch.float32)
+                data = model.decode(vector)[0]
+                data = torch.swapaxes(data, 0, 2)
+                image = Image.fromarray((numpy.clip(data.detach().numpy(),0,1)*255).astype(numpy.uint8))
+                if image.width > self.crop_size or image.height > self.crop_size: # do a center crop
+                    image = image.crop((int(image.width/2-self.crop_size/2),int(image.height/2-self.crop_size/2),
+                                        int(image.width/2+self.crop_size/2),int(image.height/2+self.crop_size/2)))
+                if image.width != self.output_size or image.height != self.output_size: # rescale to output resolution
+                    image = image.resize((self.output_size, self.output_size))
+                image.save(os.path.join(self.output_folder, self.title, "model", "Norder"+str(i), "Dir"+str(int(math.floor(j/10000))*10000), "Npix"+str(j)+".jpg"))
+            print(" done")
+        self.create_HiPS_properties("model")
+        self.create_index_file("model")
         print("done!")
 
-    def generate_Catalog(self, model, dataloader):
+    def generate_catalog(self, model, dataloader, catalog_file):
         if not os.path.exists(self.output_folder):
             os.mkdir(self.output_folder)
         if not os.path.exists(os.path.join(self.output_folder, self.title)):
             os.mkdir(os.path.join(self.output_folder, self.title))
-        if os.path.exists(os.path.join(self.output_folder, self.title, "catalog.csv")): #delete existing catalog
+        if os.path.exists(os.path.join(self.output_folder, self.title, catalog_file)): #delete existing catalog
             answer = input("catalog exists, delete? Yes,[No]")
             if answer != "Yes":
                 return
@@ -149,17 +161,52 @@ class HiPSter():
                 f.write(str(healpy.vec2pix(2**4, coordinates[i,0], coordinates[i,1], coordinates[i,2], nest=True))+",")
                 f.write("http://localhost:8083"+dataset.__getitem__(i)['filename']+"\n")
             f.flush()
-
         print("done!")
 
-    def generate_dataset_projection(self, model, dataset):
-        return 0
+    def generate_dataset_projection(self, dataset, catalog_file):
+        self.check_folders("projection")
+        self.create_folders("projection")
+
+        print("reading catalog")
+        catalog = numpy.genfromtxt(os.path.join(self.output_folder, self.title, catalog_file), delimiter=",", skip_header=1, usecols=[0,1,2,3,4,5,6])
+
+        print("creating tiles:")
+        for i in range(self.max_order+1):
+            healpix_cells = {} # create an extra map to quickly find images in a cell for a given order
+            for j in range(12*4**i):
+                healpix_cells[j] = []
+            for element in catalog:
+                healpix_cells[healpy.vec2pix(2**i, element[4], element[5], element[6], nest=True)].append(int(element[0]))
+
+            print ("\n  order "+str(i)+" ["+str(12*4**i).rjust(int(math.log10(12*4**self.max_order))+1," ")+" tiles]:", end="")
+            for j in range(12*4**i):
+                if j % (int(12*4**i/100)+1) == 0:
+                    print(".", end="")
+                vector = healpy.pix2vec(2**i,j,nest=True)
+                if len(healpix_cells[j]) == 0:
+                    data = torch.ones((3,self.output_size,self.output_size))
+                    data[1] = torch.zeros((self.output_size,self.output_size))
+                else:
+                    distances = numpy.sum(numpy.square(catalog[numpy.array(healpix_cells[j])][:,4:7] - vector), axis=1)
+                    data = dataset.__getitem__(healpix_cells[j][numpy.argmin(distances)])['image']
+                data = torch.swapaxes(data, 0, 2)
+                image = Image.fromarray((numpy.clip(data.detach().numpy(),0,1)*255).astype(numpy.uint8))
+                if image.width > self.crop_size or image.height > self.crop_size: # do a center crop
+                    image = image.crop((int(image.width/2-self.crop_size/2),int(image.height/2-self.crop_size/2),
+                                        int(image.width/2+self.crop_size/2),int(image.height/2+self.crop_size/2)))
+                if image.width != self.output_size or image.height != self.output_size: # rescale to output resolution
+                    image = image.resize((self.output_size, self.output_size))
+                image.save(os.path.join(self.output_folder, self.title, "projection", "Norder"+str(i), "Dir"+str(int(math.floor(j/10000))*10000), "Npix"+str(j)+".jpg"))
+
+        self.create_HiPS_properties("projection")
+        self.create_index_file("projection")
+        print("done!")
 
 if __name__ == "__main__":
     hipster = HiPSter("HiPSter", "GZ", max_order=5, crop_size=64, output_size=64)
     model = RotationalSphericalProjectingAutoencoder()
     #checkpoint = torch.load("efigi_epoch2148-step150430.ckpt")
-    checkpoint = torch.load("gz_epoch514-step124115.ckpt")
+    checkpoint = torch.load("gz_epoch4523-step1090284.ckpt")
     model.load_state_dict(checkpoint["state_dict"])
 
     #hipster.generate_HiPS(model)
@@ -174,6 +221,8 @@ if __name__ == "__main__":
 
     dataloader = DataLoader(dataset, batch_size=1024, shuffle=False, num_workers=16)
 
-    #hipster.generate_Catalog(model, dataloader)
+    #hipster.generate_catalog(model, dataloader, "catalog.csv")
+
+    hipster.generate_dataset_projection(dataset, "catalog.csv")
 
     #TODO: currently you manually have to call 'python3 -m http.server 8082' to start a simple web server providing access to the tiles.
