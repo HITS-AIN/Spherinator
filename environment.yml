@@ -11,6 +11,7 @@ dependencies:
   - pandas
   - pip
   - pip:
+    - jsonargparse[signatures]
     - tensorrt
   - python=3.10
   - pytorch-gpu
