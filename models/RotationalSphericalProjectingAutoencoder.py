@@ -5,7 +5,6 @@ import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as functional
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
 
