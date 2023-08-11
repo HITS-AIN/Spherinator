@@ -5,6 +5,7 @@
         "mhutchie.git-graph",
         "ms-python.pylint",
         "ms-toolsai.jupyter",
-        "streetsidesoftware.code-spell-checker"
+        "streetsidesoftware.code-spell-checker",
+        "ms-python.isort"
     ]
 }
