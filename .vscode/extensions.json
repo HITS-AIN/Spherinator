@@ -1,9 +1,10 @@
 {
     "recommendations": [
-        "alefragnani.numbered-bookmarks"
+        "alefragnani.numbered-bookmarks",
         "donjayamanne.python-extension-pack",
         "mhutchie.git-graph",
         "ms-python.pylint",
         "ms-toolsai.jupyter",
+        "streetsidesoftware.code-spell-checker"
     ]
 }
