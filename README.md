@@ -29,3 +29,10 @@ This repository contains git submodules. To clone the repository including the s
 ```bash
 git clone --recurse-submodules https://github.com/HITS-AIN/Spherinator.git
 ```
+
+or after cloning with
+
+```bash
+git submodule init
+git submodule update
+```
