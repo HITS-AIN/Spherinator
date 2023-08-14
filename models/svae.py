@@ -1,11 +1,10 @@
-import sys
-
 import lightning.pytorch as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import Adam
 
+import sys
 sys.path.append('external/s-vae-pytorch/')
 from hyperspherical_vae.distributions import (HypersphericalUniform,
                                               VonMisesFisher)
@@ -38,7 +37,7 @@ class SVAE(pl.LightningModule):
             self.fc_mean = nn.Linear(h_dim, z_dim)
             self.fc_var = nn.Linear(h_dim, 1)
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
         # 2 hidden layers decoder
         self.fc_d0 = nn.Linear(z_dim, h_dim)
@@ -61,7 +60,7 @@ class SVAE(pl.LightningModule):
             # the `+ 1` prevent collapsing behaviors
             z_var = F.softplus(self.fc_var(x)) + 1
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
         return z_mean, z_var
 
@@ -81,7 +80,7 @@ class SVAE(pl.LightningModule):
             q_z = VonMisesFisher(z_mean, z_var)
             p_z = HypersphericalUniform(self.z_dim - 1)
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
         return q_z, p_z
 
@@ -93,33 +92,30 @@ class SVAE(pl.LightningModule):
 
         return (z_mean, z_var), (q_z, p_z), z, x_
 
+
     def training_step(self, batch, batch_idx):
 
         x, _ = batch
 
-        mu, std, z, x_hat = self.forward(x)
+        # dynamic binarization
+        x = (x > torch.distributions.Uniform(0, 1).sample(x.shape)).float()
 
-        # reconstruction loss
-        recon_loss = self.gaussian_likelihood(x_hat, self.log_scale, x)
+        _, (q_z, p_z), _, x_ = self.forward(x)
 
-        #expectation under z of the kl divergence between q(z|x) and
-        #a standard normal distribution of the same shape
-        kl = self.kl_divergence(z, mu, std)
+        loss_recon = nn.BCEWithLogitsLoss(reduction='none')(
+            x_, x.reshape(-1, 784)).sum(-1).mean()
 
-        # elbo
-        elbo = (kl - recon_loss)
-        elbo = elbo.mean()
+        if self.distribution == 'normal':
+            loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).sum(-1).mean()
+        elif self.distribution == 'vmf':
+            loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).mean()
+        else:
+            raise NotImplementedError
 
-        self.log('train_kl_loss', kl.mean(), on_step=True,
-                 on_epoch=True, prog_bar=False)
-        self.log('train_recon_loss', recon_loss.mean(), on_step=True,
-                 on_epoch=True, prog_bar=False)
-        self.log('train_loss', elbo, on_step=True,
-                 on_epoch=True, prog_bar=True)
+        loss = loss_recon + loss_KL
+        return loss
 
-        # train_images = make_grid(x[:16]).cpu().numpy()
-        return elbo
 
     def configure_optimizers(self):
-        optimizer = Adam(self.parameters, lr=1e-3)
+        optimizer = Adam(self.parameters(), lr=1e-3)
         return optimizer
