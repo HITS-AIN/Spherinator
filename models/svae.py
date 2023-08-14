@@ -24,9 +24,12 @@ class SVAE(pl.LightningModule):
 
         self.z_dim, self.activation, self.distribution = z_dim, activation, distribution
 
-        # 2 hidden layers encoder
-        self.fc_e0 = nn.Linear(784, h_dim * 2)
-        self.fc_e1 = nn.Linear(h_dim * 2, h_dim)
+        self.encoder = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(784, h_dim * 2),
+            nn.ReLU(),
+            nn.Linear(h_dim * 2, h_dim)
+        )
 
         if self.distribution == 'normal':
             # compute mean and std of the normal distribution
@@ -39,15 +42,20 @@ class SVAE(pl.LightningModule):
         else:
             raise NotImplementedError
 
-        # 2 hidden layers decoder
-        self.fc_d0 = nn.Linear(z_dim, h_dim)
-        self.fc_d1 = nn.Linear(h_dim, h_dim * 2)
-        self.fc_logits = nn.Linear(h_dim * 2, 784)
+        self.decoder = nn.Sequential(
+            nn.Linear(z_dim, h_dim),
+            nn.Linear(h_dim, h_dim * 2),
+            nn.ReLU(),
+            nn.Linear(h_dim * 2, 784),
+            nn.Unflatten(1, (28, 28))
+        )
+
+        self.example_input_array = torch.randn(784)
+
 
     def encode(self, x):
-        # 2 hidden layers encoder
-        x = self.activation(self.fc_e0(x))
-        x = self.activation(self.fc_e1(x))
+
+        x = self.encoder(x)
 
         if self.distribution == 'normal':
             # compute mean and std of the normal distribution
@@ -66,9 +74,7 @@ class SVAE(pl.LightningModule):
 
     def decode(self, z):
 
-        x = self.activation(self.fc_d0(z))
-        x = self.activation(self.fc_d1(x))
-        x = self.fc_logits(x)
+        x = self.decoder(z)
 
         return x
 
@@ -98,7 +104,7 @@ class SVAE(pl.LightningModule):
         x, _ = batch
 
         # dynamic binarization
-        x = (x > torch.distributions.Uniform(0, 1).sample(x.shape)).float()
+        # x = (x > torch.distributions.Uniform(0, 1).sample(x.shape)).float()
 
         _, (q_z, p_z), _, x_ = self.forward(x)
 

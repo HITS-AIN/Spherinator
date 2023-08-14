@@ -1,7 +1,13 @@
+import os
+
 import lightning.pytorch as pl
 import torch
-from lightning.pytorch.demos.mnist_datamodule import MNISTDataModule
+import torch.nn as nn
+import torch.utils.data
+from torchvision import transforms
+from torchvision.datasets import MNIST
 
+import data.MNISTDataModule as MNISTDataModule
 import models
 
 # hidden dimension and dimension of latent space
@@ -12,16 +18,21 @@ model = models.SVAE(h_dim=H_DIM, z_dim=Z_DIM, distribution='normal')
 # model = models.SVAE(h_dim=H_DIM, z_dim=Z_DIM, distribution='vmf')
 # model = models.VAE(latent_dim=1024, input_height=32, input_width=32, input_channels=1, lr=0.0001, batch_size=32)
 
-input_sample = torch.randn((1, 784))
-output = model(input_sample)
+# input_sample = torch.randn(1, 28, 28)
+# _, _, _, output = model(input_sample)
+# print(output.shape)
+# quit()
 
 # filepath = "svae.onnx"
 # model.to_onnx(filepath, input_sample, export_params=True, verbose=True)
 
-data = MNISTDataModule()
+# data = MNISTDataModule.MNISTDataModule()
 # data.setup('fit')
 # print(len(data.train_dataloader()))
 # data.train_dataloader()
 
+dataset = MNIST(os.getcwd(), download=True, transform=transforms.ToTensor())
+train_loader = torch.utils.data.DataLoader(dataset)
+
 trainer = pl.Trainer(accelerator='gpu', devices=1)
-trainer.fit(model, datamodule=data)
+trainer.fit(model, train_dataloaders=train_loader)
