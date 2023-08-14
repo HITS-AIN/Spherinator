@@ -21,11 +21,12 @@ class SVAE(pl.LightningModule):
         :param distribution: string either `normal` or `vmf`, indicates which distribution to use
         """
         super().__init__()
+        self.save_hyperparameters()
 
         self.z_dim, self.activation, self.distribution = z_dim, activation, distribution
 
         self.encoder = nn.Sequential(
-            nn.Flatten(),
+            # nn.Flatten(),
             nn.Linear(784, h_dim * 2),
             nn.ReLU(),
             nn.Linear(h_dim * 2, h_dim)
@@ -47,7 +48,7 @@ class SVAE(pl.LightningModule):
             nn.Linear(h_dim, h_dim * 2),
             nn.ReLU(),
             nn.Linear(h_dim * 2, 784),
-            nn.Unflatten(1, (28, 28))
+            # nn.Unflatten(1, (28, 28))
         )
 
         self.example_input_array = torch.randn(784)
@@ -106,7 +107,7 @@ class SVAE(pl.LightningModule):
         # dynamic binarization
         # x = (x > torch.distributions.Uniform(0, 1).sample(x.shape)).float()
 
-        _, (q_z, p_z), _, x_ = self.forward(x)
+        _, (q_z, p_z), _, x_ = self.forward(x.reshape(-1, 784))
 
         loss_recon = nn.BCEWithLogitsLoss(reduction='none')(
             x_, x.reshape(-1, 784)).sum(-1).mean()
