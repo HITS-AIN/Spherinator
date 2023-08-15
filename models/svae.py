@@ -84,7 +84,7 @@ class SVAE(pl.LightningModule):
             p_z = torch.distributions.normal.Normal(torch.zeros_like(z_mean), torch.ones_like(z_var))
         elif self.distribution == 'vmf':
             q_z = VonMisesFisher(z_mean, z_var)
-            p_z = HypersphericalUniform(self.z_dim - 1)
+            p_z = HypersphericalUniform(self.z_dim - 1, device=z_mean.device)
         else:
             raise NotImplementedError
 
