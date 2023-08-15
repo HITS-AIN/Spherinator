@@ -30,7 +30,7 @@ model = models.SVAE(h_dim=H_DIM, z_dim=Z_DIM, distribution='normal')
 # data.train_dataloader()
 
 dataset = MNIST('./data', download=True, transform=transforms.ToTensor())
-train_loader = torch.utils.data.DataLoader(dataset, num_workers=12)
+train_loader = torch.utils.data.DataLoader(dataset, num_workers=12, batch_size=32)
 
 trainer = pl.Trainer(accelerator='gpu', devices=1)
 trainer.fit(model, train_dataloaders=train_loader)

@@ -26,7 +26,7 @@ class SVAE(pl.LightningModule):
         self.z_dim, self.activation, self.distribution = z_dim, activation, distribution
 
         self.encoder = nn.Sequential(
-            # nn.Flatten(),
+            nn.Flatten(),
             nn.Linear(784, h_dim * 2),
             nn.ReLU(),
             nn.Linear(h_dim * 2, h_dim)
@@ -47,11 +47,10 @@ class SVAE(pl.LightningModule):
             nn.Linear(z_dim, h_dim),
             nn.Linear(h_dim, h_dim * 2),
             nn.ReLU(),
-            nn.Linear(h_dim * 2, 784),
-            # nn.Unflatten(1, (28, 28))
+            nn.Linear(h_dim * 2, 784)
         )
 
-        self.example_input_array = torch.randn(784)
+        self.example_input_array = torch.randn(2, 1, 28, 28)
 
 
     def encode(self, x):
@@ -107,10 +106,9 @@ class SVAE(pl.LightningModule):
         # dynamic binarization
         # x = (x > torch.distributions.Uniform(0, 1).sample(x.shape)).float()
 
-        _, (q_z, p_z), _, x_ = self.forward(x.reshape(-1, 784))
+        _, (q_z, p_z), _, x_ = self.forward(x)
 
-        loss_recon = nn.BCEWithLogitsLoss(reduction='none')(
-            x_, x.reshape(-1, 784)).sum(-1).mean()
+        loss_recon = nn.BCEWithLogitsLoss(reduction='none')(x_.view(-1,1,28,28), x).sum(-1).mean()
 
         if self.distribution == 'normal':
             loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).sum(-1).mean()
@@ -120,6 +118,14 @@ class SVAE(pl.LightningModule):
             raise NotImplementedError
 
         loss = loss_recon + loss_KL
+
+        self.log('train_kl_loss', loss_KL, on_step=True,
+                 on_epoch=True, prog_bar=False)
+        self.log('train_recon_loss', loss_recon, on_step=True,
+                 on_epoch=True, prog_bar=False)
+        self.log('train_loss', loss, on_step=True,
+                 on_epoch=True, prog_bar=True)
+
         return loss
 
 
