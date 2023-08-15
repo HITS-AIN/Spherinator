@@ -12,24 +12,24 @@ from hyperspherical_vae.distributions import (HypersphericalUniform,
 
 class SVAE(pl.LightningModule):
 
-    def __init__(self, h_dim, z_dim, activation=F.relu, distribution='normal'):
+    def __init__(self, h_dim, z_dim, distribution='normal'):
         """
         SVAE initializer
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation
-        :param activation: callable activation function
         :param distribution: string either `normal` or `vmf`, indicates which distribution to use
         """
         super().__init__()
         self.save_hyperparameters()
 
-        self.z_dim, self.activation, self.distribution = z_dim, activation, distribution
+        self.z_dim, self.distribution = z_dim, distribution
 
         self.encoder = nn.Sequential(
             nn.Flatten(),
             nn.Linear(784, h_dim * 2),
             nn.ReLU(),
-            nn.Linear(h_dim * 2, h_dim)
+            nn.Linear(h_dim * 2, h_dim),
+            nn.ReLU()
         )
 
         if self.distribution == 'normal':
@@ -45,6 +45,7 @@ class SVAE(pl.LightningModule):
 
         self.decoder = nn.Sequential(
             nn.Linear(z_dim, h_dim),
+            nn.ReLU(),
             nn.Linear(h_dim, h_dim * 2),
             nn.ReLU(),
             nn.Linear(h_dim * 2, 784)
