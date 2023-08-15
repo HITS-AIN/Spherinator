@@ -11,7 +11,7 @@ import models
 # hidden dimension and dimension of latent space
 H_DIM = 128
 Z_DIM = 2
-DIST = 'normal' # 'normal' or 'vmf'
+DIST = 'vmf' # 'normal' or 'vmf'
 
 # model = models.VAE(latent_dim=1024, input_height=32, input_width=32, input_channels=1, lr=0.0001, batch_size=32)
 model = models.SVAE(h_dim=H_DIM, z_dim=Z_DIM, distribution=DIST)

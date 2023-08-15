@@ -129,6 +129,9 @@ class SVAE(pl.LightningModule):
 
         return loss
 
+    def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        x, _ = batch
+        return self(x)
 
     def configure_optimizers(self):
         optimizer = Adam(self.parameters(), lr=1e-3)
