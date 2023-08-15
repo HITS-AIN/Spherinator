@@ -7,7 +7,8 @@ import data.Preprocessing as Preprocessing
 
 class GalaxyZooDataModule(pl.LightningDataModule):
 
-    def __init__(self, data_dir: str = "./", batch_size: int = 32, extension: str = "jpg", shuffle: bool = True, num_workers: int = 16):
+    def __init__(self, data_dir: str = "./", batch_size: int = 32, extension: str = "jpg",
+                 shuffle: bool = True, num_workers: int = 16):
         super().__init__()
         self.data_dir = data_dir
         self.train_transform = transforms.Compose([

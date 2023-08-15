@@ -1,14 +1,14 @@
 import torch
 from lightning.pytorch.cli import LightningCLI
 
-import data.GalaxyZooDataModule as GalaxyZooDataModule
+import data
 import models
 
 torch.set_float32_matmul_precision('high')
 
 def cli_main():
     cli = LightningCLI(models.RotationalSphericalProjectingAutoencoder,
-                       GalaxyZooDataModule.GalaxyZooDataModule,
+                       data.GalaxyZooDataModule,
                        save_config_kwargs={"overwrite": True})
 
 
