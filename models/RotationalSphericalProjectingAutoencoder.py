@@ -80,6 +80,7 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
     def project_dataset(self, dataloader, rotation_steps):
         result_coordinates = torch.zeros((0, 3))
         result_rotations = torch.zeros((0))
+        result_losses = torch.zeros((0))
         for batch in dataloader:
             print(".", end="")
             losses = torch.zeros((batch['id'].shape[0],rotation_steps))
@@ -98,8 +99,9 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
             min = torch.argmin(losses, dim=1)
             result_coordinates = torch.cat((result_coordinates, coords[torch.arange(batch['id'].shape[0]),min]))
             result_rotations = torch.cat((result_rotations, 360.0/rotation_steps*min))
+            result_losses = torch.cat((result_losses, losses[torch.arange(batch['id'].shape[0]),min]))
             del losses
             del coords
             del min
             gc.collect()
-        return result_coordinates, result_rotations
+        return result_coordinates, result_rotations, result_losses

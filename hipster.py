@@ -53,8 +53,9 @@ class Hipster():
         Args:
             base_folder (String): The base folder to check.
         """
-        if os.path.exists(os.path.join(self.output_folder, self.title, base_folder)):
-            answer = input("path exists, delete? Yes,[No]")
+        path = os.path.join(self.output_folder, self.title, base_folder)
+        if os.path.exists(path):
+            answer = input("path "+str(path)+", delete? Yes,[No]")
             if answer == "Yes":
                 rmtree(os.path.join(self.output_folder, self.title, base_folder))
             else:
@@ -170,7 +171,7 @@ class Hipster():
 
         print("creating tiles:")
         for i in range(self.max_order+1):
-            print ("\n  order "+str(i)+" ["+
+            print ("  order "+str(i)+" ["+
                    str(12*4**i).rjust(int(math.log10(12*4**self.max_order))+1," ")+" tiles]:",
                    end="")
             for j in range(12*4**i):
@@ -220,7 +221,7 @@ class Hipster():
             if answer != "Yes":
                 return
         print("projecting dataset:")
-        coordinates, rotations = model.project_dataset(dataloader, 36)
+        coordinates, rotations, losses = model.project_dataset(dataloader, 36)
         coordinates = coordinates.cpu().detach().numpy()
         rotations = rotations.cpu().detach().numpy()
         angles = numpy.array(healpy.vec2ang(coordinates))*180.0/math.pi
@@ -230,7 +231,7 @@ class Hipster():
         with open(os.path.join(self.output_folder,
                                self.title,
                                "catalog.csv"), 'w', encoding="utf-8") as output:
-            output.write("#id,RA2000,DEC2000,rotation,x,y,z,pix3,pix4,filename\n")
+            output.write("#id,RA2000,DEC2000,rotation,x,y,z,loss,filename\n")
             for i in range(coordinates.shape[0]):
                 output.write(str(i)+","+str(angles[i,1])+"," +
                              str(90.0-angles[i,0])+"," +
@@ -238,6 +239,7 @@ class Hipster():
                 output.write(str(coordinates[i,0])+"," +
                              str(coordinates[i,1])+"," +
                              str(coordinates[i,2])+",")
+                output.write(str(losses[i])+",")
                 output.write("http://localhost:8083" +
                              dataloader.dataset[i]['filename']+"\n")
             output.flush()
@@ -314,7 +316,7 @@ class Hipster():
         print("done!")
 
 if __name__ == "__main__":
-    myHipster = Hipster("HiPSter", "GZ", max_order=5, crop_size=256, output_size=64)
+    myHipster = Hipster("/hits/basement/ain/Data/HiPSter", "GZ", max_order=7, crop_size=256, output_size=128)
     myModel = RotationalSphericalProjectingAutoencoder()
     #checkpoint = torch.load("efigi_epoch41835-step753048.ckpt")
     checkpoint = torch.load("gz_epoch4523-step1090284.ckpt")
@@ -332,8 +334,8 @@ if __name__ == "__main__":
 
     myDataloader = DataLoader(myDataset, batch_size=1024, shuffle=False, num_workers=16)
 
-    myHipster.generate_catalog(myModel, myDataloader, "catalog.csv")
+    #myHipster.generate_catalog(myModel, myDataloader, "catalog.csv")
 
-    myHipster.generate_dataset_projection(myDataset, "catalog.csv")
+    #myHipster.generate_dataset_projection(myDataset, "catalog.csv")
 
     #TODO: currently you manually have to call 'python3 -m http.server 8082' to start a simple web server providing access to the tiles.
