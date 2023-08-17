@@ -72,7 +72,7 @@ class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
             input, reconstruction, coordinates = self.forward(images, 360.0/rotations*i)
             losses[:,i] =  self.SphericalLoss(input, reconstruction, coordinates)
         loss = torch.mean(torch.min(losses, dim=1)[0])
-        self.log('train_loss', loss)
+        self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         #self.log('learning_rate', self.optimizer.state_dict()['param_groups'][0]['lr'])
         return loss
 
