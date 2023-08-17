@@ -29,7 +29,8 @@ class MNISTDataModule(pl.LightningDataModule):
             self.mnist_predict = MNIST(self.data_dir, train=False, transform=self.transform)
 
     def train_dataloader(self):
-        return DataLoader(self.mnist_train, shuffle=True, batch_size=self.batch_size, num_workers=self.num_workers)
+        return DataLoader(self.mnist_train, batch_size=self.batch_size, num_workers=self.num_workers,
+                          shuffle=True)
 
     def val_dataloader(self):
         return DataLoader(self.mnist_val, batch_size=self.batch_size, num_workers=self.num_workers)

@@ -1,7 +1,11 @@
 seed_everything: 42
+model:
+  h_dim: 256
+  z_dim: 2
+  distribution: vmf
 trainer:
   max_epochs: -1
   accelerator: gpu
   devices: 1
   precision: 32
-  # logger: wandb
+  logger: WandbLogger

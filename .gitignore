@@ -3,3 +3,4 @@ __pycache__
 HiPSter
 lightning_logs
 data/MNIST/
+wandb
