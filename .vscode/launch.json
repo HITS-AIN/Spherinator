@@ -5,11 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: efigi",
+            "name": "main efigi",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "args": ["fit", "-c", "experiments/efigi.yaml"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "rot-vae",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/rot-vae-cli.py",
+            "args": ["fit", "-c", "experiments/rot-vae.yaml"],
             "console": "integratedTerminal",
             "justMyCode": true
         }

@@ -21,7 +21,7 @@ class RotationalVAE(pl.LightningModule):
         """
         super().__init__()
         self.save_hyperparameters()
-        self.example_input_array = torch.randn(1, 3, 424, 424)
+        self.example_input_array = torch.randn(1, 3, 64, 64)
 
         self.h_dim, self.z_dim, self.distribution = h_dim, z_dim, distribution
 
@@ -117,7 +117,7 @@ class RotationalVAE(pl.LightningModule):
             x = functional.center_crop(x, [256,256])
             input = functional.resize(x, [64,64], antialias=False)
 
-            _, (q_z, p_z), _, recon = self.forward(x)
+            _, (q_z, p_z), _, recon = self.forward(input)
 
             loss_recon = nn.BCEWithLogitsLoss(reduction='none')(input, recon).sum(-1).mean()
 
