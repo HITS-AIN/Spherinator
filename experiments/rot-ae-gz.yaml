@@ -22,11 +22,11 @@ lr_scheduler:
 trainer:
   max_epochs: -1
   accelerator: gpu
-  devices: [0] # <--- Use a list to set specific GPUs
+  devices: [1] # <--- Use a list to set specific GPUs
   precision: 32
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger
     init_args:
       project: spherinator
-      name: rot-vae
+      name: rot-ae-gz
       log_model: True
