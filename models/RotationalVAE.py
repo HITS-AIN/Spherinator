@@ -109,17 +109,18 @@ class RotationalVAE(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx):
-        x, _ = batch
+        images = batch["image"]
         rotations = 36
-        losses = torch.zeros(x.shape[0], rotations)
+        losses = torch.zeros(images.shape[0], rotations)
         for i in range(rotations):
-            x = functional.rotate(x, 360.0 / rotations * i, expand=False)
+            x = functional.rotate(images, 360.0 / rotations * i, expand=False)
             x = functional.center_crop(x, [256,256])
             input = functional.resize(x, [64,64], antialias=False)
 
             _, (q_z, p_z), _, recon = self.forward(input)
 
-            loss_recon = nn.BCEWithLogitsLoss(reduction='none')(input, recon).sum(-1).mean()
+            # loss_recon = nn.BCEWithLogitsLoss(reduction='none')(input, recon).sum(-1).mean()
+            loss_recon = torch.sqrt(torch.sum(torch.square(input.reshape(-1,3*64*64) - recon.reshape(-1,3*64*64)), dim=-1))
 
             if self.distribution == 'normal':
                 loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).sum(-1).mean()
