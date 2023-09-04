@@ -72,7 +72,7 @@ class VAE(pl.LightningModule):
 
         self.log_scale = nn.Parameter(torch.Tensor([0.0]))
 
-        self.example_input_array = torch.randn(1, 32, 32)
+        self.example_input_array = torch.randn(input_channels, input_height, input_width)
 
 
     def encode(self, x):

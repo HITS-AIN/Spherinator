@@ -2,3 +2,5 @@ __pycache__
 *.ckpt
 HiPSter
 lightning_logs
+data/MNIST/
+wandb

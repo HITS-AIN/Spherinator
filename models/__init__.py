@@ -9,12 +9,17 @@ It contains the following modules:
 2. `simple`: TODO
 """
 
-from .rotational_spherical_projecting_autoencoder import RotationalSphericalProjectingAutoencoder
+from .rotational_spherical_autoencoder import RotationalSphericalAutoencoder
+from .rotational_spherical_variational_autoencoder import \
+    RotationalSphericalVariationalAutoencoder
 from .simple import SimpleModel
+from .svae import SVAE
 from .vae import VAE
 
 __all__ = [
-    'RotationalSphericalProjectingAutoencoder',
+    'RotationalSphericalAutoencoder',
+    'RotationalSphericalVariationalAutoencoder',
     'SimpleModel',
-    'VAE'
+    'SVAE',
+    'VAE',
 ]

@@ -18,7 +18,7 @@ import data.galaxy_zoo_dataset as galaxy_zoo_dataset
 import data.illustris_sdss_data_module
 import data.illustris_sdss_dataset
 import data.preprocessing as preprocessing
-from models import RotationalSphericalProjectingAutoencoder
+from models import RotationalSphericalAutoencoder
 
 
 class Hipster():
@@ -342,7 +342,7 @@ class Hipster():
 
 if __name__ == "__main__":
     myHipster = Hipster("/local_data/AIN/Data/HiPSter", "Illustris", max_order=5, crop_size=256, output_size=256)
-    myModel = RotationalSphericalProjectingAutoencoder()
+    myModel = RotationalSphericalAutoencoder()
     checkpoint = torch.load("illustris.epoch908step64539.ckpt")
     myModel.load_state_dict(checkpoint["state_dict"])
 

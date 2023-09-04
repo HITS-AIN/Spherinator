@@ -5,10 +5,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as functional
 
-class RotationalSphericalProjectingAutoencoder(pl.LightningModule):
+class RotationalSphericalAutoencoder(pl.LightningModule):
 
     def __init__(self):
-        super(RotationalSphericalProjectingAutoencoder, self).__init__()
+        super(RotationalSphericalAutoencoder, self).__init__()
         self.bottleneck = 3
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5,5), stride=2, padding=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5,5), stride=2, padding=2)
