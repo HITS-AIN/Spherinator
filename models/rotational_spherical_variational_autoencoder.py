@@ -10,11 +10,12 @@ sys.path.append('external/s-vae-pytorch/')
 from hyperspherical_vae.distributions import (HypersphericalUniform,
                                               VonMisesFisher)
 
-class RotationalVAE(pl.LightningModule):
+class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
 
     def __init__(self, h_dim=256, z_dim=2, distribution='normal'):
         """
-        RotationalVAE initializer
+        RotationalSphericalVariationalAutoencoder initializer
+
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation
         :param distribution: string either `normal` or `vmf`, indicates which distribution to use

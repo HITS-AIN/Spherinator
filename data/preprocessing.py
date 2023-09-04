@@ -19,10 +19,6 @@ class DielemanTransformation():
         zoom = numpy.exp(numpy.random.uniform(numpy.log(self.scaling_range[0]), numpy.log(self.scaling_range[1])))
         resize = TF.resize(transformed_image, [int(input_image.shape[1]*zoom),int(input_image.shape[2]*zoom)], antialias=True)
         x['image'] = self.flip.__call__(resize)
-        del input_image
-        del transformed_image
-        del zoom
-        del resize
         return x
 
 # TODO: add documentation
@@ -64,6 +60,47 @@ class CropAndScale():
         crop = TF.center_crop(transformed_image, self.crop_size)
         resize = TF.resize(crop, self.scale_size, antialias=False)
         x['image'] = resize
+        return x
+
+class CropAndExpand():
+    def __init__(self, crop_size):
+        self.crop_size = crop_size
+
+    def __call__(self, x):
+        transformed_image = x['image']
+        transformed_image = TF.center_crop(transformed_image, self.crop_size)
+        x['image'] = transformed_image
+        return x
+
+class CreateNormalizedColors():
+    def __init__(self, stretch, range, lower_limit, channel_combinations, scalers):
+        self.stretch = stretch
+        self.range = range
+        self.lower_limit = lower_limit
+        self.channel_combinations = channel_combinations
+        self.scalers = scalers
+
+    def __call__(self, x):
+        transformed_image = x['image']
+        #for i in range(len(self.max_values)):
+        #    transformed_image[i] = transformed_image[i] / self.max_values[i]
+
+        #transformed_image = torch.clip(transformed_image, 0, 1)
+        resulting_image = torch.zeros((len(self.channel_combinations), transformed_image.shape[1], transformed_image.shape[2]))
+        for i in range(len(self.channel_combinations)):
+            resulting_image[i] = transformed_image[self.channel_combinations[i][0]]
+            for t in range(1, len(self.channel_combinations[i])):
+                resulting_image[i] = resulting_image[i] + transformed_image[self.channel_combinations[i][t]]
+            resulting_image[i] = resulting_image[i] * self.scalers[i]
+
+        mean = torch.mean(resulting_image, dim=0)
+        resulting_image = resulting_image * torch.asinh(self.stretch * self.range * (mean - self.lower_limit)) / self.range / mean
+
+        resulting_image = torch.nan_to_num(resulting_image, nan=0, posinf=0, neginf=0)
+
+
+        resulting_image = torch.clip(resulting_image, 0, 1)
+        x['image'] = resulting_image
         return x
 
 # TODO: document this

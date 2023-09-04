@@ -7,7 +7,7 @@ import models
 torch.set_float32_matmul_precision('high')
 
 def cli_main():
-    cli = LightningCLI(models.RotationalVAE,
+    cli = LightningCLI(models.rotational_spherical_variational_autoencoder,
                        data.GalaxyZooDataModule,
                        save_config_kwargs={"overwrite": True})
 

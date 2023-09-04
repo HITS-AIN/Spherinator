@@ -5,20 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "main efigi",
+            "name": "Python: illustris",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/main.py",
-            "args": ["fit", "-c", "experiments/efigi.yaml"],
+            "program": "main.py",
+            "args": "fit -c experiments/Illustris.yaml",
             "console": "integratedTerminal",
             "justMyCode": true
         },
         {
-            "name": "rot-vae",
+            "name": "Python: gz",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/rot-vae-cli.py",
-            "args": ["fit", "-c", "experiments/rot-vae.yaml"],
+            "program": "main.py",
+            "args": "fit -c experiments/GZ.yaml",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true
         }

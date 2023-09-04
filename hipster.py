@@ -1,23 +1,25 @@
 """ Provides all functionalities to transform a model in a HiPS representation for browsing.
 """
 
+import math
+import os
 from datetime import datetime
 from shutil import rmtree
 
-import math
-import os
-import numpy
-
 import healpy
+import numpy
 import torch
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as functional
 from PIL import Image
 from torch.utils.data import DataLoader
 
-import data.DataSets as DataSets
-import data.Preprocessing as Preprocessing
-from models import RotationalSphericalProjectingAutoencoder
+import data.galaxy_zoo_dataset as galaxy_zoo_dataset
+import data.illustris_sdss_data_module
+import data.illustris_sdss_dataset
+import data.preprocessing as preprocessing
+from models import RotationalSphericalAutoencoder
+
 
 class Hipster():
     """_
@@ -53,8 +55,9 @@ class Hipster():
         Args:
             base_folder (String): The base folder to check.
         """
-        if os.path.exists(os.path.join(self.output_folder, self.title, base_folder)):
-            answer = input("path exists, delete? Yes,[No]")
+        path = os.path.join(self.output_folder, self.title, base_folder)
+        if os.path.exists(path):
+            answer = input("path "+str(path)+", delete? Yes,[No]")
             if answer == "Yes":
                 rmtree(os.path.join(self.output_folder, self.title, base_folder))
             else:
@@ -147,7 +150,7 @@ class Hipster():
             output.write("            aladin.setImageSurvey(aladin.createImageSurvey(" +
                          "'"+self.title+"', " +
                          "'sphere projection of data from"+self.title+"', " +
-                         "'http://localhost:8082/"+self.output_folder+"/"+self.title+"/" +
+                         "'http://localhost:8082/"+self.title+"/" +
                          base_folder+"'," +
                          "'equatorial', "+str(self.max_order)+", {imgFormat: 'jpg'})); \n")
             output.write("            aladin.setFoV(180.0); \n")
@@ -170,7 +173,7 @@ class Hipster():
 
         print("creating tiles:")
         for i in range(self.max_order+1):
-            print ("\n  order "+str(i)+" ["+
+            print ("  order "+str(i)+" ["+
                    str(12*4**i).rjust(int(math.log10(12*4**self.max_order))+1," ")+" tiles]:",
                    end="")
             for j in range(12*4**i):
@@ -194,6 +197,29 @@ class Hipster():
         self.create_hips_properties("model")
         self.create_index_file("model")
         print("done!")
+
+    def project_dataset(self, model, dataloader, rotation_steps):
+        result_coordinates = torch.zeros((0, 3))
+        result_rotations = torch.zeros((0))
+        result_losses = torch.zeros((0))
+        for batch in dataloader:
+            print(".", end="")
+            losses = torch.zeros((batch['id'].shape[0],rotation_steps))
+            coords = torch.zeros((batch['id'].shape[0],rotation_steps,3))
+            images = batch['image']
+            for r in range(rotation_steps):
+                rot_images = functional.rotate(images, 360/rotation_steps*r, expand=False) # rotate
+                crop_images = functional.center_crop(rot_images, [256,256]) # crop
+                scaled_images = functional.resize(crop_images, [64,64], antialias=False) # scale
+                with torch.no_grad():
+                    reconstruction, coordinates = model.forward(scaled_images)
+                    losses[:,r] = model.spherical_loss(scaled_images, reconstruction, coordinates)
+                    coords[:,r] = model.scale_to_unity(coordinates)
+            min = torch.argmin(losses, dim=1)
+            result_coordinates = torch.cat((result_coordinates, coords[torch.arange(batch['id'].shape[0]),min]))
+            result_rotations = torch.cat((result_rotations, 360.0/rotation_steps*min))
+            result_losses = torch.cat((result_losses, losses[torch.arange(batch['id'].shape[0]),min]))
+        return result_coordinates, result_rotations, result_losses
 
     def generate_catalog(self, model, dataloader, catalog_file):
         """ Generates a catalog by mapping all provided data using the encoder of the
@@ -220,7 +246,7 @@ class Hipster():
             if answer != "Yes":
                 return
         print("projecting dataset:")
-        coordinates, rotations = model.project_dataset(dataloader, 36)
+        coordinates, rotations, losses = self.project_dataset(model, dataloader, 36)
         coordinates = coordinates.cpu().detach().numpy()
         rotations = rotations.cpu().detach().numpy()
         angles = numpy.array(healpy.vec2ang(coordinates))*180.0/math.pi
@@ -230,7 +256,7 @@ class Hipster():
         with open(os.path.join(self.output_folder,
                                self.title,
                                "catalog.csv"), 'w', encoding="utf-8") as output:
-            output.write("#id,RA2000,DEC2000,rotation,x,y,z,pix3,pix4,filename\n")
+            output.write("#id,RA2000,DEC2000,rotation,x,y,z,loss,filename\n")
             for i in range(coordinates.shape[0]):
                 output.write(str(i)+","+str(angles[i,1])+"," +
                              str(90.0-angles[i,0])+"," +
@@ -238,6 +264,7 @@ class Hipster():
                 output.write(str(coordinates[i,0])+"," +
                              str(coordinates[i,1])+"," +
                              str(coordinates[i,2])+",")
+                output.write(str(losses[i])+",")
                 output.write("http://localhost:8083" +
                              dataloader.dataset[i]['filename']+"\n")
             output.flush()
@@ -314,26 +341,39 @@ class Hipster():
         print("done!")
 
 if __name__ == "__main__":
-    myHipster = Hipster("HiPSter", "GZ", max_order=5, crop_size=256, output_size=64)
-    myModel = RotationalSphericalProjectingAutoencoder()
-    #checkpoint = torch.load("efigi_epoch41835-step753048.ckpt")
-    checkpoint = torch.load("gz_epoch4523-step1090284.ckpt")
+    myHipster = Hipster("/local_data/AIN/Data/HiPSter", "Illustris", max_order=5, crop_size=256, output_size=256)
+    myModel = RotationalSphericalAutoencoder()
+    checkpoint = torch.load("illustris.epoch908step64539.ckpt")
     myModel.load_state_dict(checkpoint["state_dict"])
 
-    myHipster.generate_hips(myModel)
+    #myHipster.generate_hips(myModel)
 
-    myDataset = DataSets.GalaxyZooDataset(data_directory="/hits/basement/ain/Data/KaggleGalaxyZoo/images_training_rev1",#efigi-1.6/png"
-                                        extension=".jpg",
-                                        transform = transforms.Compose([#Preprocessing.DielemanTransformation(rotation_range=[0], translation_range=[4./424,4./424], scaling_range=[1/1.1,1.1], flip=0.5),
-                                                                       #Preprocessing.KrizhevskyColorTransformation(weights=[-0.0148366, -0.01253134, -0.01040762], std=0.5),
-                                                                        Preprocessing.CropAndScale((424,424), (424,424))
-                                                                       ])
-                                       )
+    # myDataset = galaxy_zoo_dataset.GalaxyZooDataset(data_directory="/hits/basement/ain/Data/KaggleGalaxyZoo/images_training_rev1",#efigi-1.6/png"
+    #                                     extension=".jpg",
+    #                                     transform = transforms.Compose([#Preprocessing.DielemanTransformation(rotation_range=[0], translation_range=[4./424,4./424], scaling_range=[1/1.1,1.1], flip=0.5),
+    #                                                                    #Preprocessing.KrizhevskyColorTransformation(weights=[-0.0148366, -0.01253134, -0.01040762], std=0.5),
+    #                                                                     preprocessing.CropAndScale((424,424), (424,424))
+    #                                                                    ])
+    #                                    )
 
-    myDataloader = DataLoader(myDataset, batch_size=1024, shuffle=False, num_workers=16)
+    # myDataloader = DataLoader(myDataset, batch_size=1024, shuffle=False, num_workers=16)
 
-    myHipster.generate_catalog(myModel, myDataloader, "catalog.csv")
+    myDataModule = data.illustris_sdss_data_module.IllustrisSdssDataModule(
+                      ["/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data/",
+                       "/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_095/data/",
+                       "/local_data/AIN/SKIRT_synthetic_images/TNG50/sdss/snapnum_099/data/",
+                       "/local_data/AIN/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/",
+                       "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_135/data/",
+                       "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data/"],
+                      extension=".fits",
+                      minsize=100,
+                      shuffle=False,
+                      batch_size=512,
+                      num_workers=32)
+    myDataModule.setup("val")
 
-    myHipster.generate_dataset_projection(myDataset, "catalog.csv")
+    myHipster.generate_catalog(myModel, myDataModule.val_dataloader(), "catalog.csv")
+
+    myHipster.generate_dataset_projection(myDataModule.data_val, "catalog.csv")
 
     #TODO: currently you manually have to call 'python3 -m http.server 8082' to start a simple web server providing access to the tiles.
