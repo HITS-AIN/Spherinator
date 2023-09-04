@@ -139,7 +139,8 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         return torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
 
     def project(self, images):
-        pass#return self.encode(images)
+        z_mean, z_var = self.encode(images)
+        return z_mean
 
     def reconstruct(self, coordinates):
-        pass#return self.decode(coordinates)
+        return self.decode(coordinates)

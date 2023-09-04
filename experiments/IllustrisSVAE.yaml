@@ -2,6 +2,10 @@ seed_everything: 42
 
 model:
   class_path: models.RotationalSphericalVariationalAutoencoder
+  init_args:
+    h_dim: 256
+    z_dim: 3
+    distribution: "normal"
 
 data:
   class_path: data.IllustrisSdssDataModule
