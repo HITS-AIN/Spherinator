@@ -1,16 +1,12 @@
+""" Uses the command line client to start the training.
+"""
+
 import torch
 from lightning.pytorch.cli import LightningCLI
-
-import data.GalaxyZooDataModule as GalaxyZooDataModule
 import models
+import data
 
 torch.set_float32_matmul_precision('high')
 
-def cli_main():
-    cli = LightningCLI(models.RotationalSphericalProjectingAutoencoder,
-                       GalaxyZooDataModule.GalaxyZooDataModule,
-                       save_config_kwargs={"overwrite": True})
-
-
 if __name__ == "__main__":
-    cli_main()
+    cli = LightningCLI(save_config_kwargs={"overwrite": True})
