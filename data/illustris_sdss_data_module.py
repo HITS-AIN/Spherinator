@@ -47,8 +47,16 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
             preprocessing.CropAndScale((363,363), (363,363))
         ])
 
-        self.transform_val = transforms.Compose([
+        self.transform_predict = transforms.Compose([
             preprocessing.CropAndExpand((363, 363)),
+            preprocessing.CreateNormalizedColors(stretch=0.9,
+                                                 range=5,
+                                                 lower_limit=0.001,
+                                                 channel_combinations=[[2, 3],[1,0],[0]],
+                                                 scalers=[.7, .5, 1.3]),
+        ])
+
+        self.transform_val = transforms.Compose([
             preprocessing.CreateNormalizedColors(stretch=0.9,
                                                  range=5,
                                                  lower_limit=0.001,
@@ -63,6 +71,8 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.data_train = None
         self.dataloader_train = None
+        self.data_predict = None
+        self.dataloader_predict = None
         self.data_val = None
         self.dataloader_val = None
 
@@ -83,6 +93,17 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
                                               batch_size=self.batch_size,
                                               shuffle=self.shuffle,
                                               num_workers=self.num_workers)
+        if stage == "predict":
+            self.data_predict = IllustrisSdssDataset(data_directories=self.data_directories,
+                                                     extension=self.extension,
+                                                     minsize=self.minsize,
+                                                     transform=self.transform_predict)
+
+            self.dataloader_predict = DataLoader(self.data_predict,
+                                                 batch_size=self.batch_size,
+                                                 shuffle=False,
+                                                 num_workers=self.num_workers)
+
         if stage == "val":
             self.data_val = IllustrisSdssDataset(data_directories=self.data_directories,
                                                  extension=self.extension,
@@ -101,6 +122,14 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
             torch.utils.data.DataLoader: The dataloader instance to use for training.
         """
         return self.dataloader_train
+
+    def predict_dataloader(self):
+        """ Gets the data loader for prediction.
+
+        Returns:
+            torch.utils.data.DataLoader: The dataloader instance to use for prediction.
+        """
+        return self.dataloader_predict
 
     def val_dataloader(self):
         """ Gets the data loader for validation.

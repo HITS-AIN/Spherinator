@@ -371,9 +371,9 @@ if __name__ == "__main__":
                       shuffle=False,
                       batch_size=512,
                       num_workers=32)
-    myDataModule.setup("val")
+    myDataModule.setup("predict")
 
-    myHipster.generate_catalog(myModel, myDataModule.val_dataloader(), "catalog.csv")
+    myHipster.generate_catalog(myModel, myDataModule.predict_dataloader(), "catalog.csv")
 
     myHipster.generate_dataset_projection(myDataModule.data_val, "catalog.csv")
 
