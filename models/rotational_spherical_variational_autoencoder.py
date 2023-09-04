@@ -96,9 +96,7 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
             p_z = HypersphericalUniform(self.z_dim - 1, device=z_mean.device)
         else:
             raise NotImplementedError
-
         return q_z, p_z
-
 
     def forward(self, x):
         z_mean, z_var = self.encode(x)
@@ -120,8 +118,7 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
 
             _, (q_z, p_z), _, recon = self.forward(input)
 
-            # loss_recon = nn.BCEWithLogitsLoss(reduction='none')(input, recon).sum(-1).mean()
-            loss_recon = torch.sqrt(torch.sum(torch.square(input.reshape(-1,3*64*64) - recon.reshape(-1,3*64*64)), dim=-1))
+            loss_recon = self.reconstruction_loss(input, recon)
 
             if self.distribution == 'normal':
                 loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).sum(-1).mean()
@@ -137,3 +134,12 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
 
         return loss
+
+    def reconstruction_loss(self, images, reconstructions):
+        torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
+
+    def project(self, images):
+        pass#return self.encode(images)
+
+    def reconstruct(self, coordinates):
+        pass#return self.decode(coordinates)

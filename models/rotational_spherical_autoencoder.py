@@ -56,9 +56,9 @@ class RotationalSphericalAutoencoder(pl.LightningModule):
         reconstruction = self.decode(self.scale_to_unity(coordinates))
         return reconstruction, coordinates
 
-    def spherical_loss(self, images, reconstruction, coordinates):
+    def spherical_loss(self, images, reconstructions, coordinates):
         coord_regularization = torch.square(1 - torch.sum(torch.square(coordinates), dim=1)) * 1e-4
-        loss = torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstruction.reshape(-1,3*64*64)), dim=-1)) + coord_regularization
+        loss = self.reconstruction_loss(images, reconstructions) + coord_regularization
         return loss
 
     def training_step(self, train_batch, _batch_idx):
@@ -75,3 +75,12 @@ class RotationalSphericalAutoencoder(pl.LightningModule):
         self.log('train_loss', loss)
         self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
         return loss
+
+    def project(self, images):
+        return self.scale_to_unity(self.encode(images))
+
+    def reconstruct(self, coordinates):
+        return self.decode(coordinates)
+
+    def reconstruction_loss(self, images, reconstructions):
+        torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))

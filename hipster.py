@@ -181,7 +181,7 @@ class Hipster():
                     print(".", end="")
                 vector = healpy.pix2vec(2**i,j,nest=True)
                 vector = torch.tensor(vector).reshape(1,3).type(dtype=torch.float32)
-                data = model.decode(vector)[0]
+                data = model.reconstruct(vector)[0]
                 data = torch.swapaxes(data, 0, 2)
                 image = Image.fromarray(
                     (numpy.clip(data.detach().numpy(),0,1)*255).astype(numpy.uint8))
@@ -212,9 +212,10 @@ class Hipster():
                 crop_images = functional.center_crop(rot_images, [256,256]) # crop
                 scaled_images = functional.resize(crop_images, [64,64], antialias=False) # scale
                 with torch.no_grad():
-                    reconstruction, coordinates = model.forward(scaled_images)
-                    losses[:,r] = model.spherical_loss(scaled_images, reconstruction, coordinates)
-                    coords[:,r] = model.scale_to_unity(coordinates)
+                    coordinates = model.project(scaled_images)
+                    reconstruction = model.reconstruct(coordinates)
+                    losses[:,r] = model.reconstruction_loss(scaled_images, reconstruction)
+                    coords[:,r] = coordinates
             min = torch.argmin(losses, dim=1)
             result_coordinates = torch.cat((result_coordinates, coords[torch.arange(batch['id'].shape[0]),min]))
             result_rotations = torch.cat((result_rotations, 360.0/rotation_steps*min))
@@ -346,7 +347,7 @@ if __name__ == "__main__":
     checkpoint = torch.load("illustris.epoch908step64539.ckpt")
     myModel.load_state_dict(checkpoint["state_dict"])
 
-    #myHipster.generate_hips(myModel)
+    myHipster.generate_hips(myModel)
 
     # myDataset = galaxy_zoo_dataset.GalaxyZooDataset(data_directory="/hits/basement/ain/Data/KaggleGalaxyZoo/images_training_rev1",#efigi-1.6/png"
     #                                     extension=".jpg",
