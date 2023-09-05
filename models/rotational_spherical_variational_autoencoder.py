@@ -66,9 +66,11 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         if self.distribution == 'normal':
             z_var = F.softplus(self.fc_var(x))
         elif self.distribution == 'vmf':
-            z_mean = z_mean / z_mean.norm(dim=-1, keepdim=True)
+            length = torch.linalg.vector_norm(z_mean, dim=1)+1.e-20
+            z_mean = (z_mean.T / length).T
+            #z_mean = z_mean / z_mean.norm(dim=-1, keepdim=True)
             # the `+ 1` prevent collapsing behaviors
-            z_var = F.softplus(self.fc_var(x)) + 1
+            z_var = F.softplus(self.fc_var(x)) + 1.e-6
         else:
             raise NotImplementedError
 
@@ -139,7 +141,7 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         return torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
 
     def project(self, images):
-        z_mean, z_var = self.encode(images)
+        z_mean, _ = self.encode(images)
         return z_mean
 
     def reconstruct(self, coordinates):

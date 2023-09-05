@@ -83,4 +83,4 @@ class RotationalSphericalAutoencoder(pl.LightningModule):
         return self.decode(coordinates)
 
     def reconstruction_loss(self, images, reconstructions):
-        torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
+        return torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
