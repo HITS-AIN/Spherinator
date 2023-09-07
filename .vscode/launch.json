@@ -23,6 +23,24 @@
             "justMyCode": true
         },
         {
+            "name": "Python: illustris-svae",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "args": "fit -c experiments/illustris-svae.yaml",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: gz-svae",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "args": "fit -c experiments/gz-svae.yaml",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

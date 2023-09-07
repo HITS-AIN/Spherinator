@@ -10,12 +10,7 @@ model:
 data:
   class_path: data.IllustrisSdssDataModule
   init_args:
-    data_directories: ["/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_095/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/TNG50/sdss/snapnum_099/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_135/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data/"]
+    data_directories: ["/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data/"]
     extension: fits
     minsize: 100
     batch_size: 128
@@ -41,5 +36,5 @@ lr_scheduler:
 trainer:
   max_epochs: -1
   accelerator: gpu
-  devices: 4
+  devices: [0]
   precision: 32
