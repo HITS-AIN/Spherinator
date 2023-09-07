@@ -18,13 +18,20 @@ if __name__ == "__main__":
         extension=".fits",
         shuffle=False,
         minsize=100,
-        batch_size=16,
+        batch_size=1,
         num_workers=16)
     datamodel.setup("val")
 
-    for batch in datamodel.val_dataloader():
-        for data, filename in zip(batch['image'], batch['filename']):
-            image = torch.swapaxes(data, 0, 2)
-            image = Image.fromarray((numpy.clip(image.numpy(),0,1)*255).astype(numpy.uint8) , mode="RGB")
-            image.save(os.path.join(filename+".jpg"))
-            print(filename+".jpg")
+    print (datamodel.val_dataloader().dataset.total_files, len(datamodel.val_dataloader().dataset))
+
+    for item in datamodel.val_dataloader().dataset:
+        image = torch.swapaxes(item['image'], 0, 2)
+        image = Image.fromarray((numpy.clip(image.numpy(),0,1)*255).astype(numpy.uint8) , mode="RGB")
+        filename = os.path.join("/local_data/AIN/Data/HiPSter",
+                                "Illustris",
+                                "thumbnails",
+                                item['metadata']['simulation'],
+                                item['metadata']['snapshot'],
+                                item['metadata']['subhalo_id']+".jpg")
+        print(filename)
+        image.save(filename)
