@@ -1,0 +1,39 @@
+seed_everything: 42
+
+model:
+  class_path: models.RotationalSphericalVariationalAutoencoder
+  init_args:
+    h_dim: 256
+    z_dim: 3
+    distribution: "vmf"
+
+data:
+  class_path: data.GalaxyZooDataModule
+  init_args:
+    data_dir: /hits/basement/ain/Data/KaggleGalaxyZoo/images_training_rev1
+    extension: jpg
+    batch_size: 256
+    shuffle: True
+    num_workers: 12
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.001
+
+lr_scheduler:
+  class_path: lightning.pytorch.cli.ReduceLROnPlateau
+  init_args:
+    mode: min
+    factor: 0.1
+    patience: 500
+    cooldown: 500
+    min_lr: 1.e-5
+    monitor: train_loss
+    verbose: True
+
+trainer:
+  max_epochs: -1
+  accelerator: gpu
+  devices: 1
+  precision: 32
