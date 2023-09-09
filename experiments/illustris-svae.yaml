@@ -10,12 +10,17 @@ model:
 data:
   class_path: data.IllustrisSdssDataModule
   init_args:
-    data_directories: ["/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data/"]
+    data_directories: ["/hits/basement/its/doserbd/projects/AIN_SPACE/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data/",
+                       "/hits/basement/its/doserbd/projects/AIN_SPACE/SKIRT_synthetic_images/TNG100/sdss/snapnum_095/data/",
+                       "/hits/basement/its/doserbd/projects/AIN_SPACE/SKIRT_synthetic_images/TNG50/sdss/snapnum_099/data/",
+                       "/hits/basement/its/doserbd/projects/AIN_SPACE/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/",
+                       "/hits/basement/its/doserbd/projects/AIN_SPACE/SKIRT_synthetic_images/Illustris/sdss/snapnum_135/data/",
+                       "/hits/basement/its/doserbd/projects/AIN_SPACE/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data/"]
     extension: fits
     minsize: 100
-    batch_size: 128
+    batch_size: 64
     shuffle: True
-    num_workers: 32
+    num_workers: 8
 
 optimizer:
   class_path: torch.optim.Adam
@@ -36,5 +41,11 @@ lr_scheduler:
 trainer:
   max_epochs: -1
   accelerator: gpu
-  devices: [0]
+  devices: 4
   precision: 32
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: spherinator
+      name: illustris-svae
+      log_model: True
