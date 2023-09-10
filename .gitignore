@@ -4,3 +4,4 @@ HiPSter
 lightning_logs
 data/MNIST/
 wandb
+TNG50/
