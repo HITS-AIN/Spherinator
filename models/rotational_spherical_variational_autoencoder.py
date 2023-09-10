@@ -1,14 +1,17 @@
+import sys
+
 import lightning.pytorch as pl
 import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as functional
+from torch.optim import Adam
 
-import sys
 sys.path.append('external/s-vae-pytorch/')
 from hyperspherical_vae.distributions import (HypersphericalUniform,
                                               VonMisesFisher)
+
 
 class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
 
@@ -52,7 +55,6 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         self.deconv4 = nn.ConvTranspose2d(in_channels=32, out_channels=16, kernel_size=(4,4), stride=2, padding=1)
         self.deconv5 = nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=(5,5), stride=1, padding=2)
 
-
     def encode(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
@@ -76,7 +78,6 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
 
         return z_mean, z_var
 
-
     def decode(self, z):
         x = F.tanh(self.fc2(z))
         x = F.tanh(self.fc3(x))
@@ -87,7 +88,6 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         x = F.relu(self.deconv4(x))
         x = self.deconv5(x)
         return x
-
 
     def reparameterize(self, z_mean, z_var):
         if self.distribution == 'normal':
@@ -105,9 +105,7 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         q_z, p_z = self.reparameterize(z_mean, z_var)
         z = q_z.rsample()
         x = self.decode(z)
-
         return (z_mean, z_var), (q_z, p_z), z, x
-
 
     def training_step(self, batch, batch_idx):
         images = batch["image"]
@@ -136,6 +134,10 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
 
         return loss
+
+    def configure_optimizers(self):
+        """Default Adam optimizer if missing from the configuration file."""
+        return Adam(self.parameters(), lr=1e-3)
 
     def project(self, images):
         z_mean, _ = self.encode(images)
