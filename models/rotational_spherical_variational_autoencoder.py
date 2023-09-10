@@ -116,6 +116,9 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
             x = functional.center_crop(x, [256,256])
             input = functional.resize(x, [64,64], antialias=False)
 
+            # dynamic binarization
+            input = (input > torch.distributions.Uniform(torch.tensor([0.0]), torch.tensor([1.0])).sample(input.shape))
+
             _, (q_z, p_z), _, recon = self.forward(input)
 
             loss_recon = self.reconstruction_loss(input, recon)
@@ -131,7 +134,10 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
 
         loss = torch.mean(torch.min(losses, dim=1)[0])
 
-        self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        self.log('train_loss', loss, prog_bar=True)
+        self.log('loss_recon', loss_recon)
+        self.log('loss_KL', loss_KL)
+        self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
 
         return loss
 
