@@ -10,12 +10,12 @@ model:
 data:
   class_path: data.IllustrisSdssDataModule
   init_args:
-    data_directories: ["TNG100"]
+    data_directories: ["TNG50"]
     extension: fits
     minsize: 100
     batch_size: 32
     shuffle: True
-    num_workers: 4
+    num_workers: 8
 
 optimizer:
   class_path: torch.optim.Adam
@@ -38,9 +38,9 @@ trainer:
   accelerator: gpu
   devices: 1
   precision: 32
-  # logger:
-  #   class_path: lightning.pytorch.loggers.WandbLogger
-  #   init_args:
-  #     project: spherinator
-  #     name: illustris-svae
-  #     log_model: True
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: spherinator
+      name: illustris-svae-bce
+      log_model: True
