@@ -1,9 +1,9 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import lightning.pytorch as pl
 
 
-class SpherinatorModule(pl.LightningModule):
+class SpherinatorModule(ABC, pl.LightningModule):
     """
     Abstract base class for all spherinator modules.
     """
