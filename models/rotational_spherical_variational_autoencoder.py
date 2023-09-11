@@ -1,16 +1,17 @@
-import lightning.pytorch as pl
 import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as functional
 
+from .spherinator_module import SpherinatorModule
+
 import sys
 sys.path.append('external/s-vae-pytorch/')
 from hyperspherical_vae.distributions import (HypersphericalUniform,
                                               VonMisesFisher)
 
-class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
+class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
 
     def __init__(self, h_dim=256, z_dim=2, distribution='normal'):
         """
