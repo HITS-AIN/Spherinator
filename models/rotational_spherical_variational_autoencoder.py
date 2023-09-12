@@ -138,12 +138,12 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
 
         return loss
 
-    def reconstruction_loss(self, images, reconstructions):
-        return torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
-
     def project(self, images):
         z_mean, _ = self.encode(images)
         return z_mean
 
     def reconstruct(self, coordinates):
         return self.decode(coordinates)
+
+    def reconstruction_loss(self, images, reconstructions):
+        return torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
