@@ -412,13 +412,13 @@ if __name__ == "__main__":
                         help="config file (default = 'config.yaml').")
     parser.add_argument("--checkpoint", "-m", default="model.ckpt",
                         help="checkpoint file (default = 'model.ckpt').")
-    parser.add_argument("--max_order", default=4,
+    parser.add_argument("--max_order", default=4, type=int,
                         help="Maximal order of HiPS tiles (default = 4).")
-    parser.add_argument("--hierarchy", default=8,
+    parser.add_argument("--hierarchy", default=8, type=int,
                         help="Maximal order of HiPS tiles (default = 8).")
-    parser.add_argument("--crop_size", default=256,
+    parser.add_argument("--crop_size", default=256, type=int,
                         help="Image crop size (default = 256).")
-    parser.add_argument("--output_size", default=256,
+    parser.add_argument("--output_size", default=256, type=int,
                         help="Image output size (default = 64).")
     parser.add_argument("--output_folder", default='./HiPSter',
                         help="Output of HiPS (default = './HiPSter').")
