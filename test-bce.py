@@ -11,7 +11,9 @@ if __name__ == "__main__":
 
     model = models.RotationalSphericalVariationalAutoencoder(**(config["model"]["init_args"]))
 
-    data_module = data.IllustrisSdssDataModule(data_directories=["TNG50"], num_workers=8, batch_size=32)
+    data_module = data.IllustrisSdssDataModule(
+        data_directories=["/home/doserbd/data/machine-learning/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],
+        num_workers=8, batch_size=32)
 
     trainer = pl.Trainer(accelerator='gpu', max_epochs=-1)
     trainer.fit(model, data_module)
