@@ -10,7 +10,7 @@ model:
 data:
   class_path: data.IllustrisSdssDataModule
   init_args:
-    data_directories: ["TNG50"]
+    data_directories: ["/home/doserbd/data/machine-learning/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"]
     extension: fits
     minsize: 100
     batch_size: 32
@@ -38,9 +38,9 @@ trainer:
   accelerator: gpu
   devices: 1
   precision: 32
-  logger:
-    class_path: lightning.pytorch.loggers.WandbLogger
-    init_args:
-      project: spherinator
-      name: illustris-svae-bce
-      log_model: True
+  # logger:
+  #   class_path: lightning.pytorch.loggers.WandbLogger
+  #   init_args:
+  #     project: spherinator
+  #     name: illustris-svae-bce
+  #     log_model: True
