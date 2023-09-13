@@ -68,7 +68,7 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         if self.distribution == 'normal':
             z_var = F.softplus(self.fc_var(x))
         elif self.distribution == 'vmf':
-            length = torch.linalg.vector_norm(z_mean, dim=1)+1.e-20
+            length = torch.linalg.vector_norm(z_mean, dim=1) + 1.e-20
             z_mean = (z_mean.T / length).T
             #z_mean = z_mean / z_mean.norm(dim=-1, keepdim=True)
             # the `+ 1` prevent collapsing behaviors
@@ -104,8 +104,8 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         z_mean, z_var = self.encode(x)
         q_z, p_z = self.reparameterize(z_mean, z_var)
         z = q_z.rsample()
-        x = self.decode(z)
-        return (z_mean, z_var), (q_z, p_z), z, x
+        recon = self.decode(z)
+        return (z_mean, z_var), (q_z, p_z), z, recon
 
     def training_step(self, batch, batch_idx):
         images = batch["image"]
@@ -115,10 +115,6 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
             x = functional.rotate(images, 360.0 / rotations * i, expand=False)
             x = functional.center_crop(x, [256,256])
             input = functional.resize(x, [64,64], antialias=False)
-
-            # dynamic binarization
-            input = (input > torch.distributions.Uniform(torch.tensor(0.0, device=self.device),
-                torch.tensor(1.0, device=self.device)).sample(input.shape)).float()
 
             _, (q_z, p_z), _, recon = self.forward(input)
 
@@ -134,12 +130,10 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
             losses[:,i] = loss_recon + loss_KL
 
         loss = torch.mean(torch.min(losses, dim=1)[0])
-
         self.log('train_loss', loss, prog_bar=True)
         self.log('loss_recon', loss_recon, prog_bar=True)
         self.log('loss_KL', loss_KL)
         self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
-
         return loss
 
     def configure_optimizers(self):
