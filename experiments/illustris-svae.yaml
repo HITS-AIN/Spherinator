@@ -6,6 +6,7 @@ model:
     h_dim: 256
     z_dim: 3
     distribution: "vmf"
+    spherical_loss_weight: 1.e-4
 
 data:
   class_path: data.IllustrisSdssDataModule

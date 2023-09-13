@@ -15,19 +15,21 @@ from hyperspherical_vae.distributions import (HypersphericalUniform,
 
 class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
 
-    def __init__(self, h_dim=256, z_dim=2, distribution='normal'):
+    def __init__(self, h_dim=256, z_dim=2, distribution='normal', spherical_loss_weight=1e-4):
         """
         RotationalSphericalVariationalAutoencoder initializer
 
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation
         :param distribution: string either `normal` or `vmf`, indicates which distribution to use
+        :param spherical_loss_weight: weight of the spherical loss
         """
         super().__init__()
         self.save_hyperparameters()
         self.example_input_array = torch.randn(1, 3, 64, 64)
 
         self.h_dim, self.z_dim, self.distribution = h_dim, z_dim, distribution
+        self.spherical_loss_weight = spherical_loss_weight
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5,5), stride=2, padding=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5,5), stride=2, padding=2)
@@ -105,6 +107,9 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         recon = self.decode(z)
         return (z_mean, z_var), (q_z, p_z), z, recon
 
+    def spherical_loss(self, coordinates):
+        return torch.square(1 - torch.sum(torch.square(coordinates), dim=1))
+
     def training_step(self, batch, batch_idx):
         images = batch["image"]
         rotations = 36
@@ -114,7 +119,7 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
             x = functional.center_crop(x, [256,256])
             input = functional.resize(x, [64,64], antialias=False)
 
-            _, (q_z, p_z), _, recon = self.forward(input)
+            (z_mean, _), (q_z, p_z), _, recon = self.forward(input)
 
             loss_recon = self.reconstruction_loss(input, recon)
 
@@ -125,7 +130,7 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
             else:
                 raise NotImplementedError
 
-            losses[:,i] = loss_recon + loss_KL
+            losses[:,i] = loss_recon + loss_KL + self.spherical_loss_weight * self.spherical_loss(z_mean)
 
         loss = torch.mean(torch.min(losses, dim=1)[0])
         self.log('train_loss', loss, prog_bar=True)
