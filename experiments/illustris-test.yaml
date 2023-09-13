@@ -1,11 +1,7 @@
 seed_everything: 42
 
 model:
-  class_path: models.RotationalSphericalVariationalAutoencoder
-  init_args:
-    h_dim: 256
-    z_dim: 3
-    distribution: "vmf"
+  class_path: models.RotationalSphericalAutoencoder
 
 data:
   class_path: data.IllustrisSdssDataModule
@@ -42,5 +38,5 @@ trainer:
     class_path: lightning.pytorch.loggers.WandbLogger
     init_args:
       project: spherinator
-      name: illustris-svae-bce
+      name: illustris-test
       log_model: True
