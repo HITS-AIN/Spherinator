@@ -415,7 +415,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_order", default=4, type=int,
                         help="Maximal order of HiPS tiles (default = 4).")
     parser.add_argument("--hierarchy", default=8, type=int,
-                        help="Maximal order of HiPS tiles (default = 8).")
+                        help="Number of tiles hierarchically combined (default = 1).")
     parser.add_argument("--crop_size", default=256, type=int,
                         help="Image crop size (default = 256).")
     parser.add_argument("--output_size", default=256, type=int,
