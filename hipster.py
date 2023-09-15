@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+
 """ Provides all functionalities to transform a model in a HiPS representation for browsing.
 """
 
+import argparse
+import importlib
 import math
 import os
 from datetime import datetime
@@ -11,14 +15,10 @@ import numpy
 import torch
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as functional
+import yaml
+from astropy.io.votable import writeto
+from astropy.table import Table
 from PIL import Image
-from torch.utils.data import DataLoader
-
-import data.galaxy_zoo_dataset as galaxy_zoo_dataset
-import data.illustris_sdss_data_module
-import data.illustris_sdss_dataset
-import data.preprocessing as preprocessing
-from models import RotationalSphericalAutoencoder
 
 
 class Hipster():
@@ -27,7 +27,7 @@ class Hipster():
     model that projects images on a sphere.
     """
 
-    def __init__(self, output_folder, title, max_order=3, crop_size=64, output_size=128):
+    def __init__(self, output_folder, title, max_order=3, hierarchy=1, crop_size=64, output_size=128):
         """ Initializes the hipster
 
         Args:
@@ -36,6 +36,8 @@ class Hipster():
             title (String): The title string to be passed to the meta files.
             max_order (int, optional): The depth of the tiling. Should be smaller than 10.
                 Defaults to 3.
+            hierarchy: (int, optional): Defines how many tiles should be hierarchically combined.
+                Defaults to 1.
             crop_size (int, optional): The size to be cropped from the generating model output, in
                 case it might be larger. Defaults to 64.
             output_size (int, optional): Specifies the size the tilings should be scaled to. Must be
@@ -46,6 +48,7 @@ class Hipster():
         self.output_folder = output_folder
         self.title = title
         self.max_order = max_order
+        self.hierarchy = hierarchy
         self.crop_size = crop_size
         self.output_size = output_size
 
@@ -114,7 +117,7 @@ class Hipster():
             output.write("hips_status          = public master clonable\n")
             output.write("hips_tile_format     = jpeg\n")
             output.write("hips_order           = "+str(self.max_order)+"\n")
-            output.write("hips_tile_width      = "+str(self.output_size)+"\n")
+            output.write("hips_tile_width      = "+str(self.output_size*self.hierarchy)+"\n")
             output.write("hips_frame           = equatorial\n")
             output.flush()
 
@@ -160,6 +163,25 @@ class Hipster():
             output.write("</html>")
             output.flush()
 
+    def generate_tile(self, model, order, pixel, hierarchy):
+        if hierarchy<=1:
+            vector = healpy.pix2vec(2**order,pixel,nest=True)
+            vector = torch.tensor(vector).reshape(1,3).type(dtype=torch.float32)
+            data = model.reconstruct(vector)[0]
+            data = functional.resize(data, [self.output_size,self.output_size], antialias=False)
+            data = torch.swapaxes(data, 0, 2)
+            return data
+        q1 = self.generate_tile(model, order+1, pixel*4, hierarchy/2)
+        q2 = self.generate_tile(model, order+1, pixel*4+1, hierarchy/2)
+        q3 = self.generate_tile(model, order+1, pixel*4+2, hierarchy/2)
+        q4 = self.generate_tile(model, order+1, pixel*4+3, hierarchy/2)
+        result = torch.ones((q1.shape[0]*2, q1.shape[1]*2,3))
+        result[:q1.shape[0],:q1.shape[1]] = q1
+        result[q1.shape[0]:,:q1.shape[1]] = q2
+        result[:q1.shape[0],q1.shape[1]:] = q3
+        result[q1.shape[0]:,q1.shape[1]:] = q4
+        return result
+
     def generate_hips(self, model):
         """ Generates a HiPS tiling following the standard defined in
             https://www.ivoa.net/documents/HiPS/20170519/REC-HIPS-1.0-20170519.pdf
@@ -178,15 +200,9 @@ class Hipster():
                    end="")
             for j in range(12*4**i):
                 if j % (int(12*4**i/100)+1) == 0:
-                    print(".", end="")
-                vector = healpy.pix2vec(2**i,j,nest=True)
-                vector = torch.tensor(vector).reshape(1,3).type(dtype=torch.float32)
-                data = model.reconstruct(vector)[0]
-                data = torch.swapaxes(data, 0, 2)
-                image = Image.fromarray(
-                    (numpy.clip(data.detach().numpy(),0,1)*255).astype(numpy.uint8))
-                if image.width != self.output_size or image.height != self.output_size:
-                    image = image.resize((self.output_size, self.output_size))
+                    print(".", end="", flush=True)
+                image = self.generate_tile(model, i, j, self.hierarchy)
+                image = Image.fromarray((numpy.clip(image.detach().numpy(),0,1)*255).astype(numpy.uint8))
                 image.save(os.path.join(self.output_folder,
                                         self.title,
                                         "model",
@@ -197,6 +213,16 @@ class Hipster():
         self.create_hips_properties("model")
         self.create_index_file("model")
         print("done!")
+
+    def transform_csv_to_votable(self, csv_filename, votable_filename):
+        input_file = os.path.join(self.output_folder,
+                             self.title,
+                             csv_filename)
+        output_file = os.path.join(self.output_folder,
+                              self.title,
+                              votable_filename)
+        table = Table.read(input_file, format='ascii.csv')
+        writeto(table, output_file)
 
     def project_dataset(self, model, dataloader, rotation_steps):
         result_coordinates = torch.zeros((0, 3))
@@ -210,7 +236,7 @@ class Hipster():
             for r in range(rotation_steps):
                 rot_images = functional.rotate(images, 360/rotation_steps*r, expand=False) # rotate
                 crop_images = functional.center_crop(rot_images, [256,256]) # crop
-                scaled_images = functional.resize(crop_images, [64,64], antialias=False) # scale
+                scaled_images = functional.resize(crop_images, [128,128], antialias=False) # scale
                 with torch.no_grad():
                     coordinates = model.project(scaled_images)
                     reconstruction = model.reconstruct(coordinates)
@@ -250,6 +276,7 @@ class Hipster():
         coordinates, rotations, losses = self.project_dataset(model, dataloader, 36)
         coordinates = coordinates.cpu().detach().numpy()
         rotations = rotations.cpu().detach().numpy()
+        losses = losses.cpu().detach().numpy()
         angles = numpy.array(healpy.vec2ang(coordinates))*180.0/math.pi
         angles = angles.T
 
@@ -257,19 +284,81 @@ class Hipster():
         with open(os.path.join(self.output_folder,
                                self.title,
                                "catalog.csv"), 'w', encoding="utf-8") as output:
-            output.write("#id,RA2000,DEC2000,rotation,x,y,z,loss,filename\n")
+            output.write("#preview,simulation,snapshot data,subhalo id,subhalo,RMSE,id,RA2000,DEC2000,rotation,x,y,z\n")
             for i in range(coordinates.shape[0]):
+                output.write("<a href='https://space.h-its.org/Illustris/jpg/")
+                output.write(str(dataloader.dataset[i]['metadata']['simulation'])+"/")
+                output.write(str(dataloader.dataset[i]['metadata']['snapshot'])+"/")
+                output.write(str(dataloader.dataset[i]['metadata']['subhalo_id'])+".jpg' target='_blank'>")
+                output.write("<img src='https://space.h-its.org/Illustris/thumbnails/")
+                output.write(str(dataloader.dataset[i]['metadata']['simulation'])+"/")
+                output.write(str(dataloader.dataset[i]['metadata']['snapshot'])+"/")
+                output.write(str(dataloader.dataset[i]['metadata']['subhalo_id'])+".jpg'></a>,")
+
+                output.write(str(dataloader.dataset[i]['metadata']['simulation'])+",")
+                output.write(str(dataloader.dataset[i]['metadata']['snapshot'])+",")
+                output.write(str(dataloader.dataset[i]['metadata']['subhalo_id'])+",")
+                output.write("<a href='")
+                output.write("https://www.illustris-project.org/api/")
+                output.write(str(dataloader.dataset[i]['metadata']['simulation'])+"-1/snapshots/")
+                output.write(str(dataloader.dataset[i]['metadata']['snapshot'])+"/subhalos/")
+                output.write(str(dataloader.dataset[i]['metadata']['subhalo_id'])+"/")
+                output.write("' target='_blank'>www.illustris-project.org</a>,")
+                output.write(str(losses[i])+",")
                 output.write(str(i)+","+str(angles[i,1])+"," +
                              str(90.0-angles[i,0])+"," +
                              str(rotations[i])+",")
                 output.write(str(coordinates[i,0])+"," +
                              str(coordinates[i,1])+"," +
-                             str(coordinates[i,2])+",")
-                output.write(str(losses[i])+",")
-                output.write("http://localhost:8083" +
-                             dataloader.dataset[i]['filename']+"\n")
+                             str(coordinates[i,2])+"\n")
+
+
             output.flush()
         print("done!")
+
+    def calculate_healpix_cells(self, catalog, numbers, order, pixels):
+        healpix_cells = {} # create an extra map to quickly find images in a cell
+        for pixel in pixels:
+            healpix_cells[pixel] = [] # create empty lists for each cell
+        for number in numbers:
+            pixel = healpy.vec2pix(2**order,
+                                   catalog[number][4],
+                                   catalog[number][5],
+                                   catalog[number][6],
+                                   nest=True)
+            if pixel in healpix_cells:
+                healpix_cells[pixel].append(int(number))
+        return healpix_cells
+
+    def embed_tile(self, dataset, catalog, order, pixel, hierarchy, idx):
+        if hierarchy <= 1:
+            if len(idx) == 0:
+                data = torch.ones((3,self.output_size,self.output_size))
+                data[0] = data[0]*77.0/255.0 # deep purple
+                data[1] = data[1]*0.0/255.0
+                data[2] = data[2]*153.0/255.0
+            else:
+                vector = healpy.pix2vec(2**order,pixel,nest=True)
+                distances = numpy.sum(numpy.square(
+                     catalog[numpy.array(idx)][:,4:7] - vector), axis=1)
+                best = idx[numpy.argmin(distances)]
+                data = dataset[int(catalog[best][0])]['image']
+                data = functional.rotate(data, catalog[best][3], expand=False)
+                data = functional.center_crop(data, [self.crop_size,self.crop_size]) # crop
+                data = functional.resize(data, [self.output_size,self.output_size], antialias=False) # scale
+            data = torch.swapaxes(data, 0, 2)
+            return data
+        healpix_cells = self.calculate_healpix_cells(catalog, idx, order+1, range(pixel*4,pixel*4+4))
+        q1 = self.embed_tile(dataset, catalog, order+1, pixel*4, hierarchy/2, healpix_cells[pixel*4])
+        q2 = self.embed_tile(dataset, catalog, order+1, pixel*4+1, hierarchy/2, healpix_cells[pixel*4+1])
+        q3 = self.embed_tile(dataset, catalog, order+1, pixel*4+2, hierarchy/2, healpix_cells[pixel*4+2])
+        q4 = self.embed_tile(dataset, catalog, order+1, pixel*4+3, hierarchy/2, healpix_cells[pixel*4+3])
+        result = torch.ones((q1.shape[0]*2, q1.shape[1]*2,3))
+        result[:q1.shape[0],:q1.shape[1]] = q1
+        result[q1.shape[0]:,:q1.shape[1]] = q2
+        result[:q1.shape[0],q1.shape[1]:] = q3
+        result[q1.shape[0]:,q1.shape[1]:] = q4
+        return result
 
     def generate_dataset_projection(self, dataset, catalog_file):
         """ Generates a HiPS tiling by using the coordinates of every image to map the original
@@ -290,46 +379,20 @@ class Hipster():
                                                 catalog_file),
                                    delimiter=",",
                                    skip_header=1,
-                                   usecols=[0,1,2,3,4,5,6])
+                                   usecols=[6,7,8,9,10,11,12]) ##id,RA2000,DEC2000,rotation,x,y,z
 
         print("creating tiles:")
         for i in range(self.max_order+1):
-            healpix_cells = {} # create an extra map to quickly find images in a cell
-            for j in range(12*4**i):
-                healpix_cells[j] = []
-            for element, number in zip(catalog, range(catalog.shape[0])):
-                healpix_cells[healpy.vec2pix(2**i,
-                                             element[4],
-                                             element[5],
-                                             element[6],
-                                             nest=True)].append(int(number))
-
+            healpix_cells = self.calculate_healpix_cells(catalog, range(catalog.shape[0]), i, range(12*4**i))
             print ("\n  order "+str(i)+" [" +
                    str(12*4**i).rjust(int(math.log10(12*4**self.max_order))+1," ")+" tiles]:",
                    end="")
             for j in range(12*4**i):
                 if j % (int(12*4**i/100)+1) == 0:
-                    print(".", end="")
-                vector = healpy.pix2vec(2**i,j,nest=True)
-                if len(healpix_cells[j]) == 0:
-                    data = torch.ones((3,self.output_size,self.output_size))
-                    data[1] = torch.zeros((self.output_size,self.output_size))
-                else:
-                    distances = numpy.sum(numpy.square(
-                        catalog[numpy.array(healpix_cells[j])][:,4:7] - vector), axis=1)
-                    best = healpix_cells[j][numpy.argmin(distances)]
-                    data = dataset[int(catalog[best][0])]['image']
-                    data = functional.rotate(data, catalog[best][3], expand=False)
-                data = torch.swapaxes(data, 0, 2)
+                    print(".", end="", flush=True)
+                data = self.embed_tile(dataset, catalog, i, j, self.hierarchy, healpix_cells[j])
                 image = Image.fromarray((
                     numpy.clip(data.detach().numpy(),0,1)*255).astype(numpy.uint8))
-                if image.width > self.crop_size or image.height > self.crop_size:
-                    image = image.crop((int(image.width/2-self.crop_size/2),
-                                        int(image.height/2-self.crop_size/2),
-                                        int(image.width/2+self.crop_size/2),
-                                        int(image.height/2+self.crop_size/2)))
-                if image.width != self.output_size or image.height != self.output_size:
-                    image = image.resize((self.output_size, self.output_size))
                 image.save(os.path.join(self.output_folder,
                                         self.title,
                                         "projection",
@@ -342,39 +405,64 @@ class Hipster():
         print("done!")
 
 if __name__ == "__main__":
-    myHipster = Hipster("/local_data/AIN/Data/HiPSter", "Illustris", max_order=5, crop_size=256, output_size=256)
-    myModel = RotationalSphericalAutoencoder()
-    checkpoint = torch.load("illustris.epoch908step64539.ckpt")
-    myModel.load_state_dict(checkpoint["state_dict"])
 
-    myHipster.generate_hips(myModel)
+    parser = argparse.ArgumentParser(description="Transform a model in a HiPS representation")
+    parser.add_argument("task", help="Execution task [hips, catalog, projection, all].")
+    parser.add_argument("--config", "-c", default="config.yaml",
+                        help="config file (default = 'config.yaml').")
+    parser.add_argument("--checkpoint", "-m", default="model.ckpt",
+                        help="checkpoint file (default = 'model.ckpt').")
+    parser.add_argument("--max_order", default=4, type=int,
+                        help="Maximal order of HiPS tiles (default = 4).")
+    parser.add_argument("--hierarchy", default=8, type=int,
+                        help="Maximal order of HiPS tiles (default = 8).")
+    parser.add_argument("--crop_size", default=256, type=int,
+                        help="Image crop size (default = 256).")
+    parser.add_argument("--output_size", default=256, type=int,
+                        help="Image output size (default = 64).")
+    parser.add_argument("--output_folder", default='./HiPSter',
+                        help="Output of HiPS (default = './HiPSter').")
+    parser.add_argument("--title", default='IllustrisV2',
+                        help="HiPS title (default = 'IllustrisV2').")
 
-    # myDataset = galaxy_zoo_dataset.GalaxyZooDataset(data_directory="/hits/basement/ain/Data/KaggleGalaxyZoo/images_training_rev1",#efigi-1.6/png"
-    #                                     extension=".jpg",
-    #                                     transform = transforms.Compose([#Preprocessing.DielemanTransformation(rotation_range=[0], translation_range=[4./424,4./424], scaling_range=[1/1.1,1.1], flip=0.5),
-    #                                                                    #Preprocessing.KrizhevskyColorTransformation(weights=[-0.0148366, -0.01253134, -0.01040762], std=0.5),
-    #                                                                     preprocessing.CropAndScale((424,424), (424,424))
-    #                                                                    ])
-    #                                    )
+    args = parser.parse_args()
+    with open(args.config, "r", encoding="utf-8") as stream:
+        config = yaml.load(stream, Loader=yaml.Loader)
 
-    # myDataloader = DataLoader(myDataset, batch_size=1024, shuffle=False, num_workers=16)
+    # Import the model class and create an instance of it
+    if args.task in ["hips", "catalog", "all"]:
+        model_class_path = config['model']['class_path']
+        module_name, class_name = model_class_path.rsplit('.', 1)
+        module = importlib.import_module(module_name)
+        model_class = getattr(module, class_name)
+        model_init_args = config['model']['init_args']
+        myModel = model_class(**model_init_args)
 
-    myDataModule = data.illustris_sdss_data_module.IllustrisSdssDataModule(
-                      ["/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_095/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/TNG50/sdss/snapnum_099/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_135/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data/"],
-                      extension=".fits",
-                      minsize=100,
-                      shuffle=False,
-                      batch_size=512,
-                      num_workers=32)
-    myDataModule.setup("predict")
+        checkpoint = torch.load(args.checkpoint)
+        myModel.load_state_dict(checkpoint["state_dict"])
 
-    myHipster.generate_catalog(myModel, myDataModule.predict_dataloader(), "catalog.csv")
+    # Import the data module and create an instance of it
+    if args.task in ["catalog", "projection", "all"]:
+        data_class_path = config['data']['class_path']
+        module_name, class_name = data_class_path.rsplit('.', 1)
+        module = importlib.import_module(module_name)
+        data_class = getattr(module, class_name)
+        data_init_args = config['data']['init_args']
+        myDataModule = data_class(**data_init_args)
+        myDataModule.setup("predict")
 
-    myHipster.generate_dataset_projection(myDataModule.data_val, "catalog.csv")
+    myHipster = Hipster(args.output_folder, args.title,
+                        max_order=args.max_order, hierarchy=args.hierarchy,
+                        crop_size=args.crop_size, output_size=args.output_size)
+
+    if (args.task == "hips" or args.task == "all"):
+        myHipster.generate_hips(myModel)
+
+    if (args.task == "catalog" or args.task == "all"):
+        myHipster.generate_catalog(myModel, myDataModule.predict_dataloader(), "catalog.csv")
+        myHipster.transform_csv_to_votable("catalog.csv", "catalog.vot")
+
+    if (args.task == "projection" or args.task == "all"):
+        myHipster.generate_dataset_projection(myDataModule.data_predict, "catalog.csv")
 
     #TODO: currently you manually have to call 'python3 -m http.server 8082' to start a simple web server providing access to the tiles.

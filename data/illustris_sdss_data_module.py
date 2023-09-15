@@ -41,8 +41,8 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
                                                  scalers=[.7, .5, 1.3]),
             preprocessing.DielemanTransformation(
                 rotation_range=[0,360],
-                translation_range=[4./363,4./363],
-                scaling_range=[0.9,1.1],
+                translation_range=[0,0],#4./363,4./363],
+                scaling_range=[1,1],#0.9,1.1],
                 flip=0.5),
             preprocessing.CropAndScale((363,363), (363,363))
         ])
@@ -57,6 +57,7 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
         ])
 
         self.transform_val = transforms.Compose([
+            preprocessing.CropAndScale((363,363), (100,100)),
             preprocessing.CreateNormalizedColors(stretch=0.9,
                                                  range=5,
                                                  lower_limit=0.001,
