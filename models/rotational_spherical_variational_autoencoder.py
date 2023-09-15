@@ -1,3 +1,4 @@
+import os
 import sys
 
 import lightning.pytorch as pl
@@ -8,7 +9,8 @@ import torch.nn.functional as F
 import torchvision.transforms.functional as functional
 from torch.optim import Adam
 
-sys.path.append('external/s-vae-pytorch/')
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(script_dir, '../external/s-vae-pytorch/'))
 from hyperspherical_vae.distributions import (HypersphericalUniform,
                                               VonMisesFisher)
 
