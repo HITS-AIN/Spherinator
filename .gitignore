@@ -1,6 +1,6 @@
 __pycache__
 *.ckpt
-HiPSter
-lightning_logs
+HiPSter/
+lightning_logs/
 data/MNIST/
-wandb
+wandb/

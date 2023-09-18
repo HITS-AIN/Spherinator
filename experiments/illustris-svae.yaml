@@ -6,6 +6,7 @@ model:
     h_dim: 256
     z_dim: 3
     distribution: "vmf"
+    spherical_loss_weight: 1.e-4
 
 data:
   class_path: data.IllustrisSdssDataModule
@@ -20,7 +21,7 @@ data:
     minsize: 100
     batch_size: 128
     shuffle: True
-    num_workers: 32
+    num_workers: 16
 
 optimizer:
   class_path: torch.optim.Adam
@@ -43,3 +44,9 @@ trainer:
   accelerator: gpu
   devices: 4
   precision: 32
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: spherinator
+      name: illustris-svae
+      log_model: True

@@ -11,7 +11,9 @@ dependencies:
   - pandas
   - pip
   - pip:
+    - ipykernel
     - jsonargparse[signatures]
+    - tensorboard
     - tensorrt
   - python=3.10
   - pytorch-gpu

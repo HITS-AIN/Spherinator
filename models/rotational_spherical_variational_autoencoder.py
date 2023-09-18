@@ -1,31 +1,38 @@
+import os
+import sys
+
 import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as functional
+from torch.optim import Adam
 
 from .spherinator_module import SpherinatorModule
 
-import sys
-sys.path.append('external/s-vae-pytorch/')
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(script_dir, '../external/s-vae-pytorch/'))
 from hyperspherical_vae.distributions import (HypersphericalUniform,
                                               VonMisesFisher)
 
+
 class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
 
-    def __init__(self, h_dim=256, z_dim=2, distribution='normal'):
+    def __init__(self, h_dim=256, z_dim=2, distribution='normal', spherical_loss_weight=1e-4):
         """
         RotationalSphericalVariationalAutoencoder initializer
 
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation
         :param distribution: string either `normal` or `vmf`, indicates which distribution to use
+        :param spherical_loss_weight: weight of the spherical loss
         """
         super().__init__()
         self.save_hyperparameters()
         self.example_input_array = torch.randn(1, 3, 64, 64)
 
         self.h_dim, self.z_dim, self.distribution = h_dim, z_dim, distribution
+        self.spherical_loss_weight = spherical_loss_weight
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5,5), stride=2, padding=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5,5), stride=2, padding=2)
@@ -53,7 +60,6 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
         self.deconv4 = nn.ConvTranspose2d(in_channels=32, out_channels=16, kernel_size=(4,4), stride=2, padding=1)
         self.deconv5 = nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=(5,5), stride=1, padding=2)
 
-
     def encode(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
@@ -67,16 +73,13 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
         if self.distribution == 'normal':
             z_var = F.softplus(self.fc_var(x))
         elif self.distribution == 'vmf':
-            length = torch.linalg.vector_norm(z_mean, dim=1)+1.e-20
-            z_mean = (z_mean.T / length).T
-            #z_mean = z_mean / z_mean.norm(dim=-1, keepdim=True)
+            z_mean = torch.nn.functional.normalize(z_mean, p=2, dim=1)
             # the `+ 1` prevent collapsing behaviors
             z_var = F.softplus(self.fc_var(x)) + 1.e-6
         else:
             raise NotImplementedError
 
         return z_mean, z_var
-
 
     def decode(self, z):
         x = F.tanh(self.fc2(z))
@@ -88,7 +91,6 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
         x = F.relu(self.deconv4(x))
         x = self.deconv5(x)
         return x
-
 
     def reparameterize(self, z_mean, z_var):
         if self.distribution == 'normal':
@@ -105,21 +107,25 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
         z_mean, z_var = self.encode(x)
         q_z, p_z = self.reparameterize(z_mean, z_var)
         z = q_z.rsample()
-        x = self.decode(z)
+        recon = self.decode(z)
+        return (z_mean, z_var), (q_z, p_z), z, recon
 
-        return (z_mean, z_var), (q_z, p_z), z, x
-
+    def spherical_loss(self, coordinates):
+        return torch.square(1 - torch.sum(torch.square(coordinates), dim=1))
 
     def training_step(self, batch, batch_idx):
         images = batch["image"]
         rotations = 36
         losses = torch.zeros(images.shape[0], rotations)
+        losses_recon = torch.zeros(images.shape[0], rotations)
+        losses_KL = torch.zeros(images.shape[0], rotations)
+        losses_spher = torch.zeros(images.shape[0], rotations)
         for i in range(rotations):
             x = functional.rotate(images, 360.0 / rotations * i, expand=False)
             x = functional.center_crop(x, [256,256])
             input = functional.resize(x, [64,64], antialias=False)
 
-            _, (q_z, p_z), _, recon = self.forward(input)
+            (z_mean, _), (q_z, p_z), _, recon = self.forward(input)
 
             loss_recon = self.reconstruction_loss(input, recon)
 
@@ -130,20 +136,36 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
             else:
                 raise NotImplementedError
 
-            losses[:,i] = loss_recon + loss_KL
+            loss_spher = self.spherical_loss(z_mean)
 
-        loss = torch.mean(torch.min(losses, dim=1)[0])
+            losses[:,i] = loss_recon + loss_KL + self.spherical_loss_weight * loss_spher
+            losses_recon[:,i] = loss_recon
+            losses_KL[:,i] = loss_KL
+            losses_spher[:,i] = loss_spher
 
-        self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-
+        loss_idx = torch.min(losses, dim=1)[1]
+        loss = torch.mean(torch.gather(losses, 1, loss_idx.unsqueeze(1)))
+        loss_recon = torch.mean(torch.gather(losses_recon, 1, loss_idx.unsqueeze(1)))
+        loss_KL = torch.mean(torch.gather(losses_KL, 1, loss_idx.unsqueeze(1)))
+        loss_spher = torch.mean(torch.gather(losses_spher, 1, loss_idx.unsqueeze(1)))
+        self.log('train_loss', loss, prog_bar=True)
+        self.log('loss_recon', loss_recon, prog_bar=True)
+        self.log('loss_KL', loss_KL)
+        self.log('loss_spher', loss_spher)
+        self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
         return loss
+
+    def configure_optimizers(self):
+        """Default Adam optimizer if missing from the configuration file."""
+        return Adam(self.parameters(), lr=1e-3)
 
     def project(self, images):
         z_mean, _ = self.encode(images)
         return z_mean
 
     def reconstruct(self, coordinates):
-        return self.decode(coordinates)
+        return torch.sigmoid(self.decode(coordinates))
 
     def reconstruction_loss(self, images, reconstructions):
-        return torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
+        return nn.BCEWithLogitsLoss(reduction='none')(
+            reconstructions.reshape(-1, 3*64*64), images.reshape(-1, 3*64*64)).sum(-1).mean()
