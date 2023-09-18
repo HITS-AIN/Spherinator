@@ -152,7 +152,7 @@ class Hipster():
             # TODO: check this current hack for the tile location!!!
             output.write("            aladin.setImageSurvey(aladin.createImageSurvey(" +
                          "'"+self.title+"', " +
-                         "'sphere projection of data from"+self.title+"', " +
+                         "'sphere projection of data from "+self.title+"', " +
                          "'http://localhost:8082/"+self.title+"/" +
                          base_folder+"'," +
                          "'equatorial', "+str(self.max_order)+", {imgFormat: 'jpg'})); \n")
@@ -414,11 +414,11 @@ if __name__ == "__main__":
                         help="checkpoint file (default = 'model.ckpt').")
     parser.add_argument("--max_order", default=4, type=int,
                         help="Maximal order of HiPS tiles (default = 4).")
-    parser.add_argument("--hierarchy", default=8, type=int,
+    parser.add_argument("--hierarchy", default=1, type=int,
                         help="Number of tiles hierarchically combined (default = 1).")
     parser.add_argument("--crop_size", default=256, type=int,
                         help="Image crop size (default = 256).")
-    parser.add_argument("--output_size", default=256, type=int,
+    parser.add_argument("--output_size", default=64, type=int,
                         help="Image output size (default = 64).")
     parser.add_argument("--output_folder", default='./HiPSter',
                         help="Output of HiPS (default = './HiPSter').")
