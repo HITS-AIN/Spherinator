@@ -116,6 +116,9 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
         images = batch["image"]
         rotations = 36
         losses = torch.zeros(images.shape[0], rotations)
+        losses_recon = torch.zeros(images.shape[0], rotations)
+        losses_KL = torch.zeros(images.shape[0], rotations)
+        losses_spher = torch.zeros(images.shape[0], rotations)
         for i in range(rotations):
             x = functional.rotate(images, 360.0 / rotations * i, expand=False)
             x = functional.center_crop(x, [256,256])
@@ -132,12 +135,22 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
             else:
                 raise NotImplementedError
 
-            losses[:,i] = loss_recon + loss_KL + self.spherical_loss_weight * self.spherical_loss(z_mean)
+            loss_spher = self.spherical_loss(z_mean)
 
-        loss = torch.mean(torch.min(losses, dim=1)[0])
+            losses[:,i] = loss_recon + loss_KL + self.spherical_loss_weight * loss_spher
+            losses_recon[:,i] = loss_recon
+            losses_KL[:,i] = loss_KL
+            losses_spher[:,i] = loss_spher
+
+        loss_idx = torch.min(losses, dim=1)[1]
+        loss = torch.mean(torch.gather(losses, 1, loss_idx.unsqueeze(1)))
+        loss_recon = torch.mean(torch.gather(losses_recon, 1, loss_idx.unsqueeze(1)))
+        loss_KL = torch.mean(torch.gather(losses_KL, 1, loss_idx.unsqueeze(1)))
+        loss_spher = torch.mean(torch.gather(losses_spher, 1, loss_idx.unsqueeze(1)))
         self.log('train_loss', loss, prog_bar=True)
         self.log('loss_recon', loss_recon, prog_bar=True)
         self.log('loss_KL', loss_KL)
+        self.log('loss_spher', loss_spher)
         self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
         return loss
 
