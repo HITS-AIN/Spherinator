@@ -1,11 +1,13 @@
-import lightning.pytorch as pl
 import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as functional
 
-class RotationalSphericalAutoencoder(pl.LightningModule):
+from .spherinator_module import SpherinatorModule
+
+
+class RotationalSphericalAutoencoder(SpherinatorModule):
 
     def __init__(self,
                  rotations: int = 36,

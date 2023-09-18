@@ -1,16 +1,17 @@
-import lightning.pytorch as pl
 import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as functional
 
+from .spherinator_module import SpherinatorModule
+
 import sys
 sys.path.append('external/s-vae-pytorch/')
 from hyperspherical_vae.distributions import (HypersphericalUniform,
                                               VonMisesFisher)
 
-class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
+class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
 
     def __init__(self, h_dim=256, z_dim=2, distribution='normal'):
         """
@@ -137,12 +138,12 @@ class RotationalSphericalVariationalAutoencoder(pl.LightningModule):
 
         return loss
 
-    def reconstruction_loss(self, images, reconstructions):
-        return torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
-
     def project(self, images):
         z_mean, _ = self.encode(images)
         return z_mean
 
     def reconstruct(self, coordinates):
         return self.decode(coordinates)
+
+    def reconstruction_loss(self, images, reconstructions):
+        return torch.sqrt(torch.sum(torch.square(images.reshape(-1,3*64*64)-reconstructions.reshape(-1,3*64*64)), dim=-1))
