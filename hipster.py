@@ -414,13 +414,8 @@ if __name__ == "__main__":
                         help="checkpoint file (default = 'model.ckpt').")
     parser.add_argument("--max_order", default=4, type=int,
                         help="Maximal order of HiPS tiles (default = 4).")
-<<<<<<< Updated upstream
-    parser.add_argument("--hierarchy", default=8, type=int,
-                        help="Maximal order of HiPS tiles (default = 8).")
-=======
     parser.add_argument("--hierarchy", default=1, type=int,
                         help="Number of tiles hierarchically combined (default = 1).")
->>>>>>> Stashed changes
     parser.add_argument("--crop_size", default=256, type=int,
                         help="Image crop size (default = 256).")
     parser.add_argument("--output_size", default=64, type=int,
