@@ -1,6 +1,7 @@
 __pycache__
 *.ckpt
+*.ncu-rep
 HiPSter/
 lightning_logs/
-data/MNIST/
+local/
 wandb/
