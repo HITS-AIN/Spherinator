@@ -23,6 +23,7 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
                  z_dim: int = 2,
                  distribution: str = 'normal',
                  rotations: int = 36,
+                 beta: float = 1.0,
                  spherical_loss_weight: float = 1e-4):
         """
         RotationalSphericalVariationalAutoencoder initializer
@@ -31,6 +32,7 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
         :param z_dim: dimension of the latent representation
         :param distribution: string either `normal` or `vmf`, indicates which distribution to use
         :param rotations: number of rotations
+        :param beta: factor for beta-VAE
         :param spherical_loss_weight: weight of the spherical loss
         """
         super().__init__()
@@ -38,7 +40,7 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
         self.example_input_array = torch.randn(1, 3, 64, 64)
 
         self.h_dim, self.z_dim, self.distribution = h_dim, z_dim, distribution
-        self.rotations, self.spherical_loss_weight = rotations, spherical_loss_weight
+        self.rotations, self.beta, self.spherical_loss_weight = rotations, beta, spherical_loss_weight
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5,5), stride=2, padding=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5,5), stride=2, padding=2)
@@ -143,7 +145,7 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
 
             loss_spher = self.spherical_loss(z_mean)
 
-            losses[:,i] = loss_recon + loss_KL + self.spherical_loss_weight * loss_spher
+            losses[:,i] = loss_recon + self.beta * loss_KL #+ self.spherical_loss_weight * loss_spher
             losses_recon[:,i] = loss_recon
             losses_KL[:,i] = loss_KL
             losses_spher[:,i] = loss_spher
