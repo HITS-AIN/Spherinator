@@ -1,6 +1,6 @@
 import models
 
-model = models.rotational_spherical_variational_autoencoder()
+model = models.rotational_variational_autoencoder()
 
 # Test the model with a dummy input
 model(model.example_input_array)

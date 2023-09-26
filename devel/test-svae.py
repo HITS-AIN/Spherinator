@@ -17,7 +17,7 @@ if __name__ == "__main__":
         with open(vars["config"], "r", encoding="utf-8") as stream:
             config = yaml.load(stream, Loader=yaml.Loader)
 
-    model = models.RotationalSphericalVariationalAutoencoder(**(config["model"]["init_args"]))
+    model = models.RotationalVariationalAutoencoder(**(config["model"]["init_args"]))
 
     checkpoint = torch.load("lightning_logs/version_13/checkpoints/epoch=43-step=3344.ckpt")
     model.load_state_dict(checkpoint["state_dict"])

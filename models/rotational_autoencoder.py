@@ -7,12 +7,12 @@ import torchvision.transforms.functional as functional
 from .spherinator_module import SpherinatorModule
 
 
-class RotationalSphericalAutoencoder(SpherinatorModule):
+class RotationalAutoencoder(SpherinatorModule):
 
     def __init__(self,
                  rotations: int = 36,
                  bottleneck: int = 3):
-        super(RotationalSphericalAutoencoder, self).__init__()
+        super(RotationalAutoencoder, self).__init__()
         self.bottleneck = bottleneck
         self.rotations = rotations
         self.conv0 = nn.Conv2d(in_channels=3, out_channels=16,

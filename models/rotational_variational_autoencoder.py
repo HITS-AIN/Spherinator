@@ -16,7 +16,7 @@ from hyperspherical_vae.distributions import (HypersphericalUniform,
                                               VonMisesFisher)
 
 
-class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
+class RotationalVariationalAutoencoder(SpherinatorModule):
 
     def __init__(self,
                  h_dim: int = 256,
@@ -26,7 +26,7 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
                  beta: float = 1.0,
                  spherical_loss_weight: float = 1e-4):
         """
-        RotationalSphericalVariationalAutoencoder initializer
+        RotationalVariationalAutoencoder initializer
 
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation

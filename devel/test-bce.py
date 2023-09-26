@@ -9,7 +9,7 @@ if __name__ == "__main__":
     with open("experiments/illustris-svae.yaml", "r", encoding="utf-8") as stream:
         config = yaml.load(stream, Loader=yaml.Loader)
 
-    model = models.RotationalSphericalVariationalAutoencoder(**(config["model"]["init_args"]))
+    model = models.RotationalVariationalAutoencoder(**(config["model"]["init_args"]))
 
     data_module = data.IllustrisSdssDataModule(
         data_directories=["/home/doserbd/data/machine-learning/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],

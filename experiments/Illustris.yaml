@@ -1,7 +1,7 @@
 seed_everything: 42
 
 model:
-  class_path: models.RotationalSphericalAutoencoder
+  class_path: models.RotationalAutoencoder
   init_args:
     bottleneck: 3
     rotations: 36

@@ -1,9 +1,9 @@
-from models import RotationalSphericalVariationalAutoencoder
+from models import RotationalVariationalAutoencoder
 
-def test_rotational_spherical_variational_autoencoder():
+def test_rotational_variational_autoencoder():
 
     z_dim = 2
-    model = RotationalSphericalVariationalAutoencoder(z_dim=z_dim)
+    model = RotationalVariationalAutoencoder(z_dim=z_dim)
     input = model.example_input_array
     batch_size = input.shape[0]
 
