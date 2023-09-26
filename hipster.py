@@ -272,7 +272,7 @@ class Hipster():
             if answer != "Yes":
                 return
         print("projecting dataset:")
-        coordinates, rotations, losses = self.project_dataset(model, dataloader, 36)
+        coordinates, rotations, losses = self.project_dataset(model, dataloader, model.rotations)
         coordinates = coordinates.cpu().detach().numpy()
         rotations = rotations.cpu().detach().numpy()
         losses = losses.cpu().detach().numpy()
