@@ -11,8 +11,7 @@ It contains the following modules:
 """
 
 from .rotational_autoencoder import RotationalAutoencoder
-from .rotational_variational_autoencoder import \
-    RotationalVariationalAutoencoder
+from .rotational_variational_autoencoder import RotationalVariationalAutoencoder
 from .svae import SVAE
 from .vae import VAE
 
