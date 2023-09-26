@@ -16,15 +16,23 @@ from hyperspherical_vae.distributions import (HypersphericalUniform,
                                               VonMisesFisher)
 
 
-class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
+class RotationalVariationalAutoencoder(SpherinatorModule):
 
-    def __init__(self, h_dim=256, z_dim=2, distribution='normal', spherical_loss_weight=1e-4):
+    def __init__(self,
+                 h_dim: int = 256,
+                 z_dim: int = 2,
+                 distribution: str = 'normal',
+                 rotations: int = 36,
+                 beta: float = 1.0,
+                 spherical_loss_weight: float = 1e-4):
         """
-        RotationalSphericalVariationalAutoencoder initializer
+        RotationalVariationalAutoencoder initializer
 
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation
         :param distribution: string either `normal` or `vmf`, indicates which distribution to use
+        :param rotations: number of rotations
+        :param beta: factor for beta-VAE
         :param spherical_loss_weight: weight of the spherical loss
         """
         super().__init__()
@@ -32,7 +40,7 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
         self.example_input_array = torch.randn(1, 3, 64, 64)
 
         self.h_dim, self.z_dim, self.distribution = h_dim, z_dim, distribution
-        self.spherical_loss_weight = spherical_loss_weight
+        self.rotations, self.beta, self.spherical_loss_weight = rotations, beta, spherical_loss_weight
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5,5), stride=2, padding=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5,5), stride=2, padding=2)
@@ -115,13 +123,12 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
 
     def training_step(self, batch, batch_idx):
         images = batch["image"]
-        rotations = 36
-        losses = torch.zeros(images.shape[0], rotations)
-        losses_recon = torch.zeros(images.shape[0], rotations)
-        losses_KL = torch.zeros(images.shape[0], rotations)
-        losses_spher = torch.zeros(images.shape[0], rotations)
-        for i in range(rotations):
-            x = functional.rotate(images, 360.0 / rotations * i, expand=False)
+        losses = torch.zeros(images.shape[0], self.rotations)
+        losses_recon = torch.zeros(images.shape[0], self.rotations)
+        losses_KL = torch.zeros(images.shape[0], self.rotations)
+        losses_spher = torch.zeros(images.shape[0], self.rotations)
+        for i in range(self.rotations):
+            x = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
             x = functional.center_crop(x, [256,256])
             input = functional.resize(x, [64,64], antialias=False)
 
@@ -138,7 +145,7 @@ class RotationalSphericalVariationalAutoencoder(SpherinatorModule):
 
             loss_spher = self.spherical_loss(z_mean)
 
-            losses[:,i] = loss_recon + loss_KL + self.spherical_loss_weight * loss_spher
+            losses[:,i] = loss_recon + self.beta * loss_KL #+ self.spherical_loss_weight * loss_spher
             losses_recon[:,i] = loss_recon
             losses_KL[:,i] = loss_KL
             losses_spher[:,i] = loss_spher

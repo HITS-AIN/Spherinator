@@ -3,8 +3,6 @@
 
 import torch
 from lightning.pytorch.cli import LightningCLI
-import models
-import data
 
 torch.set_float32_matmul_precision('high')
 

@@ -13,7 +13,6 @@ from shutil import rmtree
 import healpy
 import numpy
 import torch
-import torchvision.transforms as transforms
 import torchvision.transforms.functional as functional
 import yaml
 from astropy.io.votable import writeto
@@ -235,8 +234,8 @@ class Hipster():
             images = batch['image']
             for r in range(rotation_steps):
                 rot_images = functional.rotate(images, 360/rotation_steps*r, expand=False) # rotate
-                crop_images = functional.center_crop(rot_images, [256,256]) # crop
-                scaled_images = functional.resize(crop_images, [128,128], antialias=False) # scale
+                crop_images = functional.center_crop(rot_images, [self.crop_size, self.crop_size]) # crop
+                scaled_images = functional.resize(crop_images, [self.output_size, self.output_size], antialias=False) # scale
                 with torch.no_grad():
                     coordinates = model.project(scaled_images)
                     reconstruction = model.reconstruct(coordinates)
@@ -273,7 +272,7 @@ class Hipster():
             if answer != "Yes":
                 return
         print("projecting dataset:")
-        coordinates, rotations, losses = self.project_dataset(model, dataloader, 36)
+        coordinates, rotations, losses = self.project_dataset(model, dataloader, model.rotations)
         coordinates = coordinates.cpu().detach().numpy()
         rotations = rotations.cpu().detach().numpy()
         losses = losses.cpu().detach().numpy()

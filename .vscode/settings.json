@@ -5,5 +5,10 @@
     "files.trimFinalNewlines": true,
     "python.analysis.extraPaths": [
         "./external/s-vae-pytorch"
-    ]
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

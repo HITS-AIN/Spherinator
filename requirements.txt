@@ -1,0 +1,4 @@
+lightning
+scipy
+torch
+torchvision
