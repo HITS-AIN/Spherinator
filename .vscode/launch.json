@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "main.py",
-            "args": "fit -c experiments/Illustris.yaml",
+            "args": "fit -c experiments/illustris.yaml",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -18,7 +18,7 @@
             "type": "python",
             "request": "launch",
             "program": "main.py",
-            "args": "fit -c experiments/GZ.yaml",
+            "args": "fit -c experiments/gz.yaml",
             "console": "integratedTerminal",
             "justMyCode": true
         },
