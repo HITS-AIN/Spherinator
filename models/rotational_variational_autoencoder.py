@@ -22,6 +22,7 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
                  h_dim: int = 256,
                  z_dim: int = 2,
                  distribution: str = 'normal',
+                 image_size: int = 91,
                  rotations: int = 36,
                  beta: float = 1.0,
                  spherical_loss_weight: float = 1e-4):
@@ -31,6 +32,7 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation
         :param distribution: string either `normal` or `vmf`, indicates which distribution to use
+        :param image_size: size of the input images
         :param rotations: number of rotations
         :param beta: factor for beta-VAE
         :param spherical_loss_weight: weight of the spherical loss
@@ -40,6 +42,7 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         self.example_input_array = torch.randn(1, 3, 64, 64)
 
         self.h_dim, self.z_dim, self.distribution = h_dim, z_dim, distribution
+        self.image_size = image_size
         self.rotations, self.beta, self.spherical_loss_weight = rotations, beta, spherical_loss_weight
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5,5), stride=2, padding=2)
@@ -129,8 +132,7 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         losses_spher = torch.zeros(images.shape[0], self.rotations)
         for i in range(self.rotations):
             x = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
-            x = functional.center_crop(x, [256,256])
-            input = functional.resize(x, [64,64], antialias=False)
+            input = functional.center_crop(x, [64,64])
 
             (z_mean, _), (q_z, p_z), _, recon = self.forward(input)
 

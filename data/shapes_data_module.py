@@ -14,6 +14,7 @@ class ShapesDataModule(pl.LightningDataModule):
     def __init__(self,
                  data_directory: str,
                  shuffle: bool = True,
+                 image_size: int = 91,
                  batch_size: int = 32,
                  num_workers: int = 1):
         """ Initializes the data loader
@@ -27,17 +28,25 @@ class ShapesDataModule(pl.LightningDataModule):
         super().__init__()
 
         self.data_directory = data_directory
+        self.shuffle = shuffle
+        self.image_size = image_size
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+
         self.transform_train = transforms.Compose([
             transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
             transforms.Normalize((0,0,0), (290,290,290)),
-            transforms.Resize((363,363))
+            transforms.Resize((self.image_size, self.image_size), antialias=True)
         ])
+        self.transform_predict = self.transform_train
+        self.transform_val = self.transform_train
 
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.num_workers = num_workers
         self.data_train = None
         self.dataloader_train = None
+        self.data_predict = None
+        self.dataloader_predict = None
+        self.data_val = None
+        self.dataloader_val = None
 
     def setup(self, stage: str):
         """ Sets up the data set and data loaders.
@@ -54,6 +63,23 @@ class ShapesDataModule(pl.LightningDataModule):
                                               batch_size=self.batch_size,
                                               shuffle=self.shuffle,
                                               num_workers=self.num_workers)
+        if stage == "predict":
+            self.data_predict = ShapesDataset(data_directory=self.data_directory,
+                                                     transform=self.transform_predict)
+
+            self.dataloader_predict = DataLoader(self.data_predict,
+                                                 batch_size=self.batch_size,
+                                                 shuffle=False,
+                                                 num_workers=self.num_workers)
+
+        if stage == "val":
+            self.data_val = ShapesDataset(data_directory=self.data_directory,
+                                                 transform=self.transform_val)
+
+            self.dataloader_val = DataLoader(self.data_val,
+                                             batch_size=self.batch_size,
+                                             shuffle=False,
+                                             num_workers=self.num_workers)
 
     def train_dataloader(self):
         """ Gets the data loader for training.
@@ -62,3 +88,19 @@ class ShapesDataModule(pl.LightningDataModule):
             torch.utils.data.DataLoader: The dataloader instance to use for training.
         """
         return self.dataloader_train
+
+    def predict_dataloader(self):
+        """ Gets the data loader for prediction.
+
+        Returns:
+            torch.utils.data.DataLoader: The dataloader instance to use for prediction.
+        """
+        return self.dataloader_predict
+
+    def val_dataloader(self):
+        """ Gets the data loader for validation.
+
+        Returns:
+            torch.utils.data.DataLoader: The dataloader instance to use for validation.
+        """
+        return self.dataloader_val
