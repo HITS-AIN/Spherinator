@@ -2,10 +2,12 @@
 """
 
 import os
+
 import numpy
+import skimage.io as io
 import torch
 from torch.utils.data import Dataset
-import skimage.io as io
+
 
 class GalaxyZooDataset(Dataset):
     """ Provides access to galaxy zoo images.
