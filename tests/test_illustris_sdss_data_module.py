@@ -10,7 +10,7 @@ def test_empty():
     try:
         data.setup("fit")
         assert False
-    except IsADirectoryError:
+    except ValueError:
         assert True
 
 
