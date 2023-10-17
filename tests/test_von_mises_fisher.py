@@ -28,12 +28,20 @@ def test_von_mises_fisher_2d():
     assert torch.isclose(dist.sample(), torch.Tensor([-0.7871,  0.6168]), rtol = 1e-3).all()
 
 
-def test_von_mises_fisher_pytorch():
+def test_von_mises_fisher_pytorch_1d():
     torch.manual_seed(0)
     dist = VonMises(torch.Tensor([0.0]), torch.Tensor([1.0]))
 
     assert dist.has_rsample == False
     assert torch.isclose(dist.sample(), torch.Tensor([-0.8953]), rtol = 1e-3)
+
+
+def test_von_mises_fisher_pytorch_2d():
+    torch.manual_seed(0)
+    dist = VonMises(torch.Tensor([0.0, 0.0]), torch.Tensor([1.0]))
+
+    assert dist.has_rsample == False
+    assert torch.isclose(dist.sample(), torch.Tensor([-0.8953, 1.8114]), rtol = 1e-3).all()
 
 
 def test_normal_pytorch():
