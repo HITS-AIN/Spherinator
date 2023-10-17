@@ -14,10 +14,12 @@ It contains the following modules:
 
 from .rotational_autoencoder import RotationalAutoencoder
 from .rotational_variational_autoencoder import RotationalVariationalAutoencoder
+from .rotational_variational_autoencoder_power import RotationalVariationalAutoencoderPower
 from .svae import SVAE
 
 __all__ = [
     'RotationalAutoencoder',
     'RotationalVariationalAutoencoder',
+    'RotationalVariationalAutoencoderPower',
     'SVAE',
 ]
