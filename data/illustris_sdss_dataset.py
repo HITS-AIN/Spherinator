@@ -1,13 +1,13 @@
 """ Provides access to the Illustris sdss images.
 """
+import os
 from typing import List
 
-import os
 import numpy
-
 import torch
-from torch.utils.data import Dataset
 from astropy.io import fits
+from torch.utils.data import Dataset
+
 
 class IllustrisSdssDataset(Dataset):
     """ Provides access to Illustris sdss like images.

@@ -1,10 +1,8 @@
 import numpy
-import copy
-
 import torch
-import torchvision.transforms.functional as TF
-from PIL import Image
 import torchvision.transforms as transforms
+import torchvision.transforms.functional as TF
+
 
 # FIXME: implement this
 class DielemanTransformation():
