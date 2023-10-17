@@ -84,7 +84,7 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         if self.distribution == 'normal':
             z_var = F.softplus(self.fc_var(x))
         elif self.distribution == 'vmf':
-            z_mean = torch.nn.functional.normalize(z_mean, p=2, dim=1)
+            z_mean = torch.nn.functional.normalize(z_mean, p=2., dim=1)
             # the `+ 1` prevent collapsing behaviors
             z_var = F.softplus(self.fc_var(x)) + 1.e-6
         else:
