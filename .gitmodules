@@ -1,3 +1,6 @@
 [submodule "external/s-vae-pytorch"]
 	path = external/s-vae-pytorch
 	url = https://github.com/nicola-decao/s-vae-pytorch
+[submodule "external/power_spherical"]
+	path = external/power_spherical
+	url = https://github.com/nicola-decao/power_spherical.git
