@@ -84,7 +84,7 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         if self.distribution == 'normal':
             z_var = F.softplus(self.fc_var(x))
         elif self.distribution == 'vmf':
-            z_mean = torch.nn.functional.normalize(z_mean, p=2., dim=1)
+            z_mean = torch.nn.functional.normalize(z_mean, p=2, dim=1)
             # the `+ 1` prevent collapsing behaviors
             z_var = F.softplus(self.fc_var(x)) + 1.e-6
         else:
@@ -101,6 +101,7 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         x = F.relu(self.deconv3(x))
         x = F.relu(self.deconv4(x))
         x = self.deconv5(x)
+        x = torch.sigmoid(x)
         return x
 
     def reparameterize(self, z_mean, z_var):
@@ -176,5 +177,5 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         return torch.sigmoid(self.decode(coordinates))
 
     def reconstruction_loss(self, images, reconstructions):
-        return nn.BCEWithLogitsLoss(reduction='none')(
+        return nn.MSELoss(reduction='none')(
             reconstructions.reshape(-1, 3*64*64), images.reshape(-1, 3*64*64)).sum(-1).mean()
