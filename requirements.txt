@@ -43,8 +43,6 @@ dateutils==0.6.12
     # via lightning
 deepdiff==6.6.0
     # via lightning
-exceptiongroup==1.1.3
-    # via anyio
 fastapi==0.103.2
     # via
     #   lightning
@@ -242,8 +240,7 @@ typing-extensions==4.8.0
     #   pydantic-core
     #   pytorch-lightning
     #   torch
-    #   uvicorn
-urllib3==2.0.6
+urllib3==2.0.7
     # via
     #   lightning
     #   lightning-cloud
