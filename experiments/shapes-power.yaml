@@ -5,7 +5,6 @@ model:
   init_args:
     h_dim: 256
     z_dim: 3
-    distribution: "vmf"
     image_size: 91
     rotations: 36
     beta: 1.0
