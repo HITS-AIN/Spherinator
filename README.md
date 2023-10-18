@@ -1,3 +1,5 @@
+[![Build Status](https://github.com/HITS-AIN/Spherinator/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/HITS-AIN/Spherinator/actions/workflows/python-package.yml?branch=main)
+
 # Spherinator
 
 Provides simple autoencoders to project images to the surface of a sphere inluding a tool to creat HiPS representations for browsing.
