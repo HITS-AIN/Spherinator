@@ -3,7 +3,7 @@ import torch
 
 def test_empty():
 
-    data = IllustrisSdssDataModule(["tests/data/"])
+    data = IllustrisSdssDataModule(["tests/data/"], num_workers=1)
 
     assert data.train_dataloader() == None
 
@@ -16,7 +16,8 @@ def test_empty():
 
 def test_fits():
 
-    data = IllustrisSdssDataModule(["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"])
+    data = IllustrisSdssDataModule(["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],
+        num_workers=1)
     data.setup("fit")
 
     assert data.train_dataloader().batch_size == 32
