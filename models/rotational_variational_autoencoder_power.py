@@ -70,7 +70,8 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
         z_mean = self.fc_mean(x)
         z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=1)
-        z_var = F.softplus(self.fc_var(x))
+        # SVAE code: the `+ 1` prevent collapsing behaviors
+        z_var = F.softplus(self.fc_var(x)) + 1
 
         return z_mean, z_var
 
