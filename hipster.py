@@ -283,7 +283,7 @@ class Hipster():
         with open(os.path.join(self.output_folder,
                                self.title,
                                "catalog.csv"), 'w', encoding="utf-8") as output:
-            output.write("#preview,simulation,snapshot data,subhalo id,subhalo,RMSE,id,RA2000,DEC2000,rotation,x,y,z\n")
+            output.write("#preview,simulation,snapshot data,subhalo id,subhalo data,RMSE,id,RA2000,DEC2000,rotation,x,y,z\n")
             for i in range(coordinates.shape[0]):
                 output.write("<a href='https://space.h-its.org/Illustris/jpg/")
                 output.write(str(dataloader.dataset[i]['metadata']['simulation'])+"/")
@@ -298,11 +298,11 @@ class Hipster():
                 output.write(str(dataloader.dataset[i]['metadata']['snapshot'])+",")
                 output.write(str(dataloader.dataset[i]['metadata']['subhalo_id'])+",")
                 output.write("<a href='")
-                output.write("https://www.illustris-project.org/api/")
+                output.write("https://www.tng-project.org/api/")
                 output.write(str(dataloader.dataset[i]['metadata']['simulation'])+"-1/snapshots/")
                 output.write(str(dataloader.dataset[i]['metadata']['snapshot'])+"/subhalos/")
                 output.write(str(dataloader.dataset[i]['metadata']['subhalo_id'])+"/")
-                output.write("' target='_blank'>www.illustris-project.org</a>,")
+                output.write("' target='_blank'>www.tng-project.org</a>,")
                 output.write(str(losses[i])+",")
                 output.write(str(i)+","+str(angles[i,1])+"," +
                              str(90.0-angles[i,0])+"," +
