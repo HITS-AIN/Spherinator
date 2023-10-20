@@ -33,8 +33,8 @@ lr_scheduler:
   init_args:
     mode: min
     factor: 0.1
-    patience: 500
-    cooldown: 500
+    patience: 5
+    cooldown: 5
     min_lr: 1.e-5
     monitor: train_loss
     verbose: True
@@ -50,3 +50,11 @@ trainer:
       project: spherinator
       name: illustris-svae
       log_model: True
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        monitor: train_loss
+        filename: "{epoch}-{train_loss:.2f}"
+        save_top_k: 1
+        mode: min
+        every_n_epochs: 1

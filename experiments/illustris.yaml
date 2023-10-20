@@ -31,8 +31,8 @@ lr_scheduler:
   init_args:
     mode: min
     factor: 0.1
-    patience: 500
-    cooldown: 500
+    patience: 5
+    cooldown: 5
     min_lr: 1.e-5
     monitor: train_loss
     verbose: True

@@ -41,6 +41,15 @@
             "justMyCode": true
         },
         {
+            "name": "Python: power spherical",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": "fit -c ${workspaceFolder}/experiments/shapes-power.yaml",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

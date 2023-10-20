@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 
 import torch
 import torch.linalg
@@ -11,39 +12,43 @@ from torch.optim import Adam
 from .spherinator_module import SpherinatorModule
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(script_dir, '../external/s-vae-pytorch/'))
-from hyperspherical_vae.distributions import (HypersphericalUniform,
-                                              VonMisesFisher)
+sys.path.append(os.path.join(script_dir, '../external/power_spherical/'))
+from power_spherical import (HypersphericalUniform, PowerSpherical)
 
 
-class RotationalVariationalAutoencoder(SpherinatorModule):
+class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
     def __init__(self,
                  h_dim: int = 256,
                  z_dim: int = 2,
-                 distribution: str = 'normal',
                  image_size: int = 91,
                  rotations: int = 36,
-                 beta: float = 1.0,
-                 spherical_loss_weight: float = 1e-4):
+                 beta: float = 1.0):
         """
         RotationalVariationalAutoencoder initializer
 
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation
-        :param distribution: string either `normal` or `vmf`, indicates which distribution to use
         :param image_size: size of the input images
         :param rotations: number of rotations
         :param beta: factor for beta-VAE
-        :param spherical_loss_weight: weight of the spherical loss
         """
         super().__init__()
         self.save_hyperparameters()
-        self.example_input_array = torch.randn(1, 3, 64, 64)
 
-        self.h_dim, self.z_dim, self.distribution = h_dim, z_dim, distribution
+        self.h_dim = h_dim
+        self.z_dim = z_dim
         self.image_size = image_size
-        self.rotations, self.beta, self.spherical_loss_weight = rotations, beta, spherical_loss_weight
+        self.rotations = rotations
+        self.beta = beta
+
+        self.crop_size = int(self.image_size * math.sqrt(2) / 2)
+        self.input_size = 64
+
+        if self.input_size > self.crop_size:
+            raise ValueError("Image size to small.")
+
+        self.example_input_array = torch.randn(1, 3, self.input_size, self.input_size)
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5,5), stride=2, padding=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5,5), stride=2, padding=2)
@@ -51,17 +56,8 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         self.conv4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(5,5), stride=2, padding=2)
 
         self.fc1 = nn.Linear(256*4*4, h_dim)
-
         self.fc_mean = nn.Linear(h_dim, z_dim)
-        if self.distribution == 'normal':
-            # compute mean and std of the normal distribution
-            self.fc_var =  nn.Linear(h_dim, z_dim)
-        elif self.distribution == 'vmf':
-            # compute mean and concentration of the von Mises-Fisher
-            self.fc_var = nn.Linear(h_dim, 1)
-        else:
-            raise NotImplementedError
-
+        self.fc_var = nn.Linear(h_dim, 1)
         self.fc2 = nn.Linear(z_dim, h_dim)
         self.fc3 = nn.Linear(h_dim, 256*4*4)
 
@@ -81,14 +77,9 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         x = F.tanh(self.fc1(x))
 
         z_mean = self.fc_mean(x)
-        if self.distribution == 'normal':
-            z_var = F.softplus(self.fc_var(x))
-        elif self.distribution == 'vmf':
-            z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=1)
-            # the `+ 1` prevent collapsing behaviors
-            z_var = F.softplus(self.fc_var(x)) + 1.e-6
-        else:
-            raise NotImplementedError
+        z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=1)
+        # SVAE code: the `+ 1` prevent collapsing behaviors
+        z_var = F.softplus(self.fc_var(x)) + 1
 
         return z_mean, z_var
 
@@ -105,63 +96,43 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         return x
 
     def reparameterize(self, z_mean, z_var):
-        if self.distribution == 'normal':
-            q_z = torch.distributions.normal.Normal(z_mean, z_var)
-            p_z = torch.distributions.normal.Normal(torch.zeros_like(z_mean), torch.ones_like(z_var))
-        elif self.distribution == 'vmf':
-            q_z = VonMisesFisher(z_mean, z_var)
-            p_z = HypersphericalUniform(self.z_dim - 1, device=z_mean.device)
-        else:
-            raise NotImplementedError
+        q_z = PowerSpherical(z_mean, z_var)
+        p_z = HypersphericalUniform(self.z_dim - 1, device=z_mean.device)
         return q_z, p_z
 
     def forward(self, x):
         z_mean, z_var = self.encode(x)
-        q_z, p_z = self.reparameterize(z_mean, z_var)
+        q_z, p_z = self.reparameterize(z_mean, z_var.squeeze())
         z = q_z.rsample()
         recon = self.decode(z)
         return (z_mean, z_var), (q_z, p_z), z, recon
-
-    def spherical_loss(self, coordinates):
-        return torch.square(1 - torch.sum(torch.square(coordinates), dim=1))
 
     def training_step(self, batch, batch_idx):
         images = batch["image"]
         losses = torch.zeros(images.shape[0], self.rotations)
         losses_recon = torch.zeros(images.shape[0], self.rotations)
         losses_KL = torch.zeros(images.shape[0], self.rotations)
-        losses_spher = torch.zeros(images.shape[0], self.rotations)
         for i in range(self.rotations):
-            x = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
-            input = functional.center_crop(x, [64,64])
+            rotate = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
+            crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
+            scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False)
 
-            (z_mean, _), (q_z, p_z), _, recon = self.forward(input)
+            (_, _), (q_z, p_z), _, recon = self.forward(scaled)
 
-            loss_recon = self.reconstruction_loss(input, recon)
+            loss_recon = self.reconstruction_loss(scaled, recon)
+            loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).mean()
 
-            if self.distribution == 'normal':
-                loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).sum(-1).mean()
-            elif self.distribution == 'vmf':
-                loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).mean()
-            else:
-                raise NotImplementedError
-
-            loss_spher = self.spherical_loss(z_mean)
-
-            losses[:,i] = loss_recon + self.beta * loss_KL #+ self.spherical_loss_weight * loss_spher
+            losses[:,i] = loss_recon + self.beta * loss_KL
             losses_recon[:,i] = loss_recon
             losses_KL[:,i] = loss_KL
-            losses_spher[:,i] = loss_spher
 
         loss_idx = torch.min(losses, dim=1)[1]
         loss = torch.mean(torch.gather(losses, 1, loss_idx.unsqueeze(1)))
         loss_recon = torch.mean(torch.gather(losses_recon, 1, loss_idx.unsqueeze(1)))
         loss_KL = torch.mean(torch.gather(losses_KL, 1, loss_idx.unsqueeze(1)))
-        loss_spher = torch.mean(torch.gather(losses_spher, 1, loss_idx.unsqueeze(1)))
         self.log('train_loss', loss, prog_bar=True)
         self.log('loss_recon', loss_recon, prog_bar=True)
         self.log('loss_KL', loss_KL)
-        self.log('loss_spher', loss_spher)
         self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
         return loss
 

@@ -6,16 +6,18 @@ model:
     h_dim: 256
     z_dim: 3
     distribution: "vmf"
+    image_size: 91
+    rotations: 36
+    beta: 1.0
 
 data:
-  class_path: data.IllustrisSdssDataModule
+  class_path: data.ShapesDataModule
   init_args:
-    data_directories: ["/home/doserbd/data/machine-learning/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"]
-    extension: fits
-    minsize: 100
-    batch_size: 32
+    data_directory: /hits/basement/its/doserbd/projects/data/machine-learning/pink/shapes/
     shuffle: True
-    num_workers: 8
+    image_size: 91
+    batch_size: 32
+    num_workers: 4
 
 optimizer:
   class_path: torch.optim.Adam
@@ -27,8 +29,8 @@ lr_scheduler:
   init_args:
     mode: min
     factor: 0.1
-    patience: 500
-    cooldown: 500
+    patience: 5
+    cooldown: 5
     min_lr: 1.e-5
     monitor: train_loss
     verbose: True
@@ -42,5 +44,13 @@ trainer:
     class_path: lightning.pytorch.loggers.WandbLogger
     init_args:
       project: spherinator
-      name: illustris-svae-bce
+      name: shapes-svae
       log_model: True
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        monitor: train_loss
+        filename: "{epoch}-{train_loss:.2f}"
+        save_top_k: 1
+        mode: min
+        every_n_epochs: 1

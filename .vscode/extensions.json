@@ -6,6 +6,10 @@
         "ms-python.pylint",
         "ms-toolsai.jupyter",
         "streetsidesoftware.code-spell-checker",
-        "ms-python.isort"
+        "ms-python.isort",
+        "github.vscode-github-actions",
+        "eamodio.gitlens",
+        "nvidia.nsight-vscode-edition",
+        "ziruiwang.nvidia-monitor"
     ]
 }
