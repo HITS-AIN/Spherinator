@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 
 import torch
 import torch.linalg
@@ -34,13 +35,20 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         """
         super().__init__()
         self.save_hyperparameters()
-        self.example_input_array = torch.randn(1, 3, 64, 64)
 
         self.h_dim = h_dim
         self.z_dim = z_dim
         self.image_size = image_size
         self.rotations = rotations
         self.beta = beta
+
+        self.crop_size = int(self.image_size * math.sqrt(2) / 2)
+        self.input_size = 64
+
+        if self.input_size > self.crop_size:
+            raise ValueError("Image size to small.")
+
+        self.example_input_array = torch.randn(1, 3, self.input_size, self.input_size)
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5,5), stride=2, padding=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5,5), stride=2, padding=2)
@@ -105,12 +113,13 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         losses_recon = torch.zeros(images.shape[0], self.rotations)
         losses_KL = torch.zeros(images.shape[0], self.rotations)
         for i in range(self.rotations):
-            x = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
-            input = functional.center_crop(x, [64,64])
+            rotate = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
+            crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
+            scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False)
 
-            (z_mean, _), (q_z, p_z), _, recon = self.forward(input)
+            (_, _), (q_z, p_z), _, recon = self.forward(scaled)
 
-            loss_recon = self.reconstruction_loss(input, recon)
+            loss_recon = self.reconstruction_loss(scaled, recon)
             loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).mean()
 
             losses[:,i] = loss_recon + self.beta * loss_KL
