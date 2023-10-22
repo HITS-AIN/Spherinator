@@ -44,6 +44,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
         self.crop_size = int(self.image_size * math.sqrt(2) / 2)
         self.input_size = 64
+        self.total_input_size = self.input_size * self.input_size * 3
 
         if self.input_size > self.crop_size:
             raise ValueError("Image size to small.")
@@ -149,4 +150,5 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
     def reconstruction_loss(self, images, reconstructions):
         return nn.MSELoss(reduction='none')(
-            reconstructions.reshape(-1, 3*64*64), images.reshape(-1, 3*64*64)).sum(-1).mean()
+            reconstructions.reshape(-1,  self.total_input_size),
+            images.reshape(-1, self.total_input_size)).sum(-1).mean()
