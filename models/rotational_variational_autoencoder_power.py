@@ -97,7 +97,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
     def reparameterize(self, z_mean, z_var):
         q_z = PowerSpherical(z_mean, z_var)
-        p_z = HypersphericalUniform(self.z_dim - 1, device=z_mean.device)
+        p_z = HypersphericalUniform(self.z_dim, device=z_mean.device)
         return q_z, p_z
 
     def forward(self, x):
