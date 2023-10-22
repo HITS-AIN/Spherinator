@@ -4,7 +4,7 @@ import torch
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(script_dir, '../external/power_spherical/'))
-from power_spherical import PowerSpherical
+from power_spherical import PowerSpherical, HypersphericalUniform
 
 
 def test_power_spherical_2d():
@@ -24,3 +24,18 @@ def test_power_spherical_2d_batch():
 
     sample = dist.rsample()
     assert sample.shape == torch.Size([batch_size, 3])
+
+def test_kl_divergence():
+    dim = 8
+    loc = torch.tensor([0.] * (dim - 1) + [1.])
+    scale = torch.tensor(10.)
+
+    dist1 = PowerSpherical(loc, scale)
+    dist2 = HypersphericalUniform(dim)
+    x = dist1.sample((100000,))
+
+    assert torch.isclose(
+        (dist1.log_prob(x) - dist2.log_prob(x)).mean(),
+        torch.distributions.kl_divergence(dist1, dist2),
+        atol=1e-2,
+    ).all()
