@@ -1,4 +1,4 @@
-astropy==5.3.3
+astropy==5.3.4
 lightning==2.0.9.post0
 scikit-image==0.21.0
 scipy==1.11.3
