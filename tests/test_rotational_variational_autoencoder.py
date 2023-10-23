@@ -1,6 +1,8 @@
 from models import RotationalVariationalAutoencoder
+import torch
+import torch.nn as nn
 
-def test_rotational_variational_autoencoder():
+def test_forward():
 
     z_dim = 2
     model = RotationalVariationalAutoencoder(z_dim=z_dim)
@@ -12,3 +14,27 @@ def test_rotational_variational_autoencoder():
     assert z_mean.shape == (batch_size, z_dim)
     assert z_var.shape == (batch_size, z_dim)
     assert recon.shape == input.shape
+
+def test_reconstruction_loss():
+
+    torch.manual_seed(0)
+    z_dim = 2
+    model = RotationalVariationalAutoencoder(z_dim=z_dim)
+    image1 = torch.zeros((2,3,64,64))
+    image2 = torch.ones((2,3,64,64))
+    image3 = torch.zeros((2,3,64,64))
+    image3[0,0,0,0] = 1.0
+
+    assert model.reconstruction_loss(image1, image1) == 0.0
+    assert torch.isclose(model.reconstruction_loss(image1, image2), torch.Tensor([3*64*64]), rtol = 1e-3)
+    assert torch.isclose(model.reconstruction_loss(image1, image3), torch.Tensor([0.5]), rtol = 1e-3)
+
+def test_MSELoss():
+
+    image1 = torch.Tensor([0.0])
+    image2 = torch.Tensor([0.1])
+
+    loss = nn.MSELoss(reduction='none')
+
+    assert loss(image1, image1).mean() == 0.0
+    assert torch.isclose(loss(image1, image2).mean(), torch.Tensor([0.01]), rtol = 1e-3)
