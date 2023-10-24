@@ -15,6 +15,8 @@ class RotationalAutoencoder(SpherinatorModule):
         super(RotationalAutoencoder, self).__init__()
         self.bottleneck = bottleneck
         self.rotations = rotations
+        self.input_size = 128
+        self.example_input_array = torch.randn(1, bottleneck, self.input_size, self.input_size)
         self.conv0 = nn.Conv2d(in_channels=3, out_channels=16,
                                kernel_size=(3,3), stride=1, padding=1) #128x128
         self.pool0 = nn.MaxPool2d(kernel_size=(2,2), stride=2, padding=0) # 64x64
