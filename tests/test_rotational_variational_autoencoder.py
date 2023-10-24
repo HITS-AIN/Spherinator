@@ -1,6 +1,5 @@
 from models import RotationalVariationalAutoencoder
 import torch
-import torch.nn as nn
 
 def test_forward():
 
@@ -28,13 +27,3 @@ def test_reconstruction_loss():
     assert model.reconstruction_loss(image1, image1) == 0.0
     assert torch.isclose(model.reconstruction_loss(image1, image2), torch.Tensor([3*64*64]), rtol = 1e-3)
     assert torch.isclose(model.reconstruction_loss(image1, image3), torch.Tensor([0.5]), rtol = 1e-3)
-
-def test_MSELoss():
-
-    image1 = torch.Tensor([0.0])
-    image2 = torch.Tensor([0.1])
-
-    loss = nn.MSELoss(reduction='none')
-
-    assert loss(image1, image1).mean() == 0.0
-    assert torch.isclose(loss(image1, image2).mean(), torch.Tensor([0.01]), rtol = 1e-3)
