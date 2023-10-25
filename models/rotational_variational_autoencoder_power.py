@@ -46,9 +46,6 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         self.input_size = 128
         self.total_input_size = self.input_size * self.input_size * 3
 
-        if self.input_size > self.crop_size:
-            raise ValueError("Image size to small.")
-
         self.example_input_array = torch.randn(1, 3, self.input_size, self.input_size)
 
         self.conv0 = nn.Conv2d(in_channels=3, out_channels=16,

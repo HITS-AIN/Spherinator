@@ -19,11 +19,11 @@ def test_reconstruction_loss():
     torch.manual_seed(0)
     z_dim = 2
     model = RotationalVariationalAutoencoderPower(z_dim=z_dim)
-    image1 = torch.zeros((2,3,64,64))
-    image2 = torch.ones((2,3,64,64))
-    image3 = torch.zeros((2,3,64,64))
+    image1 = torch.zeros((2,3,128,128))
+    image2 = torch.ones((2,3,128,128))
+    image3 = torch.zeros((2,3,128,128))
     image3[0,0,0,0] = 1.0
 
     assert torch.isclose(model.reconstruction_loss(image1, image1), torch.Tensor([0., 0.]), atol = 1e-3).all()
-    assert torch.isclose(model.reconstruction_loss(image1, image2), torch.Tensor([12288., 12288.]), atol = 1e-3).all()
+    assert torch.isclose(model.reconstruction_loss(image1, image2), torch.Tensor([49152., 49152.]), atol = 1e-3).all()
     assert torch.isclose(model.reconstruction_loss(image1, image3), torch.Tensor([1., 0.]), atol = 1e-3).all()
