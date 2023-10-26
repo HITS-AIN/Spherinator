@@ -7,7 +7,7 @@ model:
     z_dim: 3
     image_size: 363
     rotations: 36
-    beta: 1.0
+    beta: 0.0
 
 data:
   class_path: data.IllustrisSdssDataModule
@@ -45,6 +45,7 @@ trainer:
   accelerator: gpu
   devices: 1
   precision: 32
+  # overfit_batches: 1
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger
     init_args:
