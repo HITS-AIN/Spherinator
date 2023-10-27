@@ -54,7 +54,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/hipster.py",
-            "args": "hips --config ${workspaceFolder}/experiments/illustris.yaml --checkpoint ${workspaceFolder}/Illustris128_128_E2026_S202700.ckpt --max_order 4 --hierarchy 8 --crop_size 256 --output_size 64 --output_folder /local_data/AIN/Data/HiPSter --title IllustrisV4",
+            "args": "hips --config ${workspaceFolder}/experiments/illustris.yaml --checkpoint ${workspaceFolder}/Illustris128_128_E2026_S202700.ckpt --max_order 4 --hierarchy 8 --crop_size 256 --output_size 64 --output_folder /local_data/AIN/Data/HiPSter --title IllustrisV4 --distortion",
             "console": "integratedTerminal",
             "justMyCode": true
         },

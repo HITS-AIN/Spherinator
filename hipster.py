@@ -26,7 +26,7 @@ class Hipster():
     model that projects images on a sphere.
     """
 
-    def __init__(self, output_folder, title, max_order=3, hierarchy=1, crop_size=64, output_size=128, distortion_correction=True):
+    def __init__(self, output_folder, title, max_order=3, hierarchy=1, crop_size=64, output_size=128, distortion_correction=False):
         """ Initializes the hipster
 
         Args:
@@ -449,7 +449,6 @@ def create_hips_tile(hipster, model, i, range_j):
         print('.', end="", flush=True)
 
 if __name__ == "__main__":
-    #multiprocessing.set_start_method('fork')
     parser = argparse.ArgumentParser(description="Transform a model in a HiPS representation")
     parser.add_argument("task", help="Execution task [hips, catalog, projection, all].")
     parser.add_argument("--config", "-c", default="config.yaml",
@@ -468,6 +467,8 @@ if __name__ == "__main__":
                         help="Output of HiPS (default = './HiPSter').")
     parser.add_argument("--title", default='IllustrisV2',
                         help="HiPS title (default = 'IllustrisV2').")
+    parser.add_argument("--distortion", action="store_true",
+                        help="Enable distortion correction.")
 
     args = parser.parse_args()
     with open(args.config, "r", encoding="utf-8") as stream:
@@ -481,7 +482,6 @@ if __name__ == "__main__":
         model_class = getattr(module, class_name)
         model_init_args = config['model']['init_args']
         myModel = model_class(**model_init_args)
-
         checkpoint = torch.load(args.checkpoint)
         myModel.load_state_dict(checkpoint["state_dict"])
 
@@ -497,7 +497,8 @@ if __name__ == "__main__":
 
     myHipster = Hipster(args.output_folder, args.title,
                         max_order=args.max_order, hierarchy=args.hierarchy,
-                        crop_size=args.crop_size, output_size=args.output_size)
+                        crop_size=args.crop_size, output_size=args.output_size,
+                        distortion_correction=args.distortion)
 
     if (args.task == "hips" or args.task == "all"):
         myHipster.generate_hips(myModel)
