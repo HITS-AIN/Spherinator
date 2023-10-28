@@ -7,7 +7,7 @@ model:
     z_dim: 3
     image_size: 91
     rotations: 36
-    beta: 2.0
+    beta: 0.001
 
 data:
   class_path: data.ShapesDataModule
@@ -37,7 +37,7 @@ lr_scheduler:
 trainer:
   max_epochs: -1
   accelerator: gpu
-  devices: 1
+  devices: [2]
   precision: 32
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger

@@ -1,7 +1,7 @@
 __pycache__
 *.ckpt
 *.ncu-rep
+config.yaml
 HiPSter/
 lightning_logs/
-local/
 wandb/
