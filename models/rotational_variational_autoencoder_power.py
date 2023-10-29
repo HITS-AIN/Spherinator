@@ -178,7 +178,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
     def reconstruction_loss(self, images, reconstructions):
         return torch.sqrt(nn.MSELoss(reduction='none')(
             reconstructions.reshape(-1, self.total_input_size),
-            images.reshape(-1, self.total_input_size)).mean(-1))
+            images.reshape(-1, self.total_input_size)).mean(dim=1))
         # return nn.MSELoss(reduction='none')(
         #     reconstructions.reshape(-1, self.total_input_size),
         #     images.reshape(-1, self.total_input_size)).sum(-1)
