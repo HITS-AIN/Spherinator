@@ -50,7 +50,6 @@ class Hipster():
         self.hierarchy = hierarchy
         self.crop_size = crop_size
         self.output_size = output_size
-        self.model_size = 128
         self.distortion_correction = distortion_correction
 
     def check_folders(self, base_folder):
@@ -270,7 +269,7 @@ class Hipster():
             for r in range(rotation_steps):
                 rot_images = functional.rotate(images, 360/rotation_steps*r, expand=False) # rotate
                 crop_images = functional.center_crop(rot_images, [self.crop_size, self.crop_size]) # crop
-                scaled_images = functional.resize(crop_images, [self.model_size, self.model_size], antialias=False) # scale
+                scaled_images = functional.resize(crop_images, [model.get_input_size(), model.get_input_size()], antialias=False) # scale
                 with torch.no_grad():
                     coordinates = model.project(scaled_images)
                     reconstruction = model.reconstruct(coordinates)

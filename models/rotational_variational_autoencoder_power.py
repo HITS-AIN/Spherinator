@@ -83,6 +83,9 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         self.deconv6 = nn.ConvTranspose2d(in_channels=16, out_channels=3,
                                           kernel_size=(2,2), stride=1, padding=0) #128x128
 
+    def get_input_size(self):
+        return self.input_size
+
     def encode(self, x):
         x = F.relu(self.conv0(x))
         x = self.pool0(x)

@@ -51,6 +51,9 @@ class RotationalAutoencoder(SpherinatorModule):
         self.deconv6 = nn.ConvTranspose2d(in_channels=16, out_channels=3,
                                           kernel_size=(2,2), stride=1, padding=0) #128x128
 
+    def get_input_size(self):
+        return self.input_size
+
     def encode(self, x):
         x = F.relu(self.conv0(x))
         x = self.pool0(x)
@@ -99,8 +102,8 @@ class RotationalAutoencoder(SpherinatorModule):
         losses = torch.zeros(images.shape[0], self.rotations)
         for i in range(self.rotations):
             rotate = functional.rotate(images, 360.0/self.rotations*i, expand=False) # rotate
-            crop = functional.center_crop(rotate, [256,256]) # crop
-            scaled = functional.resize(crop, [128,128], antialias=False) # scale
+            crop = functional.center_crop(rotate, [256,256]) # crop #TODO config?
+            scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False) # scale
             reconstruction, coordinates = self.forward(scaled)
             losses[:,i] = self.spherical_loss(scaled, reconstruction, coordinates)
         loss = torch.mean(torch.min(losses, dim=1)[0])
