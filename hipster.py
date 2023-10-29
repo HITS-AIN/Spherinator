@@ -50,6 +50,7 @@ class Hipster():
         self.hierarchy = hierarchy
         self.crop_size = crop_size
         self.output_size = output_size
+        self.model_size = 128
         self.distortion_correction = distortion_correction
 
     def check_folders(self, base_folder):
@@ -233,7 +234,7 @@ class Hipster():
         self.create_hips_properties("model")
         self.create_index_file("model")
         print("creating tiles:")
-        n_workers = 4
+        n_workers = 1
         for i in range(self.max_order+1):
             print ("  order "+str(i)+" ["+
                    str(12*4**i).rjust(int(math.log10(12*4**self.max_order))+1," ")+" tiles]:",
@@ -262,14 +263,14 @@ class Hipster():
         result_rotations = torch.zeros((0))
         result_losses = torch.zeros((0))
         for batch in dataloader:
-            print(".", end="")
+            print(".", end="", flush=True)
             losses = torch.zeros((batch['id'].shape[0],rotation_steps))
             coords = torch.zeros((batch['id'].shape[0],rotation_steps,3))
             images = batch['image']
             for r in range(rotation_steps):
                 rot_images = functional.rotate(images, 360/rotation_steps*r, expand=False) # rotate
                 crop_images = functional.center_crop(rot_images, [self.crop_size, self.crop_size]) # crop
-                scaled_images = functional.resize(crop_images, [self.output_size, self.output_size], antialias=False) # scale
+                scaled_images = functional.resize(crop_images, [self.model_size, self.model_size], antialias=False) # scale
                 with torch.no_grad():
                     coordinates = model.project(scaled_images)
                     reconstruction = model.reconstruct(coordinates)
