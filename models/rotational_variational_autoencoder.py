@@ -190,5 +190,6 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         return self.decode(coordinates)
 
     def reconstruction_loss(self, images, reconstructions):
-        return nn.MSELoss(reduction='none')(
-            reconstructions.reshape(-1, 3*64*64), images.reshape(-1, 3*64*64)).sum(-1).mean()
+        return torch.sqrt(nn.MSELoss(reduction='none')(
+            reconstructions.reshape(-1, self.total_input_size),
+            images.reshape(-1, self.total_input_size)).mean(dim=1))
