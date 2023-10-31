@@ -1,0 +1,19 @@
+trainer:
+  profiler:
+    class_path: lightning.pytorch.profilers.PyTorchProfiler
+    init_args:
+      # default dirpath is trainer.log_dir
+      # dirpath: /local_data/doserbd/train/illustris-power-profile
+      filename: profile
+      export_to_chrome: true
+      use_cuda: true
+    dict_kwargs: # kwargs for the PyTorch profiler
+      extended: false
+      profile_memory: false
+
+# For cuda profiling num_workers must be 0
+# https://github.com/pytorch/pytorch/issues/21016
+data:
+  class_path: data.IllustrisSdssDataModule
+  init_args:
+    num_workers: 0
