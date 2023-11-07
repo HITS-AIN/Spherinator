@@ -13,6 +13,7 @@ else:
     print('debug off')
 
 # Set the default precision of torch operations to float32
+# See https://github.com/Lightning-AI/lightning/discussions/16698
 torch.set_float32_matmul_precision('high')
 
 if __name__ == "__main__":
