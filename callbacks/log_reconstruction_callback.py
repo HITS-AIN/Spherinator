@@ -11,13 +11,14 @@ class LogReconstructionCallback(Callback):
 
     def on_train_epoch_end(self, trainer, pl_module):
 
-        # Return if no logger is used
-        if trainer.logger is None:
+        # Return if no wandb logger is used
+        if trainer.logger is None or trainer.logger.__class__.__name__ not in ["WandbLogger", "MyLogger"]:
             return
 
         # Generate some random samples from the validation set
         samples = next(iter(trainer.train_dataloader))['image']
         samples = samples[:self.num_samples]
+        samples = samples.to(pl_module.device)
 
         # Generate reconstructions of the samples using the model
         with torch.no_grad():
@@ -43,13 +44,13 @@ class LogReconstructionCallback(Callback):
         # Plot the original samples and their reconstructions side by side
         fig, axs = plt.subplots(self.num_samples, 2, figsize=(6, 2*self.num_samples))
         for i in range(self.num_samples):
-            axs[i, 0].imshow(samples[i,:,:,:,min_idx[i]].permute(1, 2, 0))
+            axs[i, 0].imshow(images[i,:,:,:,min_idx[i]].cpu().detach().numpy().T)
             axs[i, 0].set_title("Original")
             axs[i, 0].axis("off")
-            axs[i, 1].imshow(recon[i,:,:,:,min_idx[i]].permute(1, 2, 0))
+            axs[i, 1].imshow(recons[i,:,:,:,min_idx[i]].cpu().detach().numpy().T)
             axs[i, 1].set_title("Reconstruction")
             axs[i, 1].axis("off")
         plt.tight_layout()
 
         # Log the figure at W&B
-        trainer.logger.log({"Reconstructions": fig})
+        trainer.logger.log_image(key="Reconstructions", images=[fig])
