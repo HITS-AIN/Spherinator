@@ -11,8 +11,7 @@ trainer:
       # dirpath: /local_data/doserbd/train/illustris-power-profile
       filename: profile
       export_to_chrome: true
-      # use_cuda: true
-    dict_kwargs: # kwargs for the PyTorch profiler
+      # kwargs for the PyTorch profiler
       activities:
        - ProfilerActivity.CPU
        - ProfilerActivity.CUDA
