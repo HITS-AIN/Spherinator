@@ -51,3 +51,12 @@ The following command generates a HiPS representation and a catalog showing the 
 ```
 
 Call `./hipster.py --help` for more information.
+
+
+## Profiling
+
+The Pytorch profiler can be used by appending the `pytorch-profiler.yaml` config file to the command line.
+
+```bash
+python main.py fit -c experiments/shapes-power.yaml -c experiments/pytorch-profiler.yaml
+```

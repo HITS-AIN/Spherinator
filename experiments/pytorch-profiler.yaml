@@ -1,4 +1,5 @@
 trainer:
+  max_epochs: 1
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger
     init_args:
@@ -11,16 +12,16 @@ trainer:
       # dirpath: /local_data/doserbd/train/illustris-power-profile
       filename: profile
       export_to_chrome: true
+      use_cuda: true
       # kwargs for the PyTorch profiler
-      activities:
-       - ProfilerActivity.CPU
-       - ProfilerActivity.CUDA
+      # activities:
+      #  - ProfilerActivity.CPU
+      #  - ProfilerActivity.CUDA
       # extended: false
       # profile_memory: false
 
 # For cuda profiling num_workers must be 0
 # https://github.com/pytorch/pytorch/issues/21016
 data:
-  class_path: data.IllustrisSdssDataModule
   init_args:
     num_workers: 0

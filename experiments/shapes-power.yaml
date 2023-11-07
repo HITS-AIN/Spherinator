@@ -37,14 +37,15 @@ lr_scheduler:
 trainer:
   max_epochs: -1
   accelerator: gpu
-  devices: [2]
+  devices: 1
   precision: 32
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger
     init_args:
       project: spherinator
-      name: shapes-power
-      log_model: True
+      log_model: all
+      entity: bernddoser
+      tags: [shapes, power]
   callbacks:
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
