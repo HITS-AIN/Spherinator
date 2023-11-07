@@ -49,8 +49,7 @@ def test_on_train_epoch_end():
     z_dim = 3
     model = RotationalVariationalAutoencoderPower(z_dim=z_dim)
 
-    datamodule = ShapesDataModule("/hits/basement/its/doserbd/projects/data/machine-learning/pink/shapes/",
-                                   num_workers=1, batch_size=12)
+    datamodule = ShapesDataModule("tests/data/shapes", num_workers=1, batch_size=12)
     datamodule.setup("fit")
     # data_loader = data_module.train_dataloader()
 
