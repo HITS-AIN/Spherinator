@@ -1,4 +1,9 @@
 trainer:
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: profiling
+      log_model: True
   profiler:
     class_path: lightning.pytorch.profilers.PyTorchProfiler
     init_args:
@@ -8,7 +13,9 @@ trainer:
       export_to_chrome: true
       # use_cuda: true
     dict_kwargs: # kwargs for the PyTorch profiler
-      activities: [ "cpu", "cuda", "nvtx" ]
+      activities:
+       - ProfilerActivity.CPU
+       - ProfilerActivity.CUDA
       # extended: false
       # profile_memory: false
 
