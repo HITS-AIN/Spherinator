@@ -13,16 +13,23 @@ class ShapesDataset(Dataset):
     """
     def __init__(self,
                  data_directory: str,
-                 transform = None):
+                 transform = None,
+                 download: bool = False):
         """ Initializes an Illustris sdss data set.
 
         Args:
             data_directory (str): The data directory.
             transform (torchvision.transforms.Compose, optional): A single or a set of
                 transformations to modify the images. Defaults to None.
+            download (bool, optional): Wether or not to download the data. Defaults to False.
         """
         self.data_directory = data_directory
         self.transform = transform
+        self.download = download
+
+        if self.download:
+            raise NotImplementedError("Download not implemented yet.")
+
         self.images = np.empty((0,64,64), np.float32)
         for file in os.listdir(data_directory):
             self.images = np.append(self.images, np.load(os.path.join(data_directory, file)),

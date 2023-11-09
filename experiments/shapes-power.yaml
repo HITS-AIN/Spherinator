@@ -47,6 +47,9 @@ trainer:
       entity: bernddoser
       tags: [shapes, power]
   callbacks:
+    - class_path: callbacks.LogReconstructionCallback
+      init_args:
+        num_samples: 4
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
         monitor: train_loss

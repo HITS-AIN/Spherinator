@@ -60,3 +60,12 @@ The Pytorch profiler can be used by appending the `pytorch-profiler.yaml` config
 ```bash
 python main.py fit -c experiments/shapes-power.yaml -c experiments/pytorch-profiler.yaml
 ```
+
+
+## Visualize reconstructed images during training
+
+The config-file [wandb-log-reconstructions.yaml](experiments/wandb-log-reconstructions.yaml) can be appended to visualize the reconstructed images during training at W&B.
+
+```bash
+python main.py fit -c experiments/illustris.yaml -c experiments/wandb-log-reconstructions.yaml
+```

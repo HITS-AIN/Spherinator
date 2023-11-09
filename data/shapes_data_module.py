@@ -16,14 +16,17 @@ class ShapesDataModule(pl.LightningDataModule):
                  shuffle: bool = True,
                  image_size: int = 91,
                  batch_size: int = 32,
-                 num_workers: int = 1):
+                 num_workers: int = 1,
+                 download: bool = False):
         """ Initializes the data loader
 
         Args:
             data_directories (List[str]): The data directory
             shuffle (bool, optional): Wether or not to shuffle whe reading. Defaults to True.
+            image_size (int, optional): The size of the images. Defaults to 91.
             batch_size (int, optional): The batch size for training. Defaults to 32.
             num_workers (int, optional): How many worker to use for loading. Defaults to 1.
+            download (bool, optional): Wether or not to download the data. Defaults to False.
         """
         super().__init__()
 
@@ -32,11 +35,12 @@ class ShapesDataModule(pl.LightningDataModule):
         self.image_size = image_size
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.download = download
 
         self.transform_train = transforms.Compose([
             transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
             transforms.Normalize((0,0,0), (290,290,290)),
-            transforms.Resize((self.image_size, self.image_size), antialias=True)
+            transforms.Resize((self.image_size, self.image_size), antialias="none"),
         ])
         self.transform_predict = self.transform_train
         self.transform_val = self.transform_train
@@ -57,7 +61,8 @@ class ShapesDataModule(pl.LightningDataModule):
         """
         if stage == "fit":
             self.data_train = ShapesDataset(data_directory=self.data_directory,
-                                            transform=self.transform_train)
+                                            transform=self.transform_train,
+                                            download=self.download)
 
             self.dataloader_train = DataLoader(self.data_train,
                                               batch_size=self.batch_size,
@@ -65,7 +70,8 @@ class ShapesDataModule(pl.LightningDataModule):
                                               num_workers=self.num_workers)
         if stage == "predict":
             self.data_predict = ShapesDataset(data_directory=self.data_directory,
-                                                     transform=self.transform_predict)
+                                              transform=self.transform_predict,
+                                              download=self.download)
 
             self.dataloader_predict = DataLoader(self.data_predict,
                                                  batch_size=self.batch_size,
@@ -74,7 +80,8 @@ class ShapesDataModule(pl.LightningDataModule):
 
         if stage == "val":
             self.data_val = ShapesDataset(data_directory=self.data_directory,
-                                                 transform=self.transform_val)
+                                          transform=self.transform_val,
+                                          download=self.download)
 
             self.dataloader_val = DataLoader(self.data_val,
                                              batch_size=self.batch_size,
