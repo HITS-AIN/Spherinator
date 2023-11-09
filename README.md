@@ -51,3 +51,12 @@ The following command generates a HiPS representation and a catalog showing the 
 ```
 
 Call `./hipster.py --help` for more information.
+
+
+## Visualize reconstructed images during training
+
+The config-file [wandb-log-reconstructions.yaml](experiments/wandb-log-reconstructions.yaml) can be appended to visualize the reconstructed images during training at W&B.
+
+```bash
+python main.py fit -c experiments/illustris.yaml -c experiments/wandb-log-reconstructions.yaml
+```

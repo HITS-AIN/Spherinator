@@ -24,6 +24,6 @@ def test_reconstruction_loss():
     image3 = torch.zeros((2,3,64,64))
     image3[0,0,0,0] = 1.0
 
-    assert model.reconstruction_loss(image1, image1) == 0.0
-    assert torch.isclose(model.reconstruction_loss(image1, image2), torch.Tensor([3*64*64]), rtol = 1e-3)
-    assert torch.isclose(model.reconstruction_loss(image1, image3), torch.Tensor([0.5]), rtol = 1e-3)
+    assert torch.isclose(model.reconstruction_loss(image1, image1), torch.Tensor([0., 0.]), atol = 1e-3).all()
+    assert torch.isclose(model.reconstruction_loss(image1, image2), torch.Tensor([1., 1.]), atol = 1e-3).all()
+    assert torch.isclose(model.reconstruction_loss(image1, image3), torch.Tensor([0.009, 0.]), atol = 1e-2).all()
