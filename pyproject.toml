@@ -6,3 +6,6 @@ testpaths = 'tests'
 filterwarnings = [
     "ignore::DeprecationWarning"
 ]
+
+[tool.pylint.typecheck]
+generated-members=numpy.*,torch.*
