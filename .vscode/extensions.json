@@ -2,7 +2,6 @@
     "recommendations": [
         "alefragnani.numbered-bookmarks",
         "donjayamanne.python-extension-pack",
-        "eamodio.gitlens",
         "github.vscode-github-actions",
         "mhutchie.git-graph",
         "ms-python.black-formatter",
