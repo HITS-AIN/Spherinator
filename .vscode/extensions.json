@@ -10,6 +10,7 @@
         "github.vscode-github-actions",
         "eamodio.gitlens",
         "nvidia.nsight-vscode-edition",
-        "ziruiwang.nvidia-monitor"
+        "ziruiwang.nvidia-monitor",
+        "ms-python.black-formatter"
     ]
 }
