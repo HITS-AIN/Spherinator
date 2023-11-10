@@ -9,7 +9,6 @@ from models import RotationalVariationalAutoencoderPower
 
 
 class MyLogger(Logger):
-
     @property
     def name(self):
         return "MyLogger"
@@ -44,18 +43,25 @@ class MyLogger(Logger):
 
 
 def test_on_train_epoch_end():
-
     # Set up the model and dataloader
     z_dim = 3
     model = RotationalVariationalAutoencoderPower(z_dim=z_dim)
 
-    datamodule = ShapesDataModule("tests/data/shapes", num_workers=1, batch_size=12)
+    datamodule = ShapesDataModule(
+        "tests/data/shapes", num_workers=1, batch_size=12, shuffle=False
+    )
     datamodule.setup("fit")
     # data_loader = data_module.train_dataloader()
 
     logger = MyLogger()
 
-    trainer = Trainer(max_epochs=1, logger=logger, overfit_batches = 2)
+    trainer = Trainer(
+        max_epochs=1,
+        logger=logger,
+        overfit_batches=2,
+        log_every_n_steps=1,
+        enable_checkpointing=False,
+    )
     trainer.fit(model, datamodule=datamodule)
 
     # Set up the callback
