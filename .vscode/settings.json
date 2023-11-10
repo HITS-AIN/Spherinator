@@ -1,14 +1,19 @@
 {
-    "python.analysis.typeCheckingMode": "basic",
-    "python.formatting.provider": "black",
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "editor.defaultFormatter": "ms-python.black-formatter",
     "python.analysis.extraPaths": [
-        "./external/s-vae-pytorch"
+        "./external/s-vae-pytorch",
+        "./external/power_spherical",
     ],
     "python.testing.pytestArgs": [
         "tests"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.analysis.autoImportCompletions": true
 }

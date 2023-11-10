@@ -2,15 +2,15 @@
     "recommendations": [
         "alefragnani.numbered-bookmarks",
         "donjayamanne.python-extension-pack",
+        "eamodio.gitlens",
+        "github.vscode-github-actions",
         "mhutchie.git-graph",
+        "ms-python.black-formatter",
+        "ms-python.isort",
         "ms-python.pylint",
         "ms-toolsai.jupyter",
-        "streetsidesoftware.code-spell-checker",
-        "ms-python.isort",
-        "github.vscode-github-actions",
-        "eamodio.gitlens",
         "nvidia.nsight-vscode-edition",
+        "streetsidesoftware.code-spell-checker",
         "ziruiwang.nvidia-monitor",
-        "ms-python.black-formatter"
     ]
 }
