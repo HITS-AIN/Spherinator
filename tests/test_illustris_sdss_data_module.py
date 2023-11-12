@@ -1,5 +1,7 @@
-from data import IllustrisSdssDataModule
 import torch
+
+from data import IllustrisSdssDataModule
+
 
 def test_empty():
 
