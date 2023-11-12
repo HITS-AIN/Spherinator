@@ -40,6 +40,7 @@ class ShapesDataModule(pl.LightningDataModule):
         self.transform_train = transforms.Compose([
             transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
             transforms.Resize((self.image_size, self.image_size), antialias="none"),
+            transforms.Lambda(lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))),
         ])
         self.transform_predict = self.transform_train
         self.transform_val = self.transform_train

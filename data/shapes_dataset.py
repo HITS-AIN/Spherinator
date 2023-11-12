@@ -8,14 +8,12 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+
 class ShapesDataset(Dataset):
-    """ Test images with four shapes in random rotations.
-    """
-    def __init__(self,
-                 data_directory: str,
-                 transform = None,
-                 download: bool = False):
-        """ Initializes an Illustris sdss data set.
+    """Test images with four shapes in random rotations."""
+
+    def __init__(self, data_directory: str, transform=None, download: bool = False):
+        """Initializes an Illustris sdss data set.
 
         Args:
             data_directory (str): The data directory.
@@ -30,14 +28,17 @@ class ShapesDataset(Dataset):
         if self.download:
             raise NotImplementedError("Download not implemented yet.")
 
-        self.images = np.empty((0,64,64), np.float32)
+        self.images = np.empty((0, 64, 64), np.float32)
         for file in os.listdir(data_directory):
-            image = np.load(os.path.join(data_directory, file)).astype(np.float32)
-            image = (image - np.min(image)) / (np.max(image) - np.min(image)) # Normalize
-            self.images = np.append(self.images, image, axis=0)
+            images = np.load(os.path.join(data_directory, file)).astype(np.float32)
+            # for i in range(images.shape[0]):
+            #     images[i, :, :] = (images[i, :, :] - np.min(images[i, :, :])) / (
+            #         np.max(images[i, :, :]) - np.min(images[i, :, :])
+            #     )  # Normalize
+            self.images = np.append(self.images, images, axis=0)
 
     def __len__(self):
-        """ Return the number of items in the dataset.
+        """Return the number of items in the dataset.
 
         Returns:
             int: Number of items in dataset.
@@ -45,7 +46,7 @@ class ShapesDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        """ Retrieves the item/items with the given indices from the dataset.
+        """Retrieves the item/items with the given indices from the dataset.
 
         Args:
             idx (int or tensor): The index of the item to retrieve.
@@ -58,5 +59,5 @@ class ShapesDataset(Dataset):
         image = torch.Tensor(self.images[idx])
         if self.transform:
             image = self.transform(image)
-        sample = {'image': image, 'id': idx}
+        sample = {"image": image, "id": idx}
         return sample

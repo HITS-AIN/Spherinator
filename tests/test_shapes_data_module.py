@@ -22,5 +22,5 @@ def test_fit():
     assert batch["image"].shape == (32, 3, 91, 91)
     assert batch["image"].dtype == torch.float32
 
-    assert np.isclose(batch["image"].min(), 0.0, atol = 1e-2)
-    assert np.isclose(batch["image"].max(), 1.0, atol = 1e-2)
+    assert np.isclose(batch["image"].min(), 0.0)
+    assert np.isclose(batch["image"].max(), 1.0)
