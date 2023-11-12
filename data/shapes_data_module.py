@@ -3,10 +3,12 @@
 from typing import List
 
 import lightning.pytorch as pl
+import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from data.shapes_dataset import ShapesDataset
+
 
 class ShapesDataModule(pl.LightningDataModule):
     """ Defines access to the ShapesDataset.
