@@ -44,7 +44,7 @@ class LogReconstructionCallback(Callback):
                     pl_module.rotations,
                 )
             )
-            coords = torch.zeros((batch_size, 3, pl_module.rotations))
+            coords = torch.zeros((batch_size, pl_module.z_dim, pl_module.rotations))
             for r in range(pl_module.rotations):
                 rotate = functional.rotate(
                     samples, 360.0 / pl_module.rotations * r, expand=False

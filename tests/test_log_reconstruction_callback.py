@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pytest
 from lightning.pytorch.loggers import Logger
 from lightning.pytorch.trainer import Trainer
 from lightning.pytorch.utilities import rank_zero_only
@@ -42,9 +43,9 @@ class MyLogger(Logger):
         self.logged_items.append((key, images))
 
 
-def test_on_train_epoch_end():
+@pytest.mark.parametrize("z_dim", [2, 3, 4])
+def test_on_train_epoch_end(z_dim):
     # Set up the model and dataloader
-    z_dim = 3
     model = RotationalVariationalAutoencoderPower(z_dim=z_dim)
 
     datamodule = ShapesDataModule(
