@@ -1,10 +1,4 @@
 trainer:
-  max_epochs: 1
-  logger:
-    class_path: lightning.pytorch.loggers.WandbLogger
-    init_args:
-      project: profiling
-      log_model: True
   profiler:
     class_path: lightning.pytorch.profilers.PyTorchProfiler
     init_args:
