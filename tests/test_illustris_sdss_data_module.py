@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 from data import IllustrisSdssDataModule
 
@@ -28,4 +29,6 @@ def test_fits():
 
     assert batch["image"].shape == (1, 3, 363, 363)
     assert batch["image"].dtype == torch.float32
-    assert batch["image"].max() == 1.0
+
+    assert np.isclose(batch["image"].min(), 0.0)
+    assert np.isclose(batch["image"].max(), 1.0)

@@ -32,8 +32,9 @@ class ShapesDataset(Dataset):
 
         self.images = np.empty((0,64,64), np.float32)
         for file in os.listdir(data_directory):
-            self.images = np.append(self.images, np.load(os.path.join(data_directory, file)),
-                axis=0).astype(np.float32)
+            image = np.load(os.path.join(data_directory, file)).astype(np.float32)
+            image = (image - np.min(image)) / (np.max(image) - np.min(image)) # Normalize
+            self.images = np.append(self.images, image, axis=0)
 
     def __len__(self):
         """ Return the number of items in the dataset.

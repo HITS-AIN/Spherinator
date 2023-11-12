@@ -39,7 +39,6 @@ class ShapesDataModule(pl.LightningDataModule):
 
         self.transform_train = transforms.Compose([
             transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
-            transforms.Normalize((0,0,0), (290,290,290)),
             transforms.Resize((self.image_size, self.image_size), antialias="none"),
         ])
         self.transform_predict = self.transform_train
