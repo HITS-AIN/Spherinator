@@ -98,7 +98,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         x = F.relu(self.conv4(x))
         x = self.pool4(x)
         x = x.view(-1, 256*4*4)
-        x = F.sigmoid(self.fc1(x))
+        x = self.fc1(x)
 
         z_mean = self.fc_mean(x)
         z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=1)
