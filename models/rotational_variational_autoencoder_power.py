@@ -66,7 +66,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
         self.fc1 = nn.Linear(256*4*4, h_dim)
         self.fc_mean = nn.Linear(h_dim, z_dim)
-        self.fc_var = nn.Linear(h_dim, 1)
+        self.fc_scale = nn.Linear(h_dim, 1)
         self.fc2 = nn.Linear(z_dim, h_dim)
         self.fc3 = nn.Linear(h_dim, 256*4*4)
 
@@ -103,9 +103,9 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         z_mean = self.fc_mean(x)
         z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=1)
         # SVAE code: the `+ 1` prevent collapsing behaviors
-        z_var = F.softplus(self.fc_var(x)) + 1
+        z_scale = F.softplus(self.fc_scale(x)) + 1
 
-        return z_mean, z_var
+        return z_mean, z_scale
 
     def decode(self, z):
         x = F.tanh(self.fc2(z))
@@ -121,17 +121,17 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         # x = torch.sigmoid(x)
         return x
 
-    def reparameterize(self, z_mean, z_var):
-        q_z = PowerSpherical(z_mean, z_var)
+    def reparameterize(self, z_mean, z_scale):
+        q_z = PowerSpherical(z_mean, z_scale)
         p_z = HypersphericalUniform(self.z_dim, device=z_mean.device)
         return q_z, p_z
 
     def forward(self, x):
-        z_mean, z_var = self.encode(x)
-        q_z, p_z = self.reparameterize(z_mean, z_var.squeeze())
+        z_mean, z_scale = self.encode(x)
+        q_z, p_z = self.reparameterize(z_mean, z_scale.squeeze())
         z = q_z.rsample()
         recon = self.decode(z)
-        return (z_mean, z_var), (q_z, p_z), z, recon
+        return (z_mean, z_scale), (q_z, p_z), z, recon
 
     def training_step(self, batch, batch_idx):
         images = batch["image"]
