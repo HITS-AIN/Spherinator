@@ -103,8 +103,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         z_mean = self.fc_mean(x)
         z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=1)
         # SVAE code: the `+ 1` prevent collapsing behaviors
-        # z_var = F.softplus(self.fc_var(x)) + 0.1
-        z_var = torch.exp(self.fc_var(x)) + 20.0
+        z_var = F.softplus(self.fc_var(x)) + 1
 
         return z_mean, z_var
 
@@ -153,7 +152,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
             losses[:,i] = loss_recon + self.beta * loss_KL
             losses_recon[:,i] = loss_recon
-            losses_KL[:,i] = loss_KL
+            losses_KL[:,i] = self.beta * loss_KL
 
         loss_idx = torch.min(losses, dim=1)[1]
         loss = torch.mean(torch.gather(losses, 1, loss_idx.unsqueeze(1)))
