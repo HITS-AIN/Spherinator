@@ -23,6 +23,7 @@ class IllustrisSdssDataset(Dataset):
             data_directories (List[str]): The directories to scan for images.
             extension (str, optional): The file extension to use for searching for files.
                 Defaults to ".fits".
+            minsize (int, optional): The minimum size of the images to include. Defaults to 100.
             transform (torchvision.transforms.Compose, optional): A single or a set of
                 transformations to modify the images. Defaults to None.
         """
