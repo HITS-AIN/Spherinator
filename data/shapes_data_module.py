@@ -60,8 +60,6 @@ class ShapesDataModule(pl.LightningDataModule):
         self.dataloader_train = None
         self.data_predict = None
         self.dataloader_predict = None
-        self.data_val = None
-        self.dataloader_val = None
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
@@ -100,21 +98,6 @@ class ShapesDataModule(pl.LightningDataModule):
                 num_workers=self.num_workers,
             )
 
-        if stage == "val":
-            self.data_val = ShapesDataset(
-                data_directory=self.data_directory,
-                exclude_files=self.exclude_files,
-                transform=self.transform_val,
-                download=self.download,
-            )
-
-            self.dataloader_val = DataLoader(
-                self.data_val,
-                batch_size=self.batch_size,
-                shuffle=False,
-                num_workers=self.num_workers,
-            )
-
     def train_dataloader(self):
         """Gets the data loader for training.
 
@@ -130,11 +113,3 @@ class ShapesDataModule(pl.LightningDataModule):
             torch.utils.data.DataLoader: The dataloader instance to use for prediction.
         """
         return self.dataloader_predict
-
-    def val_dataloader(self):
-        """Gets the data loader for validation.
-
-        Returns:
-            torch.utils.data.DataLoader: The dataloader instance to use for validation.
-        """
-        return self.dataloader_val
