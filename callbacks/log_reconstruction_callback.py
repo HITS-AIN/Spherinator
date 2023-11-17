@@ -1,7 +1,12 @@
-import matplotlib.pyplot as plt
+import gc
+
+import matplotlib
 import torch
 import torchvision.transforms.functional as functional
 from lightning.pytorch.callbacks import Callback
+from matplotlib import figure
+
+matplotlib.use('Agg')
 
 
 class LogReconstructionCallback(Callback):
@@ -27,24 +32,20 @@ class LogReconstructionCallback(Callback):
             batch_size = samples.shape[0]
             losses = torch.zeros(batch_size, pl_module.rotations)
             images = torch.zeros(
-                (
-                    batch_size,
-                    3,
-                    pl_module.input_size,
-                    pl_module.input_size,
-                    pl_module.rotations,
-                )
+                batch_size,
+                3,
+                pl_module.input_size,
+                pl_module.input_size,
+                pl_module.rotations,
             )
             recons = torch.zeros(
-                (
-                    batch_size,
-                    3,
-                    pl_module.input_size,
-                    pl_module.input_size,
-                    pl_module.rotations,
-                )
+                batch_size,
+                3,
+                pl_module.input_size,
+                pl_module.input_size,
+                pl_module.rotations,
             )
-            coords = torch.zeros((batch_size, pl_module.z_dim, pl_module.rotations))
+            coords = torch.zeros(batch_size, pl_module.z_dim, pl_module.rotations)
             for r in range(pl_module.rotations):
                 rotate = functional.rotate(
                     samples, 360.0 / pl_module.rotations * r, expand=False
@@ -66,15 +67,24 @@ class LogReconstructionCallback(Callback):
             min_idx = torch.min(losses, dim=1)[1]
 
         # Plot the original samples and their reconstructions side by side
-        fig, axs = plt.subplots(self.num_samples, 2, figsize=(6, 2 * self.num_samples))
+        fig = figure.Figure(figsize=(6, 2 * self.num_samples))
+        ax = fig.subplots(self.num_samples, 2)
         for i in range(self.num_samples):
-            axs[i, 0].imshow(images[i, :, :, :, min_idx[i]].cpu().detach().numpy().T)
-            axs[i, 0].set_title("Original")
-            axs[i, 0].axis("off")
-            axs[i, 1].imshow(recons[i, :, :, :, min_idx[i]].cpu().detach().numpy().T)
-            axs[i, 1].set_title("Reconstruction")
-            axs[i, 1].axis("off")
-        plt.tight_layout()
+            ax[i, 0].imshow(images[i, :, :, :, min_idx[i]].cpu().detach().numpy().T)
+            ax[i, 0].set_title("Original")
+            ax[i, 0].axis("off")
+            ax[i, 1].imshow(recons[i, :, :, :, min_idx[i]].cpu().detach().numpy().T)
+            ax[i, 1].set_title("Reconstruction")
+            ax[i, 1].axis("off")
+        fig.tight_layout()
 
         # Log the figure at W&B
         trainer.logger.log_image(key="Reconstructions", images=[fig])
+
+        # Clear the figure and free memory
+        # Memory leak issue: https://github.com/matplotlib/matplotlib/issues/27138
+        for i in range(self.num_samples):
+            ax[i, 0].clear()
+            ax[i, 1].clear()
+        fig.clear()
+        gc.collect()
