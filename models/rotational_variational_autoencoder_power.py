@@ -83,6 +83,9 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         self.deconv6 = nn.ConvTranspose2d(in_channels=16, out_channels=3,
                                           kernel_size=(2,2), stride=1, padding=0) #128x128
 
+        with torch.no_grad():
+            self.fc_scale.bias.fill_(1.0e3)
+
     def get_input_size(self):
         return self.input_size
 
@@ -98,7 +101,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         x = F.relu(self.conv4(x))
         x = self.pool4(x)
         x = x.view(-1, 256*4*4)
-        x = self.fc1(x)
+        x = F.relu(self.fc1(x))
 
         z_mean = self.fc_mean(x)
         z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=1)
