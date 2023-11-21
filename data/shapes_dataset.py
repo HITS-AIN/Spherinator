@@ -4,7 +4,6 @@ import os
 from typing import List
 
 import numpy as np
-from sklearn import dummy
 import torch
 from torch.utils.data import Dataset
 
