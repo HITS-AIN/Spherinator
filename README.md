@@ -1,4 +1,5 @@
 [![Build Status](https://github.com/HITS-AIN/Spherinator/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/HITS-AIN/Spherinator/actions/workflows/python-package.yml?branch=main)
+![versions](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue)
 
 # Spherinator
 

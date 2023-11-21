@@ -1,7 +1,6 @@
 """ Provides access to the Illustris sdss images.
 """
 import os
-from typing import List
 
 import numpy
 import torch
@@ -13,14 +12,14 @@ class IllustrisSdssDataset(Dataset):
     """ Provides access to Illustris sdss like images.
     """
     def __init__(self,
-                 data_directories: List[str],
+                 data_directories: list[str],
                  extension: str = ".fits",
                  minsize: int = 100,
                  transform = None):
         """ Initializes an Illustris sdss data set.
 
         Args:
-            data_directories (List[str]): The directories to scan for images.
+            data_directories (list[str]): The directories to scan for images.
             extension (str, optional): The file extension to use for searching for files.
                 Defaults to ".fits".
             minsize (int, optional): The minimum size of the images to include. Defaults to 100.

@@ -1,6 +1,6 @@
 """ Defines access to the ShapesDataset.
 """
-from typing import List
+from typing import Union
 
 import lightning.pytorch as pl
 import torch
@@ -16,7 +16,7 @@ class ShapesDataModule(pl.LightningDataModule):
     def __init__(
         self,
         data_directory: str,
-        exclude_files: List[str] | str = [],
+        exclude_files: Union[list[str], str] = [],
         shuffle: bool = True,
         image_size: int = 91,
         batch_size: int = 32,
@@ -26,8 +26,8 @@ class ShapesDataModule(pl.LightningDataModule):
         """Initializes the data loader
 
         Args:
-            data_directories (List[str]): The data directory
-            exclude_files (List[str], optional): A list of files to exclude. Defaults to [].
+            data_directory (str): The data directory
+            exclude_files (list[str] | str, optional): A list of files to exclude. Defaults to [].
             shuffle (bool, optional): Wether or not to shuffle whe reading. Defaults to True.
             image_size (int, optional): The size of the images. Defaults to 91.
             batch_size (int, optional): The batch size for training. Defaults to 32.

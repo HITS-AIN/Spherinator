@@ -1,7 +1,7 @@
 """ Test images with four shapes in random rotations.
 """
 import os
-from typing import List
+from typing import Union
 
 import numpy as np
 import torch
@@ -14,15 +14,15 @@ class ShapesDataset(Dataset):
     def __init__(
         self,
         data_directory: str,
-        exclude_files: List[str] | str = [],
-        transform=None,
+        exclude_files: Union[list[str], str] = [],
+        transform = None,
         download: bool = False,
     ):
         """Initializes the data set.
 
         Args:
             data_directory (str): The data directory.
-            exclude_files (List[str], optional): A list of files to exclude. Defaults to [].
+            exclude_files (list[str] | str, optional): A list of files to exclude. Defaults to [].
             transform (torchvision.transforms.Compose, optional): A single or a set of
                 transformations to modify the images. Defaults to None.
             download (bool, optional): Wether or not to download the data. Defaults to False.
