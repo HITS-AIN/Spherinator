@@ -3,7 +3,7 @@ trainer:
     class_path: lightning.pytorch.loggers.WandbLogger
     init_args:
       project: spherinator
-      log_model: all
+      log_model: True
       entity: ain-space
       tags:
         - log-reconstructions

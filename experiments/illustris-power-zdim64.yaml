@@ -1,11 +1,11 @@
 seed_everything: 42
-# ckpt_path: /local_data/doserbd/train/illustris-power-72rot/spherinator/br6psjxt/checkpoints/epoch=377-step=248125.ckpt
+# ckpt_path: /local_data/doserbd/train/illustris-power-zdim4/spherinator/iuvs47h2/checkpoints/epoch=96-step=38509.ckpt
 
 model:
   class_path: models.RotationalVariationalAutoencoderPower
   init_args:
     h_dim: 256
-    z_dim: 3
+    z_dim: 64
     image_size: 363
     rotations: 36
     beta: 1.0e-3
@@ -44,8 +44,9 @@ optimizer:
 trainer:
   max_epochs: -1
   accelerator: gpu
-  devices: [3]
+  devices: [1]
   precision: 32
+  # overfit_batches: 100
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger
     init_args:
