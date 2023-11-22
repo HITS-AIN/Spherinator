@@ -1,3 +1,47 @@
+[tool.poetry]
+name = "spherinator"
+version = "0.1.0"
+description = "Rotation-Invariant Hyperspherical Variational Convolutional Autoencoder"
+authors = [
+    "Kai Polsterer <kai.polsterer@h-its.org",
+    "Bernd Doser <bernd.doser@h-its.org>",
+    "Andreas Fehlner <andreas.fehlner@h-its.org>",
+    "Sebastian T. Gomez <sebastian.trujillogomez@h-its.org>",
+]
+license = "Apache-2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+astropy = "5.3.4"
+lightning = "2.1.2"
+matplotlib = "3.8.2"
+python = "^3.9"
+scikit-image = "0.22.0"
+scipy = "1.11.4"
+torch = "2.1.1"
+torchvision = "0.16.1"
+
+[tool.poetry.group.dev.dependencies]
+healpy = "1.16.6"
+ipykernel = "6.26.0"
+jsonargparse = "4.27.0"
+jupytext = "1.15.2"
+numpy = "1.26.2"
+onnx = "1.15.0"
+onnxruntime = "1.16.3"
+pandas = "2.1.3"
+pip-licenses = "4.3.3"
+pytest = "7.4.3"
+pytest-cov = "4.1.0"
+scikit-learn = "1.3.2"
+tensorboard = "2.15.1"
+tensorrt = "8.6.1.post1"
+wandb = "0.16.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.pytest]
 timeout = 300
 testpaths = 'tests'
