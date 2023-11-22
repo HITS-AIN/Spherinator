@@ -3,7 +3,7 @@ name = "spherinator"
 version = "0.1.0"
 description = "Rotation-Invariant Hyperspherical Variational Convolutional Autoencoder"
 authors = [
-    "Kai Polsterer <kai.polsterer@h-its.org",
+    "Kai Polsterer <kai.polsterer@h-its.org>",
     "Bernd Doser <bernd.doser@h-its.org>",
     "Andreas Fehlner <andreas.fehlner@h-its.org>",
     "Sebastian T. Gomez <sebastian.trujillogomez@h-its.org>",
@@ -22,6 +22,7 @@ torch = "2.1.1"
 torchvision = "0.16.1"
 
 [tool.poetry.group.dev.dependencies]
+flake8 = "6.1.0"
 healpy = "1.16.6"
 ipykernel = "6.26.0"
 jsonargparse = "4.27.0"
@@ -35,7 +36,6 @@ pytest = "7.4.3"
 pytest-cov = "4.1.0"
 scikit-learn = "1.3.2"
 tensorboard = "2.15.1"
-tensorrt = "8.6.1.post1"
 wandb = "0.16.0"
 
 [build-system]
