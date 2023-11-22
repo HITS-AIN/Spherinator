@@ -2,7 +2,6 @@
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
     "python.analysis.typeCheckingMode": "basic",
-    "editor.defaultFormatter": "ms-python.black-formatter",
     "python.analysis.extraPaths": [
         "./external/s-vae-pytorch",
         "./external/power_spherical",
@@ -13,7 +12,8 @@
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": false,
     },
     "python.analysis.autoImportCompletions": true
 }

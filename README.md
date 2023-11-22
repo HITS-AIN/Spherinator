@@ -24,6 +24,16 @@ git submodule update
 ```
 
 
+## Python virtual environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+... DO YOUR WORK ...
+deactivate
+```
+
+
 ## Conda environment
 
 Based on [Miniconda](https://docs.conda.io/en/latest/miniconda.html) all dependencies can be installed in a conda environment. The environment can be created and activated with the following commands:
