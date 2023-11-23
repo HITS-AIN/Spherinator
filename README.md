@@ -52,7 +52,12 @@ conda activate spherinator
 python spherinator.py fit -c experiments/illustris-power.yaml
 ```
 
-Arguments can be overwritten on the command line. For example, `--model.init_args.z_dim 16` overwrites the `z_dim` argument in the YAML file.
+Arguments can be directly defined on the command line and overwrite the YAML file.
+Examples:
+
+- Define number of latent dimensions: `--model.init_args.z_dim 16`
+- Define GPU indices: `--trainer.devices [0,1]`
+- Define number of epochs: `--trainer.max_epochs 100`
 
 
 ## Generate HiPS and catalog

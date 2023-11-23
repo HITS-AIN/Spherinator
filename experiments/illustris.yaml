@@ -3,6 +3,7 @@ seed_everything: 42
 model:
   class_path: models.RotationalAutoencoder
   init_args:
+    image_size: 363
     bottleneck: 3
     rotations: 36
 
@@ -17,9 +18,9 @@ data:
                        "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data/"]
     extension: .fits
     minsize: 100
-    batch_size: 128
+    batch_size: 512
     shuffle: True
-    num_workers: 32
+    num_workers: 16
 
 optimizer:
   class_path: torch.optim.Adam
@@ -40,7 +41,5 @@ lr_scheduler:
 trainer:
   max_epochs: -1
   accelerator: gpu
-  devices: 4
+  devices: 1
   precision: 32
-
-#ckpt_path: lightning_logs/version_5/checkpoints/epoch=7-step=800.ckpt

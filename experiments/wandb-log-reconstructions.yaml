@@ -6,8 +6,8 @@ trainer:
       log_model: True
       entity: ain-space
       tags:
-        - log-reconstructions
+        - illustris
   callbacks:
     - class_path: callbacks.LogReconstructionCallback
       init_args:
-        num_samples: 4
+        num_samples: 6
