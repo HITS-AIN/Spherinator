@@ -49,8 +49,10 @@ conda activate spherinator
 [LightningCLI](https://lightning.ai/docs/pytorch/latest/cli/lightning_cli.html#lightning-cli) is a command line interface separating source code from hyperparameters. Hyperparameters are defined in a YAML file `config.yaml` and passed to the CLI.
 
 ```bash
-python main.py fit -c experiments/illustris.yaml
+python spherinator.py fit -c experiments/illustris-power.yaml
 ```
+
+Arguments can be overwritten on the command line. For example, `--model.init_args.z_dim 16` overwrites the `z_dim` argument in the YAML file.
 
 
 ## Generate HiPS and catalog
