@@ -1,8 +1,11 @@
+import math
+
 import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as functional
+from torch.optim import Adam
 
 from .spherinator_module import SpherinatorModule
 
@@ -10,13 +13,28 @@ from .spherinator_module import SpherinatorModule
 class RotationalAutoencoder(SpherinatorModule):
 
     def __init__(self,
+                 image_size: int = 363,
                  rotations: int = 36,
                  bottleneck: int = 3):
-        super(RotationalAutoencoder, self).__init__()
-        self.bottleneck = bottleneck
+        """
+        RotationalAutoencoder initializer
+
+        :param image_size: size of the input images
+        :param rotations: number of rotations
+        :param beta: factor for beta-VAE
+        """
+        super().__init__()
+        self.save_hyperparameters()
+
+        self.image_size = image_size
         self.rotations = rotations
+        self.bottleneck = bottleneck
+
+        self.crop_size = int(self.image_size * math.sqrt(2) / 2)
         self.input_size = 128
+
         self.example_input_array = torch.randn(1, bottleneck, self.input_size, self.input_size)
+
         self.conv0 = nn.Conv2d(in_channels=3, out_channels=16,
                                kernel_size=(3,3), stride=1, padding=1) #128x128
         self.pool0 = nn.MaxPool2d(kernel_size=(2,2), stride=2, padding=0) # 64x64
@@ -99,17 +117,33 @@ class RotationalAutoencoder(SpherinatorModule):
 
     def training_step(self, train_batch, _batch_idx):
         images = train_batch['image']
-        losses = torch.zeros(images.shape[0], self.rotations)
-        for i in range(self.rotations):
-            rotate = functional.rotate(images, 360.0/self.rotations*i, expand=False) # rotate
-            crop = functional.center_crop(rotate, [256,256]) # crop #TODO config?
-            scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False) # scale
-            reconstruction, coordinates = self.forward(scaled)
-            losses[:,i] = self.spherical_loss(scaled, reconstruction, coordinates)
-        loss = torch.mean(torch.min(losses, dim=1)[0])
+        best_recon = torch.ones(images.shape[0], device = images.device) * 1e10
+        best_scaled = torch.zeros((images.shape[0], images.shape[1], self.input_size, self.input_size),
+                                  device = images.device)
+
+        with torch.no_grad():
+            for i in range(self.rotations):
+                rotate = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
+                crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
+                scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False)
+
+                recon, _ = self.forward(scaled)
+                loss_recon = self.reconstruction_loss(scaled, recon)
+                best_recon_idx = torch.where(loss_recon < best_recon)
+                best_recon[best_recon_idx] = loss_recon[best_recon_idx]
+                best_scaled[best_recon_idx] = scaled[best_recon_idx]
+
+        recon, coord = self.forward(best_scaled)
+
+        loss = self.spherical_loss(best_scaled, recon, coord).mean()
+
         self.log('train_loss', loss)
         self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
         return loss
+
+    def configure_optimizers(self):
+        """Default Adam optimizer if missing from the configuration file."""
+        return Adam(self.parameters(), lr=1e-3)
 
     def project(self, images):
         return self.scale_to_unity(self.encode(images))

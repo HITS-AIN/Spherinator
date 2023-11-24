@@ -5,8 +5,9 @@ import torch
 import torchvision.transforms.functional as functional
 from lightning.pytorch.callbacks import Callback
 from matplotlib import figure
+from torchvision import transforms
 
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 
 
 class LogReconstructionCallback(Callback):
@@ -29,23 +30,16 @@ class LogReconstructionCallback(Callback):
 
         # Generate reconstructions of the samples using the model
         with torch.no_grad():
-            batch_size = samples.shape[0]
-            losses = torch.zeros(batch_size, pl_module.rotations)
-            images = torch.zeros(
-                batch_size,
-                3,
-                pl_module.input_size,
-                pl_module.input_size,
-                pl_module.rotations,
+            best_recon_loss = torch.ones(samples.shape[0], device=samples.device) * 1e10
+            best_scaled = torch.zeros(
+                samples.shape[0],
+                samples.shape[1],
+                pl_module.get_input_size(),
+                pl_module.get_input_size(),
+                device=samples.device,
             )
-            recons = torch.zeros(
-                batch_size,
-                3,
-                pl_module.input_size,
-                pl_module.input_size,
-                pl_module.rotations,
-            )
-            coords = torch.zeros(batch_size, pl_module.z_dim, pl_module.rotations)
+            best_recon = best_scaled.clone()
+
             for r in range(pl_module.rotations):
                 rotate = functional.rotate(
                     samples, 360.0 / pl_module.rotations * r, expand=False
@@ -57,23 +51,31 @@ class LogReconstructionCallback(Callback):
                     crop, [pl_module.input_size, pl_module.input_size], antialias=False
                 )
 
-                (z_mean, _), (_, _), _, recon = pl_module(scaled)
+                if pl_module.__class__.__name__ == "RotationalAutoencoder":
+                    recon, _ = pl_module(scaled)
+                else:
+                    (_, _), (_, _), _, recon = pl_module(scaled)
 
-                losses[:, r] = pl_module.reconstruction_loss(scaled, recon)
-                images[:, :, :, :, r] = scaled
-                recons[:, :, :, :, r] = recon
-                coords[:, :, r] = z_mean
+                loss_recon = pl_module.reconstruction_loss(scaled, recon)
+                best_recon_idx = torch.where(loss_recon < best_recon_loss)
+                best_recon_loss[best_recon_idx] = loss_recon[best_recon_idx]
+                best_scaled[best_recon_idx] = scaled[best_recon_idx]
+                best_recon[best_recon_idx] = recon[best_recon_idx]
 
-            min_idx = torch.min(losses, dim=1)[1]
+            normalize = transforms.Lambda(
+                lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
+            )
+            normalize(best_scaled)
+            normalize(best_recon)
 
         # Plot the original samples and their reconstructions side by side
         fig = figure.Figure(figsize=(6, 2 * self.num_samples))
         ax = fig.subplots(self.num_samples, 2)
         for i in range(self.num_samples):
-            ax[i, 0].imshow(images[i, :, :, :, min_idx[i]].cpu().detach().numpy().T)
+            ax[i, 0].imshow(best_scaled[i].cpu().detach().numpy().T)
             ax[i, 0].set_title("Original")
             ax[i, 0].axis("off")
-            ax[i, 1].imshow(recons[i, :, :, :, min_idx[i]].cpu().detach().numpy().T)
+            ax[i, 1].imshow(best_recon[i].cpu().detach().numpy().T)
             ax[i, 1].set_title("Reconstruction")
             ax[i, 1].axis("off")
         fig.tight_layout()

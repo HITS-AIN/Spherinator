@@ -4,22 +4,20 @@ It initializes the package and makes its modules available for import.
 
 It contains the following modules:
 
-1. `rotational_spherical_autoencoder`:
+1. `RotationalAutoencoder`:
     A plain convolutional autoencoder projecting on a sphere with naive rotation invariance.
-2. `rotational_spherical_variational_autoencoder`:
+2. `RotationalVariationalAutoencoder`:
     A convolutional variational autoencoder projecting on a sphere with naive rotation invariance.
-3. `SVAE`:
-    Straightforward implementation of hyperspherical variational autoencoder (SVAE).
+3. `RotationalVariationalAutoencoderPower`:
+    A convolutional variational autoencoder using power spherical distribution.
 """
 
 from .rotational_autoencoder import RotationalAutoencoder
 from .rotational_variational_autoencoder import RotationalVariationalAutoencoder
 from .rotational_variational_autoencoder_power import RotationalVariationalAutoencoderPower
-from .svae import SVAE
 
 __all__ = [
     'RotationalAutoencoder',
     'RotationalVariationalAutoencoder',
     'RotationalVariationalAutoencoderPower',
-    'SVAE',
 ]

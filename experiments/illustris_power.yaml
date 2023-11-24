@@ -6,8 +6,8 @@ model:
     h_dim: 256
     z_dim: 3
     image_size: 363
-    rotations: 72
-    beta: 5.0e-4
+    rotations: 36
+    beta: 1.0e-3
 
 data:
   class_path: data.IllustrisSdssDataModule
@@ -20,9 +20,9 @@ data:
                        "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data/"]
     extension: .fits
     minsize: 100
-    batch_size: 128
+    batch_size: 512
     shuffle: True
-    num_workers: 32
+    num_workers: 16
 
 optimizer:
   class_path: torch.optim.Adam
@@ -43,20 +43,5 @@ lr_scheduler:
 trainer:
   max_epochs: -1
   accelerator: gpu
-  devices: [3]
+  devices: 1
   precision: 32
-  # overfit_batches: 1
-  logger:
-    class_path: lightning.pytorch.loggers.WandbLogger
-    init_args:
-      project: spherinator
-      name: illustris-power
-      log_model: True
-  # callbacks:
-  #   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
-  #     init_args:
-  #       monitor: train_loss
-  #       filename: "{epoch}-{train_loss:.2f}"
-  #       save_top_k: 1
-  #       mode: min
-  #       every_n_epochs: 1

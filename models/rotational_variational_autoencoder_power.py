@@ -25,7 +25,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
                  rotations: int = 36,
                  beta: float = 1.0):
         """
-        RotationalVariationalAutoencoder initializer
+        RotationalVariationalAutoencoderPower initializer
 
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation
@@ -65,8 +65,8 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         self.pool4 = nn.MaxPool2d(kernel_size=(2,2), stride=2, padding=0) # 4x4
 
         self.fc1 = nn.Linear(256*4*4, h_dim)
-        self.fc_mean = nn.Linear(h_dim, z_dim)
-        self.fc_var = nn.Linear(h_dim, 1)
+        self.fc_location = nn.Linear(h_dim, z_dim)
+        self.fc_scale = nn.Linear(h_dim, 1)
         self.fc2 = nn.Linear(z_dim, h_dim)
         self.fc3 = nn.Linear(h_dim, 256*4*4)
 
@@ -83,6 +83,9 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         self.deconv6 = nn.ConvTranspose2d(in_channels=16, out_channels=3,
                                           kernel_size=(2,2), stride=1, padding=0) #128x128
 
+        with torch.no_grad():
+            self.fc_scale.bias.fill_(1.0e3)
+
     def get_input_size(self):
         return self.input_size
 
@@ -98,19 +101,18 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         x = F.relu(self.conv4(x))
         x = self.pool4(x)
         x = x.view(-1, 256*4*4)
-        x = F.sigmoid(self.fc1(x))
+        x = F.relu(self.fc1(x))
 
-        z_mean = self.fc_mean(x)
-        z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=1)
+        z_location = self.fc_location(x)
+        z_location = torch.nn.functional.normalize(z_location, p=2.0, dim=1)
         # SVAE code: the `+ 1` prevent collapsing behaviors
-        # z_var = F.softplus(self.fc_var(x)) + 0.1
-        z_var = torch.exp(self.fc_var(x)) + 20.0
+        z_scale = F.softplus(self.fc_scale(x)) + 1
 
-        return z_mean, z_var
+        return z_location, z_scale
 
     def decode(self, z):
-        x = F.tanh(self.fc2(z))
-        x = F.tanh(self.fc3(x))
+        x = F.relu(self.fc2(z))
+        x = F.relu(self.fc3(x))
         x = x.view(-1, 256, 4, 4)
 
         x = F.relu(self.deconv1(x))
@@ -119,51 +121,51 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         x = F.relu(self.deconv4(x))
         x = F.relu(self.deconv5(x))
         x = self.deconv6(x)
-        # x = torch.sigmoid(x)
         return x
 
-    def reparameterize(self, z_mean, z_var):
-        q_z = PowerSpherical(z_mean, z_var)
-        p_z = HypersphericalUniform(self.z_dim, device=z_mean.device)
+    def reparameterize(self, z_location, z_scale):
+        q_z = PowerSpherical(z_location, z_scale)
+        p_z = HypersphericalUniform(self.z_dim, device=z_location.device)
         return q_z, p_z
 
     def forward(self, x):
-        z_mean, z_var = self.encode(x)
-        q_z, p_z = self.reparameterize(z_mean, z_var.squeeze())
+        z_location, z_scale = self.encode(x)
+        q_z, p_z = self.reparameterize(z_location, z_scale.squeeze())
         z = q_z.rsample()
         recon = self.decode(z)
-        return (z_mean, z_var), (q_z, p_z), z, recon
+        return (z_location, z_scale), (q_z, p_z), z, recon
 
     def training_step(self, batch, batch_idx):
         images = batch["image"]
-        losses = torch.zeros(images.shape[0], self.rotations)
-        losses_recon = torch.zeros(images.shape[0], self.rotations)
-        losses_KL = torch.zeros(images.shape[0], self.rotations)
-        z_mean = torch.zeros(self.z_dim)
-        z_scale = torch.zeros(self.z_dim)
-        for i in range(self.rotations):
-            rotate = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
-            crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
-            scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False)
+        best_recon = torch.ones(images.shape[0], device = images.device) * 1e10
+        best_scaled = torch.zeros((images.shape[0], images.shape[1], self.input_size, self.input_size),
+                                  device = images.device)
 
-            (z_mean, z_scale), (q_z, p_z), _, recon = self.forward(scaled)
+        with torch.no_grad():
+            for i in range(self.rotations):
+                rotate = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
+                crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
+                scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False)
 
-            loss_recon = self.reconstruction_loss(scaled, recon)
-            loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z)
+                (_, _), (_, _), _, recon = self.forward(scaled)
+                loss_recon = self.reconstruction_loss(scaled, recon)
+                best_recon_idx = torch.where(loss_recon < best_recon)
+                best_recon[best_recon_idx] = loss_recon[best_recon_idx]
+                best_scaled[best_recon_idx] = scaled[best_recon_idx]
 
-            losses[:,i] = loss_recon + self.beta * loss_KL
-            losses_recon[:,i] = loss_recon
-            losses_KL[:,i] = loss_KL
+        (z_location, z_scale), (q_z, p_z), _, recon = self.forward(best_scaled)
 
-        loss_idx = torch.min(losses, dim=1)[1]
-        loss = torch.mean(torch.gather(losses, 1, loss_idx.unsqueeze(1)))
-        loss_recon = torch.mean(torch.gather(losses_recon, 1, loss_idx.unsqueeze(1)))
-        loss_KL = torch.mean(torch.gather(losses_KL, 1, loss_idx.unsqueeze(1)))
+        loss_recon = self.reconstruction_loss(best_scaled, recon)
+        loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
+        loss = (loss_recon + loss_KL).mean()
+        loss_recon = loss_recon.mean()
+        loss_KL = loss_KL.mean()
+
         self.log('train_loss', loss, prog_bar=True)
         self.log('loss_recon', loss_recon, prog_bar=True)
         self.log('loss_KL', loss_KL)
         self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
-        self.log('mean(z_mean) ', torch.mean(z_mean))
+        self.log('mean(z_location) ', torch.mean(z_location))
         self.log('mean(z_scale) ', torch.mean(z_scale))
         return loss
 
@@ -172,8 +174,8 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         return Adam(self.parameters(), lr=1e-3)
 
     def project(self, images):
-        z_mean, _ = self.encode(images)
-        return z_mean
+        z_location, _ = self.encode(images)
+        return z_location
 
     def reconstruct(self, coordinates):
         return self.decode(coordinates)
