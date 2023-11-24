@@ -1,0 +1,9 @@
+trainer:
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: spherinator
+      log_model: True
+      entity: ain-space
+      tags:
+        - illustris

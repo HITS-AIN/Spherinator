@@ -1,6 +1,5 @@
 """ Provides access to the Illustris sdss data set.
 """
-from typing import List
 
 import lightning.pytorch as pl
 from torch.utils.data import DataLoader
@@ -13,7 +12,7 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
     """ Defines access to the Illustris sdss data as a data module.
     """
     def __init__(self,
-                 data_directories: List[str],
+                 data_directories: list[str],
                  extension: str = "fits",
                  minsize: int = 100,
                  shuffle: bool = True,
@@ -22,7 +21,7 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
         """ Initializes the data loader for the Illustris sdss images.
 
         Args:
-            data_directories (List[str]): The directories to scan for data files.
+            data_directories (list[str]): The directories to scan for data files.
             extension (str, optional): The kind of files to search for. Defaults to "fits".
             minsize (int, optional): The minimum size a file should have. Defaults to 100 pixels.
             shuffle (bool, optional): Wether or not to shuffle whe reading. Defaults to True.

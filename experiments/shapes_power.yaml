@@ -7,7 +7,7 @@ model:
     z_dim: 3
     image_size: 91
     rotations: 36
-    beta: 0.001
+    beta: 1.0e-3
 
 data:
   class_path: data.ShapesDataModule
@@ -43,17 +43,11 @@ trainer:
     class_path: lightning.pytorch.loggers.WandbLogger
     init_args:
       project: spherinator
-      log_model: all
+      log_model: True
       entity: bernddoser
-      tags: [shapes, power]
+      tags:
+        - shapes
   callbacks:
     - class_path: callbacks.LogReconstructionCallback
       init_args:
-        num_samples: 4
-    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
-      init_args:
-        monitor: train_loss
-        filename: "{epoch}-{train_loss:.2f}"
-        save_top_k: 1
-        mode: min
-        every_n_epochs: 1
+        num_samples: 6

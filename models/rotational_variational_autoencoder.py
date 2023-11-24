@@ -106,15 +106,14 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         return z_mean, z_var
 
     def decode(self, z):
-        x = F.tanh(self.fc2(z))
-        x = F.tanh(self.fc3(x))
+        x = F.relu(self.fc2(z))
+        x = F.relu(self.fc3(x))
         x = x.view(-1, 256, 4, 4)
         x = F.relu(self.deconv1(x))
         x = F.relu(self.deconv2(x))
         x = F.relu(self.deconv3(x))
         x = F.relu(self.deconv4(x))
         x = self.deconv5(x)
-        x = torch.sigmoid(x)
         return x
 
     def reparameterize(self, z_mean, z_var):
@@ -140,42 +139,45 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
 
     def training_step(self, batch, batch_idx):
         images = batch["image"]
-        losses = torch.zeros(images.shape[0], self.rotations)
-        losses_recon = torch.zeros(images.shape[0], self.rotations)
-        losses_KL = torch.zeros(images.shape[0], self.rotations)
-        losses_spher = torch.zeros(images.shape[0], self.rotations)
-        for i in range(self.rotations):
-            x = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
-            input = functional.center_crop(x, [64,64])
+        best_recon = torch.ones(images.shape[0], device = images.device) * 1e10
+        best_scaled = torch.zeros((images.shape[0], images.shape[1], self.input_size, self.input_size),
+                                  device = images.device)
 
-            (z_mean, _), (q_z, p_z), _, recon = self.forward(input)
+        with torch.no_grad():
+            for i in range(self.rotations):
+                rotate = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
+                crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
+                scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False)
 
-            loss_recon = self.reconstruction_loss(input, recon)
+                (_, _), (_, _), _, recon = self.forward(scaled)
+                loss_recon = self.reconstruction_loss(scaled, recon)
 
-            if self.distribution == 'normal':
-                loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).sum(-1).mean()
-            elif self.distribution == 'vmf':
-                loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z).mean()
-            else:
-                raise NotImplementedError
+                best_recon_idx = torch.where(loss_recon < best_recon)
+                best_recon[best_recon_idx] = loss_recon[best_recon_idx]
 
-            loss_spher = self.spherical_loss(z_mean)
+                best_scaled[best_recon_idx] = scaled[best_recon_idx]
 
-            losses[:,i] = loss_recon + self.beta * loss_KL #+ self.spherical_loss_weight * loss_spher
-            losses_recon[:,i] = loss_recon
-            losses_KL[:,i] = loss_KL
-            losses_spher[:,i] = loss_spher
+        (z_mean, z_var), (q_z, p_z), _, recon = self.forward(best_scaled)
 
-        loss_idx = torch.min(losses, dim=1)[1]
-        loss = torch.mean(torch.gather(losses, 1, loss_idx.unsqueeze(1)))
-        loss_recon = torch.mean(torch.gather(losses_recon, 1, loss_idx.unsqueeze(1)))
-        loss_KL = torch.mean(torch.gather(losses_KL, 1, loss_idx.unsqueeze(1)))
-        loss_spher = torch.mean(torch.gather(losses_spher, 1, loss_idx.unsqueeze(1)))
+        loss_recon = self.reconstruction_loss(best_scaled, recon)
+
+        if self.distribution == 'normal':
+            loss_KL = self.beta * torch.distributions.kl.kl_divergence(q_z, p_z).sum(-1).mean()
+        elif self.distribution == 'vmf':
+            loss_KL = self.beta * torch.distributions.kl.kl_divergence(q_z, p_z).mean()
+        else:
+            raise NotImplementedError
+
+        loss = (loss_recon + loss_KL).mean()
+        loss_recon = loss_recon.mean()
+        loss_KL = loss_KL.mean()
+
         self.log('train_loss', loss, prog_bar=True)
         self.log('loss_recon', loss_recon, prog_bar=True)
         self.log('loss_KL', loss_KL)
-        self.log('loss_spher', loss_spher)
         self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
+        self.log('mean(z_mean) ', torch.mean(z_mean))
+        self.log('mean(z_var) ', torch.mean(z_var))
         return loss
 
     def configure_optimizers(self):
