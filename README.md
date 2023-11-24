@@ -89,3 +89,8 @@ python spherinator.sh fit -c experiments/illustris_power.yaml \
     -c experiments/wandb.yaml \
     -c experiments/callback_log_reconstructions.yaml
 ```
+
+
+## License
+
+This project is licensed under the [Apache-2.0 License](http://www.apache.org/licenses/LICENSE-2.0).
