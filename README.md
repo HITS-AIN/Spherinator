@@ -24,24 +24,16 @@ git submodule update
 ```
 
 
-## Python virtual environment
+## Dependency management with Poetry
+
+Based on [Poerty](https://python-poetry.org/) all dependencies can be installed in a virtual environment. The environment can be created and activated with the following commands:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-... DO YOUR WORK ...
-deactivate
+poetry install --no-root
+poerty shell
 ```
 
-
-## Conda environment
-
-Based on [Miniconda](https://docs.conda.io/en/latest/miniconda.html) all dependencies can be installed in a conda environment. The environment can be created and activated with the following commands:
-
-```bash
-conda env create
-conda activate spherinator
-```
+The `--no-root` option is used to avoid installing the project itself as a dependency. The environment can be deactivated with `exit`.
 
 
 ## LightningCLI
