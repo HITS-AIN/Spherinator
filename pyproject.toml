@@ -54,9 +54,3 @@ filterwarnings = [
 
 [tool.pylint.TYPECHECK]
 generated-members = 'numpy.*, torch.*'
-
-[tool.flake8]
-exclude = [
-    '.git',
-    '.venv'
-]
