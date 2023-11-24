@@ -26,7 +26,7 @@ git submodule update
 
 ## Dependency management with Poetry
 
-Based on [Poerty](https://python-poetry.org/) all dependencies can be installed in a virtual environment. The environment can be created and activated with the following commands:
+Based on [Poetry](https://python-poetry.org/) all dependencies can be installed in a virtual environment. The environment can be created and activated with the following commands:
 
 ```bash
 poetry install --no-root
