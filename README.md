@@ -49,7 +49,7 @@ conda activate spherinator
 [LightningCLI](https://lightning.ai/docs/pytorch/latest/cli/lightning_cli.html#lightning-cli) is a command line interface separating source code from hyperparameters. Hyperparameters are defined in a YAML file `config.yaml` and passed to the CLI.
 
 ```bash
-python spherinator.py fit -c experiments/illustris-power.yaml
+python spherinator.py fit -c experiments/illustris_power.yaml
 ```
 
 Arguments can be directly defined on the command line and overwrite the YAML file.
@@ -73,17 +73,19 @@ Call `./hipster.py --help` for more information.
 
 ## Profiling
 
-The Pytorch profiler can be used by appending the `pytorch-profiler.yaml` config file to the command line.
+The Pytorch profiler can be used by appending the `profiler_pytorch.yaml` config file to the command line.
 
 ```bash
-python main.py fit -c experiments/shapes-power.yaml -c experiments/pytorch-profiler.yaml
+python spherinator.sh fit -c experiments/shapes_power.yaml -c experiments/profiler_pytorch.yaml
 ```
 
 
 ## Visualize reconstructed images during training
 
-The config-file [wandb-log-reconstructions.yaml](experiments/wandb-log-reconstructions.yaml) can be appended to visualize the reconstructed images during training at W&B.
+The config-file [callback_log_reconstructions.yaml](experiments/callback_log_reconstructions.yaml) can be appended to visualize the reconstructed images during training at W&B. Therefore, the W&B config-file must be appended as well.
 
 ```bash
-python main.py fit -c experiments/illustris.yaml -c experiments/wandb-log-reconstructions.yaml
+python spherinator.sh fit -c experiments/illustris_power.yaml \
+    -c experiments/wandb.yaml \
+    -c experiments/callback_log_reconstructions.yaml
 ```
