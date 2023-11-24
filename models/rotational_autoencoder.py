@@ -11,11 +11,7 @@ from .spherinator_module import SpherinatorModule
 
 
 class RotationalAutoencoder(SpherinatorModule):
-
-    def __init__(self,
-                 image_size: int = 363,
-                 rotations: int = 36,
-                 bottleneck: int = 3):
+    def __init__(self, image_size: int = 363, rotations: int = 36, bottleneck: int = 3):
         """
         RotationalAutoencoder initializer
 
@@ -33,41 +29,54 @@ class RotationalAutoencoder(SpherinatorModule):
         self.crop_size = int(self.image_size * math.sqrt(2) / 2)
         self.input_size = 128
 
-        self.example_input_array = torch.randn(1, bottleneck, self.input_size, self.input_size)
+        self.example_input_array = torch.randn(
+            1, bottleneck, self.input_size, self.input_size
+        )
 
-        self.conv0 = nn.Conv2d(in_channels=3, out_channels=16,
-                               kernel_size=(3,3), stride=1, padding=1) #128x128
-        self.pool0 = nn.MaxPool2d(kernel_size=(2,2), stride=2, padding=0) # 64x64
-        self.conv1 = nn.Conv2d(in_channels=16, out_channels=32,
-                               kernel_size=(3,3), stride=1, padding=1) #64x64
-        self.pool1 = nn.MaxPool2d(kernel_size=(2,2), stride=2, padding=0) # 32x32
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64,
-                               kernel_size=(3,3), stride=1, padding=1) #32x32
-        self.pool2 = nn.MaxPool2d(kernel_size=(2,2), stride=2, padding=0) # 16x16
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128,
-                               kernel_size=(3,3), stride=1, padding=1) #16x16
-        self.pool3 = nn.MaxPool2d(kernel_size=(2,2), stride=2, padding=0) # 8x8
-        self.conv4 = nn.Conv2d(in_channels=128, out_channels=256,
-                               kernel_size=(3,3), stride=1, padding=1) #8x8
-        self.pool4 = nn.MaxPool2d(kernel_size=(2,2), stride=2, padding=0) # 4x4
+        self.conv0 = nn.Conv2d(
+            in_channels=3, out_channels=16, kernel_size=(3, 3), stride=1, padding=1
+        )  # 128x128
+        self.pool0 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 64x64
+        self.conv1 = nn.Conv2d(
+            in_channels=16, out_channels=32, kernel_size=(3, 3), stride=1, padding=1
+        )  # 64x64
+        self.pool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 32x32
+        self.conv2 = nn.Conv2d(
+            in_channels=32, out_channels=64, kernel_size=(3, 3), stride=1, padding=1
+        )  # 32x32
+        self.pool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 16x16
+        self.conv3 = nn.Conv2d(
+            in_channels=64, out_channels=128, kernel_size=(3, 3), stride=1, padding=1
+        )  # 16x16
+        self.pool3 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 8x8
+        self.conv4 = nn.Conv2d(
+            in_channels=128, out_channels=256, kernel_size=(3, 3), stride=1, padding=1
+        )  # 8x8
+        self.pool4 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 4x4
 
-        self.fc1 = nn.Linear(256*4*4, 256)
+        self.fc1 = nn.Linear(256 * 4 * 4, 256)
         self.fc2 = nn.Linear(256, self.bottleneck)
         self.fc3 = nn.Linear(self.bottleneck, 256)
-        self.fc4 = nn.Linear(256, 256*4*4)
+        self.fc4 = nn.Linear(256, 256 * 4 * 4)
 
-        self.deconv1 = nn.ConvTranspose2d(in_channels=256, out_channels=128,
-                                          kernel_size=(4,4), stride=2, padding=1) #8x8
-        self.deconv2 = nn.ConvTranspose2d(in_channels=128, out_channels=128,
-                                          kernel_size=(4,4), stride=2, padding=1) #16x16
-        self.deconv3 = nn.ConvTranspose2d(in_channels=128, out_channels=64,
-                                          kernel_size=(4,4), stride=2, padding=1) #32x32
-        self.deconv4 = nn.ConvTranspose2d(in_channels=64, out_channels=32,
-                                          kernel_size=(4,4), stride=2, padding=1) #64x64
-        self.deconv5 = nn.ConvTranspose2d(in_channels=32, out_channels=16,
-                                          kernel_size=(3,3), stride=2, padding=1) #127x127
-        self.deconv6 = nn.ConvTranspose2d(in_channels=16, out_channels=3,
-                                          kernel_size=(2,2), stride=1, padding=0) #128x128
+        self.deconv1 = nn.ConvTranspose2d(
+            in_channels=256, out_channels=128, kernel_size=(4, 4), stride=2, padding=1
+        )  # 8x8
+        self.deconv2 = nn.ConvTranspose2d(
+            in_channels=128, out_channels=128, kernel_size=(4, 4), stride=2, padding=1
+        )  # 16x16
+        self.deconv3 = nn.ConvTranspose2d(
+            in_channels=128, out_channels=64, kernel_size=(4, 4), stride=2, padding=1
+        )  # 32x32
+        self.deconv4 = nn.ConvTranspose2d(
+            in_channels=64, out_channels=32, kernel_size=(4, 4), stride=2, padding=1
+        )  # 64x64
+        self.deconv5 = nn.ConvTranspose2d(
+            in_channels=32, out_channels=16, kernel_size=(3, 3), stride=2, padding=1
+        )  # 127x127
+        self.deconv6 = nn.ConvTranspose2d(
+            in_channels=16, out_channels=3, kernel_size=(2, 2), stride=1, padding=0
+        )  # 128x128
 
     def get_input_size(self):
         return self.input_size
@@ -83,13 +92,13 @@ class RotationalAutoencoder(SpherinatorModule):
         x = self.pool3(x)
         x = F.relu(self.conv4(x))
         x = self.pool4(x)
-        x = x.view(-1,256*4*4)
+        x = x.view(-1, 256 * 4 * 4)
         x = F.tanh(self.fc1(x))
         x = self.fc2(x)
         return x
 
     def scale_to_unity(self, x):
-        length = torch.linalg.vector_norm(x, dim=1)+1.e-20
+        length = torch.linalg.vector_norm(x, dim=1) + 1.0e-20
         return (x.T / length).T
 
     def decode(self, x):
@@ -110,22 +119,29 @@ class RotationalAutoencoder(SpherinatorModule):
         return reconstruction, coordinates
 
     def spherical_loss(self, images, reconstructions, coordinates):
-        coord_regularization = torch.square(1 - torch.sum(torch.square(coordinates), dim=1))
+        coord_regularization = torch.square(
+            1 - torch.sum(torch.square(coordinates), dim=1)
+        )
         reconstruction_loss = self.reconstruction_loss(images, reconstructions)
         loss = reconstruction_loss + 1e-4 * coord_regularization
         return loss
 
-    def training_step(self, train_batch, _batch_idx):
-        images = train_batch['image']
-        best_recon = torch.ones(images.shape[0], device = images.device) * 1e10
-        best_scaled = torch.zeros((images.shape[0], images.shape[1], self.input_size, self.input_size),
-                                  device = images.device)
+    def training_step(self, batch, batch_idx):
+        best_recon = torch.ones(batch.shape[0], device=batch.device) * 1e10
+        best_scaled = torch.zeros(
+            (batch.shape[0], batch.shape[1], self.input_size, self.input_size),
+            device=batch.device,
+        )
 
         with torch.no_grad():
             for i in range(self.rotations):
-                rotate = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
+                rotate = functional.rotate(
+                    batch, 360.0 / self.rotations * i, expand=False
+                )
                 crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
-                scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False)
+                scaled = functional.resize(
+                    crop, [self.input_size, self.input_size], antialias=False
+                )
 
                 recon, _ = self.forward(scaled)
                 loss_recon = self.reconstruction_loss(scaled, recon)
@@ -137,8 +153,8 @@ class RotationalAutoencoder(SpherinatorModule):
 
         loss = self.spherical_loss(best_scaled, recon, coord).mean()
 
-        self.log('train_loss', loss)
-        self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
+        self.log("train_loss", loss)
+        self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
         return loss
 
     def configure_optimizers(self):
@@ -152,5 +168,14 @@ class RotationalAutoencoder(SpherinatorModule):
         return self.decode(coordinates)
 
     def reconstruction_loss(self, images, reconstructions):
-        return torch.sqrt(torch.mean(torch.square(images.reshape(-1,3*images.shape[-2]*images.shape[-1]) -
-                                                  reconstructions.reshape(-1,3*images.shape[-2]*images.shape[-1])), dim=-1))
+        return torch.sqrt(
+            torch.mean(
+                torch.square(
+                    images.reshape(-1, 3 * images.shape[-2] * images.shape[-1])
+                    - reconstructions.reshape(
+                        -1, 3 * images.shape[-2] * images.shape[-1]
+                    )
+                ),
+                dim=-1,
+            )
+        )

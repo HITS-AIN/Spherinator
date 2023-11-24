@@ -7,15 +7,17 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from .spherinator_dataset import SpherinatorDataset
 
-class ShapesDataset(Dataset):
+
+class ShapesDataset(SpherinatorDataset):
     """Test images with four shapes in random rotations."""
 
     def __init__(
         self,
         data_directory: str,
         exclude_files: Union[list[str], str] = [],
-        transform = None,
+        transform=None,
         download: bool = False,
     ):
         """Initializes the data set.
@@ -65,10 +67,21 @@ class ShapesDataset(Dataset):
         """
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        image = torch.Tensor(self.images[idx])
+        data = torch.Tensor(self.images[idx])
         if self.transform:
-            image = self.transform(image)
-        dummy_filename = "dummy"
-        dummy_metadata = {"simulation": "shapes", "snapshot": "0", "subhalo_id": "0"}
-        sample = {'image': image, 'filename': dummy_filename, 'id': idx, 'metadata': dummy_metadata}
-        return sample
+            data = self.transform(data)
+        return data
+
+    def get_metadata(self, idx):
+        """Retrieves the metadata of the item/items with the given indices from the dataset.
+
+        Args:
+            idx (int or tensor): The index of the item to retrieve.
+
+        Returns:
+            dictionary: A dictionary mapping image, filename and id.
+        """
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+        metadata = {"simulation": "shapes", "snapshot": "0", "subhalo_id": "0"}
+        return metadata

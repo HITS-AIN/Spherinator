@@ -5,7 +5,6 @@ from data import ShapesDataModule
 
 
 def test_fit():
-
     data = ShapesDataModule("tests/data/shapes", num_workers=1)
     data.setup("fit")
 
@@ -19,8 +18,8 @@ def test_fit():
 
     batch = next(iter(dataloader))
 
-    assert batch["image"].shape == (32, 3, 91, 91)
-    assert batch["image"].dtype == torch.float32
+    assert batch.shape == (32, 3, 91, 91)
+    assert batch.dtype == torch.float32
 
-    assert np.isclose(batch["image"].min(), 0.0)
-    assert np.isclose(batch["image"].max(), 1.0)
+    assert np.isclose(batch.min(), 0.0)
+    assert np.isclose(batch.max(), 1.0)
