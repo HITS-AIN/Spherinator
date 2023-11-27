@@ -6,6 +6,8 @@ import importlib
 import torch
 import yaml
 
+from hipster import Hipster
+
 
 def main():
     parser = argparse.ArgumentParser(
