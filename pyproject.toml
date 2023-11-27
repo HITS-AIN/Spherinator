@@ -10,6 +10,13 @@ authors = [
 ]
 license = "Apache-2.0"
 readme = "README.md"
+include = [
+    { path = "tests" },
+    { path = "hipster.py" },
+]
+
+[tool.poetry.scripts]
+hipster = 'hipster:main'
 
 [tool.poetry.dependencies]
 astropy = "5.3.4"
