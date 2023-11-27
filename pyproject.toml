@@ -12,7 +12,7 @@ license = "Apache-2.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-astropy = "5.3.4"
+astropy = "6.0.0"
 lightning = "2.1.2"
 matplotlib = "3.8.2"
 python = "^3.9"
