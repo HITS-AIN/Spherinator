@@ -24,9 +24,8 @@ class LogReconstructionCallback(Callback):
             return
 
         # Generate some random samples from the validation set
-        samples = next(iter(trainer.train_dataloader))
-        samples = samples[: self.num_samples]
-        samples = samples.to(pl_module.device)
+        data, _ = next(iter(trainer.train_dataloader))
+        samples = data[: self.num_samples].to(pl_module.device)
 
         # Generate reconstructions of the samples using the model
         with torch.no_grad():

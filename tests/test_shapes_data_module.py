@@ -16,7 +16,7 @@ def test_fit():
     assert len(dataloader) == len(data.data_train) / dataloader.batch_size
     assert dataloader.num_workers == 1
 
-    batch = next(iter(dataloader))
+    batch, _ = next(iter(dataloader))
 
     assert batch.shape == (32, 3, 91, 91)
     assert batch.dtype == torch.float32

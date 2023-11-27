@@ -5,7 +5,6 @@ from typing import Union
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset
 
 from .spherinator_dataset import SpherinatorDataset
 
@@ -25,7 +24,7 @@ class ShapesDataset(SpherinatorDataset):
         Args:
             data_directory (str): The data directory.
             exclude_files (list[str] | str, optional): A list of files to exclude. Defaults to [].
-            transform (torchvision.transforms.Compose, optional): A single or a set of
+            transform (torchvision.transforms, optional): A single or a set of
                 transformations to modify the images. Defaults to None.
             download (bool, optional): Wether or not to download the data. Defaults to False.
         """
@@ -33,18 +32,17 @@ class ShapesDataset(SpherinatorDataset):
         if isinstance(exclude_files, str):
             exclude_files = [exclude_files]
 
-        self.data_directory = data_directory
-        self.exclude_files = exclude_files
         self.transform = transform
-        self.download = download
+        self.filenames = []
 
-        if self.download:
+        if download:
             raise NotImplementedError("Download not implemented yet.")
 
         self.images = np.empty((0, 64, 64), np.float32)
         for file in os.listdir(data_directory):
             if file in exclude_files:
                 continue
+            self.filenames.append(os.path.join(data_directory, file))
             images = np.load(os.path.join(data_directory, file)).astype(np.float32)
             self.images = np.append(self.images, images, axis=0)
 
@@ -56,32 +54,37 @@ class ShapesDataset(SpherinatorDataset):
         """
         return len(self.images)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, index):
         """Retrieves the item/items with the given indices from the dataset.
 
         Args:
-            idx (int or tensor): The index of the item to retrieve.
+            index: The index of the item to retrieve.
 
         Returns:
-            dictionary: A dictionary mapping image, filename and id.
+            data: Data of the item/items with the given indices.
+            index: Index of the item/items
+
         """
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-        data = torch.Tensor(self.images[idx])
+        if torch.is_tensor(index):
+            index = index.tolist()
+        data = torch.Tensor(self.images[index])
         if self.transform:
             data = self.transform(data)
-        return data
+        return data, index
 
-    def get_metadata(self, idx):
+    def get_metadata(self, index):
         """Retrieves the metadata of the item/items with the given indices from the dataset.
 
         Args:
-            idx (int or tensor): The index of the item to retrieve.
+            index: The index of the item to retrieve.
 
         Returns:
-            dictionary: A dictionary mapping image, filename and id.
+            metadata: Metadata of the item/items with the given indices.
         """
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-        metadata = {"simulation": "shapes", "snapshot": "0", "subhalo_id": "0"}
+        if torch.is_tensor(index):
+            index = index.tolist()
+        metadata = {
+            "index": index,
+            "filename": self.filenames[index],
+        }
         return metadata
