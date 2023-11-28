@@ -4,7 +4,6 @@ import os
 from typing import Union
 
 import numpy as np
-import torch
 
 from .spherinator_dataset import SpherinatorDataset
 
@@ -34,6 +33,7 @@ class ShapesDataset(SpherinatorDataset):
 
         self.transform = transform
         self.filenames = []
+        self.file_entries_offsets = [0]
 
         if download:
             raise NotImplementedError("Download not implemented yet.")
@@ -45,6 +45,9 @@ class ShapesDataset(SpherinatorDataset):
             self.filenames.append(os.path.join(data_directory, file))
             images = np.load(os.path.join(data_directory, file)).astype(np.float32)
             self.images = np.append(self.images, images, axis=0)
+            self.file_entries_offsets.append(
+                self.file_entries_offsets[-1] + images.shape[0]
+            )
 
     def __len__(self):
         """Return the number of items in the dataset.
@@ -54,7 +57,7 @@ class ShapesDataset(SpherinatorDataset):
         """
         return len(self.images)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int):
         """Retrieves the item/items with the given indices from the dataset.
 
         Args:
@@ -65,14 +68,12 @@ class ShapesDataset(SpherinatorDataset):
             index: Index of the item/items
 
         """
-        if torch.is_tensor(index):
-            index = index.tolist()
-        data = torch.Tensor(self.images[index])
+        data = self.images[index]
         if self.transform:
             data = self.transform(data)
         return data, index
 
-    def get_metadata(self, index):
+    def get_metadata(self, index: int):
         """Retrieves the metadata of the item/items with the given indices from the dataset.
 
         Args:
@@ -81,10 +82,6 @@ class ShapesDataset(SpherinatorDataset):
         Returns:
             metadata: Metadata of the item/items with the given indices.
         """
-        if torch.is_tensor(index):
-            index = index.tolist()
-        metadata = {
-            "index": index,
-            "filename": self.filenames[index],
-        }
+        file_index = np.searchsorted(self.file_entries_offsets, index, side="right") - 1
+        metadata = {"filename": self.filenames[file_index]}
         return metadata
