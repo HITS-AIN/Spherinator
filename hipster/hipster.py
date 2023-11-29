@@ -221,7 +221,7 @@ class Hipster:
     def project_data(self, data, order, pixel):
         if not self.distortion_correction:
             data = functional.resize(
-                data, [self.output_size, self.output_size], antialias=False
+                data, [self.output_size, self.output_size], antialias=True
             )  # scale
             data = torch.swapaxes(data, 0, 2)
             return data
@@ -359,7 +359,7 @@ class Hipster:
                 scaled_images = functional.resize(
                     crop_images,
                     [model.get_input_size(), model.get_input_size()],
-                    antialias=False,
+                    antialias=True,
                 )  # scale
                 with torch.no_grad():
                     coordinates = model.project(scaled_images)

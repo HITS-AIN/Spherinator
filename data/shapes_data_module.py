@@ -48,7 +48,7 @@ class ShapesDataModule(pl.LightningDataModule):
             [
                 transforms.ToTensor(),
                 transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
-                transforms.Resize((self.image_size, self.image_size), antialias="none"),
+                transforms.Resize((self.image_size, self.image_size), antialias=True),
                 transforms.Lambda(  # Normalize
                     lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
                 ),

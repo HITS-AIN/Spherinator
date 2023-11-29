@@ -47,7 +47,7 @@ class LogReconstructionCallback(Callback):
                     rotate, [pl_module.crop_size, pl_module.crop_size]
                 )
                 scaled = functional.resize(
-                    crop, [pl_module.input_size, pl_module.input_size], antialias=False
+                    crop, [pl_module.input_size, pl_module.input_size], antialias=True
                 )
 
                 if pl_module.__class__.__name__ == "RotationalAutoencoder":

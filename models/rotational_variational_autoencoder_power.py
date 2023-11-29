@@ -162,7 +162,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
                 )
                 crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
                 scaled = functional.resize(
-                    crop, [self.input_size, self.input_size], antialias=False
+                    crop, [self.input_size, self.input_size], antialias=True
                 )
 
                 (_, _), (_, _), _, recon = self.forward(scaled)

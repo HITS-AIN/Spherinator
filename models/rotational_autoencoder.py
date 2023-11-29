@@ -140,7 +140,7 @@ class RotationalAutoencoder(SpherinatorModule):
                 )
                 crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
                 scaled = functional.resize(
-                    crop, [self.input_size, self.input_size], antialias=False
+                    crop, [self.input_size, self.input_size], antialias=True
                 )
 
                 recon, _ = self.forward(scaled)

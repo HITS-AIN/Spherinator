@@ -71,7 +71,7 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
         self.transform_val = transforms.Compose(
             [
                 transforms.CenterCrop((363, 363)),
-                transforms.Resize((100, 100), antialias=False),
+                transforms.Resize((100, 100), antialias=True),
                 preprocessing.CreateNormalizedColors(
                     stretch=0.9,
                     range=5,
