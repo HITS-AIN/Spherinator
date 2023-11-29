@@ -5,7 +5,7 @@ import torch
 import torchvision.transforms.functional as functional
 from lightning.pytorch.callbacks import Callback
 from matplotlib import figure
-from torchvision import transforms
+import numpy as np
 
 matplotlib.use("Agg")
 
@@ -61,20 +61,14 @@ class LogReconstructionCallback(Callback):
                 best_scaled[best_recon_idx] = scaled[best_recon_idx]
                 best_recon[best_recon_idx] = recon[best_recon_idx]
 
-            normalize = transforms.Lambda(
-                lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
-            )
-            normalize(best_scaled)
-            normalize(best_recon)
-
         # Plot the original samples and their reconstructions side by side
         fig = figure.Figure(figsize=(6, 2 * self.num_samples))
         ax = fig.subplots(self.num_samples, 2)
         for i in range(self.num_samples):
-            ax[i, 0].imshow(best_scaled[i].cpu().detach().numpy().T)
+            ax[i, 0].imshow(np.clip(best_scaled[i].cpu().detach().numpy().T, 0, 1))
             ax[i, 0].set_title("Original")
             ax[i, 0].axis("off")
-            ax[i, 1].imshow(best_recon[i].cpu().detach().numpy().T)
+            ax[i, 1].imshow(np.clip(best_recon[i].cpu().detach().numpy().T, 0, 1))
             ax[i, 1].set_title("Reconstruction")
             ax[i, 1].axis("off")
         fig.tight_layout()
