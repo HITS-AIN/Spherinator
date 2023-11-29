@@ -1,14 +1,20 @@
 seed_everything: 42
 
 model:
-  class_path: models.RotationalSphericalProjectingAutoencoder
+  class_path: models.RotationalVariationalAutoencoderPower
+  init_args:
+    h_dim: 256
+    z_dim: 3
+    image_size: 424
+    rotations: 36
+    beta: 1.0e-3
 
 data:
   class_path: models.GalaxyZooDataModule
   init_args:
     data_dir: /hits/basement/ain/Data/KaggleGalaxyZoo/images_training_rev1
     extension: jpg
-    batch_size: 256
+    batch_size: 512
     shuffle: True
     num_workers: 16
 
@@ -22,8 +28,8 @@ lr_scheduler:
   init_args:
     mode: min
     factor: 0.1
-    patience: 500
-    cooldown: 500
+    patience: 5
+    cooldown: 5
     min_lr: 1.e-5
     monitor: train_loss
     verbose: True
@@ -31,5 +37,5 @@ lr_scheduler:
 trainer:
   max_epochs: -1
   accelerator: gpu
-  devices: 4
+  devices: 1
   precision: 32
