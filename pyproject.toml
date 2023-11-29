@@ -56,7 +56,7 @@ testpaths = 'tests'
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::DeprecationWarning",
-    "ignore:Consider increasing the value of the `num_workers` argument`",
+    "ignore:The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument",
 ]
 
 [tool.pylint.TYPECHECK]

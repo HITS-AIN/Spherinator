@@ -39,7 +39,7 @@ class ShapesDataset(SpherinatorDataset):
             raise NotImplementedError("Download not implemented yet.")
 
         self.images = np.empty((0, 64, 64), np.float32)
-        for file in os.listdir(data_directory):
+        for file in sorted(os.listdir(data_directory)):
             if file in exclude_files:
                 continue
             self.filenames.append(os.path.join(data_directory, file))

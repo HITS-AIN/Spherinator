@@ -34,7 +34,7 @@ class IllustrisSdssDataset(SpherinatorDataset):
         self.files = []
         self.total_files = 0
         for data_directory in data_directories:
-            for file in os.listdir(data_directory):
+            for file in sorted(os.listdir(data_directory)):
                 if file.endswith(extension):
                     self.total_files = self.total_files + 1
                     fits_filename = os.path.join(data_directory, file)

@@ -27,7 +27,7 @@ def test_dataloader():
     assert index.tolist() == [3226, 772]
     assert (
         dataloader.dataset.get_metadata(index[0])["filename"]
-        == "tests/data/shapes/circles.npy"
+        == "tests/data/shapes/triangles.npy"
     )
     assert (
         dataloader.dataset.get_metadata(index[1])["filename"]

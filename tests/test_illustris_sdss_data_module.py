@@ -47,7 +47,7 @@ def test_datamodule():
     torch.manual_seed(0)
     data = IllustrisSdssDataModule(
         ["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],
-        num_workers=4,
+        num_workers=1,
         batch_size=4,
         shuffle=True,
     )
@@ -67,8 +67,8 @@ def test_datamodule():
 
     assert (
         dataloader.dataset.get_metadata(index[0])["filename"]
-        == "tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/broadband_117392.fits"
+        == "tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/broadband_117359.fits"
     )
     assert dataloader.dataset.get_metadata(index[0])["simulation"] == "TNG50"
     assert dataloader.dataset.get_metadata(index[0])["snapshot"] == "095"
-    assert dataloader.dataset.get_metadata(index[0])["subhalo_id"] == "117392"
+    assert dataloader.dataset.get_metadata(index[0])["subhalo_id"] == "117359"
