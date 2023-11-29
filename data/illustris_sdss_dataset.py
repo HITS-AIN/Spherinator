@@ -1,6 +1,7 @@
 """ Provides access to the Illustris sdss images.
 """
 import os
+import torch
 
 import numpy
 from astropy.io import fits
@@ -58,6 +59,7 @@ class IllustrisSdssDataset(SpherinatorDataset):
         """
         data = fits.getdata(self.files[index], 0)
         data = numpy.array(data).astype(numpy.float32)
+        data = torch.Tensor(data)
         if self.transform:
             data = self.transform(data)
         return data, index

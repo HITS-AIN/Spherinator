@@ -4,6 +4,7 @@
 import lightning.pytorch as pl
 from torch.utils.data import DataLoader
 from torchvision import transforms
+import torch
 
 import data.preprocessing as preprocessing
 from data.illustris_sdss_dataset import IllustrisSdssDataset
@@ -36,7 +37,7 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
         self.data_directories = data_directories
         self.transform_train = transforms.Compose(
             [
-                transforms.ToTensor(),
+                # transforms.ToTensor(),
                 transforms.CenterCrop((363, 363)),
                 preprocessing.CreateNormalizedColors(
                     stretch=0.9,
@@ -51,7 +52,7 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
                     scaling_range=[1, 1],  # 0.9,1.1],
                     flip=0.5,
                 ),
-                transforms.CenterCrop((363, 363)),
+                # transforms.CenterCrop((363, 363)),
             ]
         )
 
