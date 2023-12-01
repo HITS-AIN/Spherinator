@@ -3,8 +3,7 @@
 
 import lightning.pytorch as pl
 from torch.utils.data import DataLoader
-from torchvision import transforms
-import torch
+import torchvision.transforms.v2 as transforms
 
 import data.preprocessing as preprocessing
 from data.illustris_sdss_dataset import IllustrisSdssDataset
@@ -35,51 +34,41 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
         super().__init__()
 
         self.data_directories = data_directories
-        self.transform_train = transforms.Compose(
+
+        self.transform_images = transforms.Compose(
             [
-                # transforms.ToTensor(),
-                transforms.CenterCrop((363, 363)),
-                preprocessing.CreateNormalizedColors(
+                preprocessing.CreateNormalizedRGBColors(
                     stretch=0.9,
                     range=5,
                     lower_limit=0.001,
                     channel_combinations=[[2, 3], [1, 0], [0]],
                     scalers=[0.7, 0.5, 1.3],
                 ),
+            ]
+        )
+        self.transform_processing = transforms.Compose(
+            [
+                transforms.CenterCrop((363, 363)),
+                self.transform_images,
+            ]
+        )
+        self.transform_train = transforms.Compose(
+            [
+                self.transform_processing,
                 preprocessing.DielemanTransformation(
                     rotation_range=[0, 360],
                     translation_range=[0, 0],  # 4./363,4./363],
                     scaling_range=[1, 1],  # 0.9,1.1],
                     flip=0.5,
                 ),
-                # transforms.CenterCrop((363, 363)),
-            ]
-        )
-
-        self.transform_predict = transforms.Compose(
-            [
                 transforms.CenterCrop((363, 363)),
-                preprocessing.CreateNormalizedColors(
-                    stretch=0.9,
-                    range=5,
-                    lower_limit=0.001,
-                    channel_combinations=[[2, 3], [1, 0], [0]],
-                    scalers=[0.7, 0.5, 1.3],
-                ),
             ]
         )
-
-        self.transform_val = transforms.Compose(
+        self.transform_thumbnail_images = transforms.Compose(
             [
                 transforms.CenterCrop((363, 363)),
                 transforms.Resize((100, 100), antialias=True),
-                preprocessing.CreateNormalizedColors(
-                    stretch=0.9,
-                    range=5,
-                    lower_limit=0.001,
-                    channel_combinations=[[2, 3], [1, 0], [0]],
-                    scalers=[0.7, 0.5, 1.3],
-                ),
+                self.transform_images,
             ]
         )
 
@@ -88,19 +77,22 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
         self.minsize = minsize
         self.shuffle = shuffle
         self.num_workers = num_workers
+
         self.data_train = None
+        self.data_processing = None
+        self.data_images = None
+        self.data_thumbnail_images = None
+
         self.dataloader_train = None
-        self.data_predict = None
-        self.dataloader_predict = None
-        self.data_val = None
-        self.dataloader_val = None
+        self.dataloader_processing = None
+        self.dataloader_images = None
+        self.dataloader_thumbnail_images = None
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
 
         Args:
-            stage (str): Defines for which stage the data is needed. For the moment just fitting
-                is supported.
+            stage (str): Defines for which stage the data is needed.
         """
         if stage == "fit":
             self.data_train = IllustrisSdssDataset(
@@ -116,35 +108,50 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
                 shuffle=self.shuffle,
                 num_workers=self.num_workers,
             )
-        if stage == "predict":
-            self.data_predict = IllustrisSdssDataset(
+        elif stage == "processing":
+            self.data_processing = IllustrisSdssDataset(
                 data_directories=self.data_directories,
                 extension=self.extension,
                 minsize=self.minsize,
-                transform=self.transform_predict,
+                transform=self.transform_processing,
             )
 
-            self.dataloader_predict = DataLoader(
-                self.data_predict,
+            self.dataloader_processing = DataLoader(
+                self.data_processing,
                 batch_size=self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
             )
-
-        if stage == "val":
-            self.data_val = IllustrisSdssDataset(
+        elif stage == "images":
+            self.data_images = IllustrisSdssDataset(
                 data_directories=self.data_directories,
                 extension=self.extension,
                 minsize=self.minsize,
-                transform=self.transform_val,
+                transform=self.transform_images,
             )
 
-            self.dataloader_val = DataLoader(
-                self.data_val,
+            self.dataloader_images = DataLoader(
+                self.data_images,
                 batch_size=self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
             )
+        elif stage == "thumbnail_images":
+            self.data_thumbnail_images = IllustrisSdssDataset(
+                data_directories=self.data_directories,
+                extension=self.extension,
+                minsize=self.minsize,
+                transform=self.transform_thumbnail_images,
+            )
+
+            self.dataloader_thumbnail_images = DataLoader(
+                self.data_thumbnail_images,
+                batch_size=self.batch_size,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
+        else:
+            raise ValueError(f"Unknown stage: {stage}")
 
     def train_dataloader(self):
         """Gets the data loader for training.
@@ -153,3 +160,27 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
             torch.utils.data.DataLoader: The dataloader instance to use for training.
         """
         return self.dataloader_train
+
+    def processing_dataloader(self):
+        """Gets the data loader for processing.
+
+        Returns:
+            torch.utils.data.DataLoader: The dataloader instance to use for processing.
+        """
+        return self.dataloader_processing
+
+    def images_dataloader(self):
+        """Gets the data loader for images.
+
+        Returns:
+            torch.utils.data.DataLoader: The dataloader instance to use for images.
+        """
+        return self.dataloader_images
+
+    def thumbnail_images_dataloader(self):
+        """Gets the data loader for thumbnail images.
+
+        Returns:
+            torch.utils.data.DataLoader: The dataloader instance to use for thumbnail images.
+        """
+        return self.dataloader_thumbnail_images

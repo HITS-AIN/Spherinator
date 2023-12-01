@@ -47,10 +47,10 @@ class KrizhevskyColorTransformation:
         return images
 
 
-class CreateNormalizedColors:
+class CreateNormalizedRGBColors:
     def __init__(self, stretch, range, lower_limit, channel_combinations, scalers):
         """
-        Initialize CreateNormalizedColors.
+        Initialize CreateNormalizedRGBColors.
 
         Args:
             stretch (bool): Flag indicating whether to stretch the image.

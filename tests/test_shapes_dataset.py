@@ -1,3 +1,4 @@
+import pytest
 import torch
 from torch.utils.data import DataLoader
 
@@ -33,3 +34,9 @@ def test_dataloader():
         dataloader.dataset.get_metadata(index[1])["filename"]
         == "tests/data/shapes/boxes.npy"
     )
+
+
+@pytest.mark.skip(reason="must be solved")
+def test_jit():
+    dataset = ShapesDataset("tests/data/shapes")
+    torch.jit.script(dataset)

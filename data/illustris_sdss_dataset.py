@@ -55,14 +55,13 @@ class IllustrisSdssDataset(SpherinatorDataset):
 
         Returns:
             data: Data of the item/items with the given indices.
-            index: Index of the item/items
         """
         data = fits.getdata(self.files[index], 0)
         data = numpy.array(data).astype(numpy.float32)
         data = torch.Tensor(data)
         if self.transform:
             data = self.transform(data)
-        return data, index
+        return data
 
     def get_metadata(self, index: int):
         """Retrieves the metadata of the item/items with the given indices from the dataset.
