@@ -6,18 +6,21 @@ import os
 import numpy
 import skimage.io as io
 import torch
-from torch.utils.data import Dataset
+
+from .spherinator_dataset import SpherinatorDataset
 
 
-class GalaxyZooDataset(Dataset):
-    """ Provides access to galaxy zoo images.
-    """
-    def __init__(self,
-                 data_directory: str,
-                 extension: str = ".jpeg",
-                 label_file = None,
-                 transform = None):
-        """ Initializes an galaxy zoo data set.
+class GalaxyZooDataset(SpherinatorDataset):
+    """Provides access to galaxy zoo images."""
+
+    def __init__(
+        self,
+        data_directory: str,
+        extension: str = ".jpeg",
+        label_file: str = str(),
+        transform=None,
+    ):
+        """Initializes an galaxy zoo data set.
 
         Args:
             data_directory (str): The directory that contains the images for this dataset.
@@ -35,37 +38,45 @@ class GalaxyZooDataset(Dataset):
         for file in os.listdir(data_directory):
             if file.endswith(extension):
                 self.files.append(os.path.join(data_directory, file))
-        self.len = len(self.files)
-        if label_file is None:
+        if label_file is str():
             self.labels = torch.Tensor(numpy.zeros(self.len))
         else:
-            self.labels = torch.Tensor(numpy.loadtxt(label_file, delimiter=',', skiprows=1)[:,1:])
+            self.labels = torch.Tensor(
+                numpy.loadtxt(label_file, delimiter=",", skiprows=1)[:, 1:]
+            )
 
     def __len__(self):
-        """ Return the number of items in the dataset.
+        """Return the number of items in the dataset."""
+        return len(self.files)
 
-        Returns:
-            int: Number of items in dataset.
-        """
-        return self.len
-
-    def __getitem__(self, idx):
-        """ Retrieves the item/items with the given indices from the dataset.
+    def __getitem__(self, index: int):
+        """Retrieves the item/items with the given indices from the dataset.
 
         Args:
-            idx (int): The index of the item to retrieve.
+            index (int): The index of the item to retrieve.
 
         Returns:
-            dictionary: A dictionary mapping image, filename, labels and id.
+            data: Data of the item/items with the given indices.
         """
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
+        data = io.imread(self.files[index])
+        data = torch.Tensor(data)
         # to normalize the RGB values to values between 0 and 1 ,swap 0,2 to get 3x424x424
-        image = torch.swapaxes(torch.Tensor(io.imread(self.files[idx])), 0, 2) / 255.0
-        sample = {'image': image,
-                  'filename': self.files[idx],
-                  'labels': self.labels[idx],
-                  'id': idx}
+        data = torch.swapaxes(data, 0, 2) / 255.0
         if self.transform:
-            sample = self.transform(sample)
-        return sample
+            data = self.transform(data)
+        return data
+
+    def get_metadata(self, index: int):
+        """Retrieves the metadata of the item/items with the given indices from the dataset.
+
+        Args:
+            index: The index of the item to retrieve.
+
+        Returns:
+            metadata: Metadata of the item/items with the given indices.
+        """
+        metadata = {
+            "filename": self.files[index],
+            "labels": self.labels[index],
+        }
+        return metadata

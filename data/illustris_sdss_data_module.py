@@ -1,15 +1,13 @@
-""" Provides access to the Illustris sdss data set.
-"""
-
-import lightning.pytorch as pl
-from torch.utils.data import DataLoader
 import torchvision.transforms.v2 as transforms
+from torch.utils.data import DataLoader
 
 import data.preprocessing as preprocessing
 from data.illustris_sdss_dataset import IllustrisSdssDataset
 
+from .spherinator_data_module import SpherinatorDataModule
 
-class IllustrisSdssDataModule(pl.LightningDataModule):
+
+class IllustrisSdssDataModule(SpherinatorDataModule):
     """Defines access to the Illustris sdss data as a data module."""
 
     def __init__(
@@ -21,7 +19,7 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
         batch_size: int = 32,
         num_workers: int = 16,
     ):
-        """Initializes the data loader for the Illustris sdss images.
+        """Initialize IllustrisSdssDataModule.
 
         Args:
             data_directories (list[str]): The directories to scan for data files.
@@ -34,6 +32,11 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
         super().__init__()
 
         self.data_directories = data_directories
+        self.extension = extension
+        self.minsize = minsize
+        self.shuffle = shuffle
+        self.batch_size = batch_size
+        self.num_workers = num_workers
 
         self.transform_images = transforms.Compose(
             [
@@ -71,22 +74,6 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
                 self.transform_images,
             ]
         )
-
-        self.batch_size = batch_size
-        self.extension = extension
-        self.minsize = minsize
-        self.shuffle = shuffle
-        self.num_workers = num_workers
-
-        self.data_train = None
-        self.data_processing = None
-        self.data_images = None
-        self.data_thumbnail_images = None
-
-        self.dataloader_train = None
-        self.dataloader_processing = None
-        self.dataloader_images = None
-        self.dataloader_thumbnail_images = None
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
@@ -152,35 +139,3 @@ class IllustrisSdssDataModule(pl.LightningDataModule):
             )
         else:
             raise ValueError(f"Unknown stage: {stage}")
-
-    def train_dataloader(self):
-        """Gets the data loader for training.
-
-        Returns:
-            torch.utils.data.DataLoader: The dataloader instance to use for training.
-        """
-        return self.dataloader_train
-
-    def processing_dataloader(self):
-        """Gets the data loader for processing.
-
-        Returns:
-            torch.utils.data.DataLoader: The dataloader instance to use for processing.
-        """
-        return self.dataloader_processing
-
-    def images_dataloader(self):
-        """Gets the data loader for images.
-
-        Returns:
-            torch.utils.data.DataLoader: The dataloader instance to use for images.
-        """
-        return self.dataloader_images
-
-    def thumbnail_images_dataloader(self):
-        """Gets the data loader for thumbnail images.
-
-        Returns:
-            torch.utils.data.DataLoader: The dataloader instance to use for thumbnail images.
-        """
-        return self.dataloader_thumbnail_images

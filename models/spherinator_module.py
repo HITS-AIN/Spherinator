@@ -7,10 +7,10 @@ class SpherinatorModule(ABC, pl.LightningModule):
     """
     Abstract base class for all spherinator modules to ensure that all methods for hipster are implemented.
     """
+
     @abstractmethod
     def get_input_size(self):
-        """Returns the size of the images the model takes as input and generates as output.
-        """
+        """Returns the size of the images the model takes as input and generates as output."""
 
     @abstractmethod
     def project(self, images):
@@ -19,7 +19,6 @@ class SpherinatorModule(ABC, pl.LightningModule):
         Args:
             images (Tensor): Input images.
         """
-        pass
 
     @abstractmethod
     def reconstruct(self, coordinates):
@@ -28,7 +27,6 @@ class SpherinatorModule(ABC, pl.LightningModule):
         Args:
             coordinates (Tensor): Coordinates in the latent space.
         """
-        pass
 
     @abstractmethod
     def reconstruction_loss(self, images, reconstructions):
@@ -38,4 +36,3 @@ class SpherinatorModule(ABC, pl.LightningModule):
             images (Tensor): Input images.
             reconstructions (Tensor): Reconstructed images.
         """
-        pass

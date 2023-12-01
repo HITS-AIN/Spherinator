@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 
 class SpherinatorDataset(ABC, Dataset):
     """
-    Abstract base class for all datasets
+    Abstract base class for all spherinator datasets.
     """
 
     @abstractmethod

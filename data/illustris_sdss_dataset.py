@@ -51,7 +51,7 @@ class IllustrisSdssDataset(SpherinatorDataset):
         """Retrieves the item/items with the given indices from the dataset.
 
         Args:
-            index: The index of the item to retrieve.
+            index (int): The index of the item to retrieve.
 
         Returns:
             data: Data of the item/items with the given indices.
