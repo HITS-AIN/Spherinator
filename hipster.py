@@ -10,10 +10,27 @@ from hipster import Hipster
 
 
 def main():
+    list_of_tasks = [
+        "hips",
+        "catalog",
+        "votable",
+        "projection",
+        "images",
+        "thumbnails",
+        "allsky",
+        "all",
+    ]
+
     parser = argparse.ArgumentParser(
         description="Transform a model in a HiPS representation"
     )
-    parser.add_argument("task", help="Execution task [hips, catalog, projection, all].")
+    parser.add_argument(
+        "--task",
+        "-t",
+        nargs="+",
+        default=["all"],
+        help="Execution task [" + ", ".join(list_of_tasks) + "].",
+    )
     parser.add_argument(
         "--config",
         "-c",
@@ -57,6 +74,13 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if not set(args.task) <= set(list_of_tasks):
+        raise ValueError(f"Task '{args.task}' not in list of tasks: {list_of_tasks}")
+    if "all" in args.task:
+        args.task = list_of_tasks[:-1]
+    print(f"Executing task(s): {', '.join(args.task)}")
+
     with open(args.config, "r", encoding="utf-8") as stream:
         config = yaml.load(stream, Loader=yaml.Loader)
 
@@ -67,9 +91,9 @@ def main():
         module = importlib.import_module(module_name)
         model_class = getattr(module, class_name)
         model_init_args = config["model"]["init_args"]
-        myModel = model_class(**model_init_args)
+        model = model_class(**model_init_args)
         checkpoint = torch.load(args.checkpoint)
-        myModel.load_state_dict(checkpoint["state_dict"])
+        model.load_state_dict(checkpoint["state_dict"])
 
     # Import the data module and create an instance of it
     if args.task in ["catalog", "projection", "all"]:
@@ -78,10 +102,10 @@ def main():
         module = importlib.import_module(module_name)
         data_class = getattr(module, class_name)
         data_init_args = config["data"]["init_args"]
-        myDataModule = data_class(**data_init_args)
-        myDataModule.setup("predict")
+        datamodule = data_class(**data_init_args)
+        datamodule.setup("predict")
 
-    myHipster = Hipster(
+    hipster = Hipster(
         args.output_folder,
         args.title,
         max_order=args.max_order,
@@ -91,17 +115,28 @@ def main():
         distortion_correction=args.distortion,
     )
 
-    if args.task == "hips" or args.task == "all":
-        myHipster.generate_hips(myModel)
+    if "hips" in args.task:
+        hipster.generate_hips(model)
 
-    if args.task == "catalog" or args.task == "all":
-        myHipster.generate_catalog(
-            myModel, myDataModule.predict_dataloader(), "catalog.csv"
+    if "catalog" in args.task:
+        hipster.generate_catalog(
+            model, datamodule.processsing_dataloader(), "catalog.csv"
         )
-        myHipster.transform_csv_to_votable("catalog.csv", "catalog.vot")
 
-    if args.task == "projection" or args.task == "all":
-        myHipster.generate_dataset_projection(myDataModule.data_predict, "catalog.csv")
+    if "votable" in args.task:
+        hipster.transform_csv_to_votable("catalog.csv", "catalog.vot")
+
+    if "projection" in args.task:
+        hipster.generate_dataset_projection(datamodule.data_processing, "catalog.csv")
+
+    if "images" in args.task:
+        raise NotImplementedError
+
+    if "thumbnails" in args.task:
+        raise NotImplementedError
+
+    if "allsky" in args.task:
+        raise NotImplementedError
 
 
 if __name__ == "__main__":
