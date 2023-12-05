@@ -15,7 +15,7 @@ class IllustrisSdssDataset(SpherinatorDataset):
     def __init__(
         self,
         data_directories: list[str],
-        extension: str = ".fits",
+        extension: str = "fits",
         minsize: int = 100,
         transform=None,
     ):
@@ -24,7 +24,7 @@ class IllustrisSdssDataset(SpherinatorDataset):
         Args:
             data_directories (list[str]): The directories to scan for images.
             extension (str, optional): The file extension to use for searching for files.
-                Defaults to ".fits".
+                Defaults to "fits".
             minsize (int, optional): The minimum size of the images to include. Defaults to 100.
             transform (torchvision.transforms.Compose, optional): A single or a set of
                 transformations to modify the images. Defaults to None.
@@ -42,6 +42,7 @@ class IllustrisSdssDataset(SpherinatorDataset):
                     size = fits.getval(fits_filename, "NAXIS1")
                     if int(size) >= minsize:
                         self.files.append(fits_filename)
+        self.current_index = []
 
     def __len__(self):
         """Return the number of items in the dataset."""
@@ -56,6 +57,7 @@ class IllustrisSdssDataset(SpherinatorDataset):
         Returns:
             data: Data of the item/items with the given indices.
         """
+        self.current_index = index
         data = fits.getdata(self.files[index], 0)
         data = numpy.array(data).astype(numpy.float32)
         data = torch.Tensor(data)

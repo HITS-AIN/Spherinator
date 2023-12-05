@@ -48,6 +48,7 @@ class ShapesDataset(SpherinatorDataset):
             self.file_entries_offsets.append(
                 self.file_entries_offsets[-1] + images.shape[0]
             )
+        self.current_index = []
 
     def __len__(self):
         """Return the number of items in the dataset.
@@ -68,10 +69,11 @@ class ShapesDataset(SpherinatorDataset):
             index: Index of the item/items
 
         """
+        self.current_index = index
         data = self.images[index]
         if self.transform:
             data = self.transform(data)
-        return data, index
+        return data
 
     def get_metadata(self, index: int):
         """Retrieves the metadata of the item/items with the given indices from the dataset.

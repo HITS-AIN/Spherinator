@@ -148,17 +148,16 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         return (z_location, z_scale), (q_z, p_z), z, recon
 
     def training_step(self, batch, batch_idx):
-        data, _ = batch
-        best_recon = torch.ones(data.shape[0], device=data.device) * 1e10
+        best_recon = torch.ones(batch.shape[0], device=batch.device) * 1e10
         best_scaled = torch.zeros(
-            (data.shape[0], data.shape[1], self.input_size, self.input_size),
-            device=data.device,
+            (batch.shape[0], batch.shape[1], self.input_size, self.input_size),
+            device=batch.device,
         )
 
         with torch.no_grad():
             for i in range(self.rotations):
                 rotate = functional.rotate(
-                    data, 360.0 / self.rotations * i, expand=False
+                    batch, 360.0 / self.rotations * i, expand=False
                 )
                 crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
                 scaled = functional.resize(

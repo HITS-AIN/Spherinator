@@ -16,7 +16,7 @@ class GalaxyZooDataset(SpherinatorDataset):
     def __init__(
         self,
         data_directory: str,
-        extension: str = ".jpeg",
+        extension: str = "jpeg",
         label_file: str = str(),
         transform=None,
     ):
@@ -25,7 +25,7 @@ class GalaxyZooDataset(SpherinatorDataset):
         Args:
             data_directory (str): The directory that contains the images for this dataset.
             extension (str, optional): The file extension to use when searching for file.
-                Defaults to ".jpeg".
+                Defaults to "jpeg".
             label_file (str): The name of the file that contains the labels used for training of
                 testing. By default None is specified. In this case no labels will be returned for
                 the individual items!
@@ -44,6 +44,7 @@ class GalaxyZooDataset(SpherinatorDataset):
             self.labels = torch.Tensor(
                 numpy.loadtxt(label_file, delimiter=",", skiprows=1)[:, 1:]
             )
+        self.current_index = []
 
     def __len__(self):
         """Return the number of items in the dataset."""
@@ -58,10 +59,13 @@ class GalaxyZooDataset(SpherinatorDataset):
         Returns:
             data: Data of the item/items with the given indices.
         """
+        self.current_index = index
         data = io.imread(self.files[index])
         data = torch.Tensor(data)
-        # to normalize the RGB values to values between 0 and 1 ,swap 0,2 to get 3x424x424
-        data = torch.swapaxes(data, 0, 2) / 255.0
+        # Swap axis 0 and 2 to bring the color channel to the front
+        data = torch.swapaxes(data, 0, 2)
+        # Normalize the RGB values to values between 0 and 1
+        data /= 255.0
         if self.transform:
             data = self.transform(data)
         return data

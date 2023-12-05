@@ -24,7 +24,7 @@ class LogReconstructionCallback(Callback):
             return
 
         # Generate some random samples from the validation set
-        data, _ = next(iter(trainer.train_dataloader))
+        data = next(iter(trainer.train_dataloader))
         samples = data[: self.num_samples].to(pl_module.device)
 
         # Generate reconstructions of the samples using the model
