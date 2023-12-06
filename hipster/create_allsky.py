@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy
 import skimage.io as io
 import torch
+import torchvision.transforms.v2 as transforms
 from PIL import Image
 
 
@@ -31,7 +32,7 @@ def create_allsky(
                 raise RuntimeError("File not found: " + str(file))
 
             image = torch.swapaxes(torch.Tensor(io.imread(file)), 0, 2) / 255.0
-            image = TF.resize(image, [64, 64], antialias=True)
+            image = transforms.functional.resize(image, [64, 64], antialias=True)
             image = torch.swapaxes(image, 0, 2)
 
             x = i % width
