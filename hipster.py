@@ -75,28 +75,35 @@ def main():
 
     args = parser.parse_args()
 
+    # Check if the tasks are valid
     if not set(args.task) <= set(list_of_tasks):
         raise ValueError(f"Task '{args.task}' not in list of tasks: {list_of_tasks}")
+
+    # If "all" is in the list of tasks, replace it with all tasks except "all"
     if "all" in args.task:
         args.task = list_of_tasks[:-1]
+
     print(f"Executing task(s): {', '.join(args.task)}")
 
     with open(args.config, "r", encoding="utf-8") as stream:
         config = yaml.load(stream, Loader=yaml.Loader)
 
     # Import the model class and create an instance of it
-    if args.task in ["hips", "catalog", "all"]:
+    if any(x in ["hips", "catalog"] for x in args.task):
         model_class_path = config["model"]["class_path"]
         module_name, class_name = model_class_path.rsplit(".", 1)
         module = importlib.import_module(module_name)
         model_class = getattr(module, class_name)
         model_init_args = config["model"]["init_args"]
         model = model_class(**model_init_args)
-        checkpoint = torch.load(args.checkpoint)
+        # FIXME: This is a hack to load the model on the GPU
+        # See https://pytorch.org/docs/stable/generated/torch.load.html for map_location
+        checkpoint = torch.load(args.checkpoint, map_location="cuda:0")
         model.load_state_dict(checkpoint["state_dict"])
+        model.eval()
 
     # Import the data module and create an instance of it
-    if args.task in ["catalog", "projection", "all"]:
+    if any(x in ["catalog", "projection"] for x in args.task):
         data_class_path = config["data"]["class_path"]
         module_name, class_name = data_class_path.rsplit(".", 1)
         module = importlib.import_module(module_name)
