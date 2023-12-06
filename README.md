@@ -57,7 +57,7 @@ Examples:
 The following command generates a HiPS representation and a catalog showing the real images located on the latent space using the trained model.
 
 ```bash
-./hipster.py all --checkpoint <checkpoint-file>.ckpt
+./hipster.py --task <task> --checkpoint <checkpoint-file>.ckpt
 ```
 
 Call `./hipster.py --help` for more information.

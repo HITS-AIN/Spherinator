@@ -4,11 +4,13 @@
 import copy
 import math
 import os
+import sys
 from datetime import datetime
 from shutil import rmtree
 
 import healpy
 import numpy
+import psutil
 import torch
 import torch.multiprocessing as multiprocessing
 import torchvision.transforms.functional as functional
@@ -16,8 +18,13 @@ from astropy.io.votable import writeto
 from astropy.table import Table
 from PIL import Image
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(script_dir, "./"))
 
-class Hipster:
+import create_images
+
+
+class Hipster(create_images.Mixin):
     """
     Provides all functions to automatically generate a HiPS representation for a machine learning
     model that projects images on a sphere.
@@ -32,8 +39,9 @@ class Hipster:
         crop_size=64,
         output_size=128,
         distortion_correction=False,
+        number_of_workers=-1,
     ):
-        """Initializes the hipster
+        """Initializes the Hipster
 
         Args:
             output_folder (String): The place where to export the HiPS to. In case it exists, there
@@ -47,6 +55,8 @@ class Hipster:
                 case it might be larger. Defaults to 64.
             output_size (int, optional): Specifies the size the tilings should be scaled to. Must be
                 in the powers of 2. Defaults to 128.
+            number_of_workers (int, optional): The number of CPU threads. Defaults to -1, which means
+                all available threads.
         """
         assert math.log2(output_size) == int(math.log2(output_size))
         assert max_order < 10
@@ -57,7 +67,13 @@ class Hipster:
         self.crop_size = crop_size
         self.output_size = output_size
         self.distortion_correction = distortion_correction
-        self.n_workers = 12  # TODO config?
+
+        if number_of_workers == -1:
+            self.number_of_workers = psutil.cpu_count() / psutil.cpu_count(
+                logical=False
+            )
+        else:
+            self.number_of_workers = number_of_workers
 
     def check_folders(self, base_folder):
         """Checks whether the base folder exists and deletes it after prompting for user input
@@ -313,7 +329,7 @@ class Hipster:
                 flush=True,
             )
             mypool = []
-            for t in range(self.n_workers):
+            for t in range(self.number_of_workers):
                 mypool.append(
                     multiprocessing.Process(
                         target=create_hips_tile,
@@ -322,8 +338,8 @@ class Hipster:
                             model,
                             i,
                             range(
-                                t * 12 * 4**i // self.n_workers,
-                                (t + 1) * 12 * 4**i // self.n_workers,
+                                t * 12 * 4**i // self.number_of_workers,
+                                (t + 1) * 12 * 4**i // self.number_of_workers,
                             ),
                         ),
                     )
@@ -606,7 +622,7 @@ class Hipster:
             #                             "Dir"+str(int(math.floor(j/10000))*10000),
             #                             "Npix"+str(j)+".jpg"))
 
-            for t in range(self.n_workers):
+            for t in range(self.number_of_workers):
                 mypool.append(
                     multiprocessing.Process(
                         target=create_embeded_tile,
@@ -617,8 +633,8 @@ class Hipster:
                             copy.deepcopy(healpix_cells),
                             i,
                             range(
-                                t * 12 * 4**i // self.n_workers,
-                                (t + 1) * 12 * 4**i // self.n_workers,
+                                t * 12 * 4**i // self.number_of_workers,
+                                (t + 1) * 12 * 4**i // self.number_of_workers,
                             ),
                         ),
                     )

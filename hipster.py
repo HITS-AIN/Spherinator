@@ -103,14 +103,13 @@ def main():
         model.eval()
 
     # Import the data module and create an instance of it
-    if any(x in ["catalog", "projection"] for x in args.task):
+    if any(x in ["catalog", "projection", "images", "thumbnails"] for x in args.task):
         data_class_path = config["data"]["class_path"]
         module_name, class_name = data_class_path.rsplit(".", 1)
         module = importlib.import_module(module_name)
         data_class = getattr(module, class_name)
         data_init_args = config["data"]["init_args"]
         datamodule = data_class(**data_init_args)
-        datamodule.setup("predict")
 
     hipster = Hipster(
         args.output_folder,
@@ -137,7 +136,7 @@ def main():
         hipster.generate_dataset_projection(datamodule.data_processing, "catalog.csv")
 
     if "images" in args.task:
-        raise NotImplementedError
+        hipster.create_images(datamodule)
 
     if "thumbnails" in args.task:
         raise NotImplementedError

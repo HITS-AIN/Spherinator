@@ -119,7 +119,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
 
             self.dataloader_images = DataLoader(
                 self.data_images,
-                batch_size=self.batch_size,
+                batch_size=1,
                 shuffle=False,
                 num_workers=self.num_workers,
             )
@@ -133,7 +133,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
 
             self.dataloader_thumbnail_images = DataLoader(
                 self.data_thumbnail_images,
-                batch_size=self.batch_size,
+                batch_size=1,
                 shuffle=False,
                 num_workers=self.num_workers,
             )
