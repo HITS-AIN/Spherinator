@@ -69,9 +69,7 @@ class Hipster(create_images.Mixin):
         self.distortion_correction = distortion_correction
 
         if number_of_workers == -1:
-            self.number_of_workers = psutil.cpu_count() / psutil.cpu_count(
-                logical=False
-            )
+            self.number_of_workers = psutil.cpu_count(logical=False)
         else:
             self.number_of_workers = number_of_workers
 
