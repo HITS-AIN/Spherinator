@@ -16,7 +16,7 @@ data:
                        "/local_data/AIN/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/",
                        "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_135/data/",
                        "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data/"]
-    extension: .fits
+    extension: fits
     minsize: 100
     batch_size: 512
     shuffle: True
