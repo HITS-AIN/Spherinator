@@ -147,14 +147,16 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         recon = self.decode(z)
         return (z_location, z_scale), (q_z, p_z), z, recon
 
-    def training_step(self, batch, batch_idx):
-        best_recon = torch.ones(batch.shape[0], device=batch.device) * 1e10
-        best_scaled = torch.zeros(
-            (batch.shape[0], batch.shape[1], self.input_size, self.input_size),
-            device=batch.device,
-        )
-
+    def find_best_rotation(self, batch):
+        """Returns the rotated and scaled image with the lowest reconstruction loss."""
         with torch.no_grad():
+            best_recon = torch.ones(batch.shape[0], device=batch.device) * 1e10
+            best_recon_idx = torch.zeros(batch.shape[0], device=batch.device)
+            best_scaled_image = torch.zeros(
+                (batch.shape[0], batch.shape[1], self.input_size, self.input_size),
+                device=batch.device,
+            )
+
             for i in range(self.rotations):
                 rotate = functional.rotate(
                     batch, 360.0 / self.rotations * i, expand=False
@@ -164,15 +166,21 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
                     crop, [self.input_size, self.input_size], antialias=True
                 )
 
-                (_, _), (_, _), _, recon = self.forward(scaled)
-                loss_recon = self.reconstruction_loss(scaled, recon)
+                coordinates = self.project(scaled)
+                reconstruction = self.reconstruct(coordinates)
+                loss_recon = self.reconstruction_loss(scaled, reconstruction)
+
                 best_recon_idx = torch.where(loss_recon < best_recon)
                 best_recon[best_recon_idx] = loss_recon[best_recon_idx]
-                best_scaled[best_recon_idx] = scaled[best_recon_idx]
+                best_scaled_image[best_recon_idx] = scaled[best_recon_idx]
 
-        (z_location, z_scale), (q_z, p_z), _, recon = self.forward(best_scaled)
+            return best_scaled_image, best_recon_idx
 
-        loss_recon = self.reconstruction_loss(best_scaled, recon)
+    def training_step(self, batch, batch_idx):
+        best_scaled_image, _ = self.find_best_rotation(batch)
+        (z_location, z_scale), (q_z, p_z), _, recon = self.forward(best_scaled_image)
+
+        loss_recon = self.reconstruction_loss(best_scaled_image, recon)
         loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
         loss = (loss_recon + loss_KL).mean()
         loss_recon = loss_recon.mean()
