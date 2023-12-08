@@ -4,7 +4,11 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 
 import data.preprocessing as pp
-from data import IllustrisSdssDataModule, IllustrisSdssDataset
+from data import (
+    IllustrisSdssDataModule,
+    IllustrisSdssDataset,
+    IllustrisSdssDatasetWithMetadata,
+)
 
 
 def test_empty():
@@ -74,6 +78,23 @@ def test_metadata():
     assert dataset.get_metadata(0)["simulation"] == "TNG50"
     assert dataset.get_metadata(0)["snapshot"] == "095"
     assert dataset.get_metadata(0)["subhalo_id"] == "117359"
+
+
+def test_dataloader_with_metadata():
+    torch.manual_seed(0)
+    dataset = IllustrisSdssDatasetWithMetadata(
+        ["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],
+        transform=IllustrisSdssDataModule.transform_processing,
+    )
+    dataloader = DataLoader(dataset, batch_size=2)
+
+    batch, metadata = next(iter(dataloader))
+
+    assert batch.shape == (2, 3, 363, 363)
+    assert (
+        metadata["filename"][0]
+        == "tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/broadband_117359.fits"
+    )
 
 
 @pytest.mark.skip(reason="must be solved")

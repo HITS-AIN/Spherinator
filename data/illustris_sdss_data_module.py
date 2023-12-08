@@ -6,12 +6,50 @@ from torch.utils.data import DataLoader
 import data.preprocessing as preprocessing
 from data.illustris_sdss_dataset import IllustrisSdssDataset
 from models.spherinator_module import SpherinatorModule
+from tqdm import tqdm
 
 from .spherinator_data_module import SpherinatorDataModule
 
 
 class IllustrisSdssDataModule(SpherinatorDataModule):
     """Defines access to the Illustris sdss data as a data module."""
+
+    transform_images = transforms.Compose(
+        [
+            preprocessing.CreateNormalizedRGBColors(
+                stretch=0.9,
+                range=5,
+                lower_limit=0.001,
+                channel_combinations=[[2, 3], [1, 0], [0]],
+                scalers=[0.7, 0.5, 1.3],
+            ),
+        ]
+    )
+    transform_processing = transforms.Compose(
+        [
+            transforms.CenterCrop((363, 363)),
+            transform_images,
+        ]
+    )
+    transform_train = transforms.Compose(
+        [
+            transform_processing,
+            preprocessing.DielemanTransformation(
+                rotation_range=[0, 360],
+                translation_range=[0, 0],  # 4./363,4./363],
+                scaling_range=[1, 1],  # 0.9,1.1],
+                flip=0.5,
+            ),
+            transforms.CenterCrop((363, 363)),
+        ]
+    )
+    transform_thumbnail_images = transforms.Compose(
+        [
+            transforms.CenterCrop((363, 363)),
+            transforms.Resize((100, 100), antialias=True),
+            transform_images,
+        ]
+    )
 
     def __init__(
         self,
@@ -41,50 +79,16 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-        self.transform_images = transforms.Compose(
-            [
-                preprocessing.CreateNormalizedRGBColors(
-                    stretch=0.9,
-                    range=5,
-                    lower_limit=0.001,
-                    channel_combinations=[[2, 3], [1, 0], [0]],
-                    scalers=[0.7, 0.5, 1.3],
-                ),
-            ]
-        )
-        self.transform_processing = transforms.Compose(
-            [
-                transforms.CenterCrop((363, 363)),
-                self.transform_images,
-            ]
-        )
-        self.transform_train = transforms.Compose(
-            [
-                self.transform_processing,
-                preprocessing.DielemanTransformation(
-                    rotation_range=[0, 360],
-                    translation_range=[0, 0],  # 4./363,4./363],
-                    scaling_range=[1, 1],  # 0.9,1.1],
-                    flip=0.5,
-                ),
-                transforms.CenterCrop((363, 363)),
-            ]
-        )
-        self.transform_thumbnail_images = transforms.Compose(
-            [
-                transforms.CenterCrop((363, 363)),
-                transforms.Resize((100, 100), antialias=True),
-                self.transform_images,
-            ]
-        )
-
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
 
         Args:
             stage (str): Defines for which stage the data is needed.
         """
-        if stage == "fit":
+        if not stage in ["fit", "processing", "images", "thumbnail_images"]:
+            raise ValueError(f"Stage {stage} not supported.")
+
+        if stage == "fit" and self.data_train is None:
             self.data_train = IllustrisSdssDataset(
                 data_directories=self.data_directories,
                 extension=self.extension,
@@ -97,7 +101,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 shuffle=self.shuffle,
                 num_workers=self.num_workers,
             )
-        elif stage == "processing":
+        elif stage == "processing" and self.data_processing is None:
             self.data_processing = IllustrisSdssDataset(
                 data_directories=self.data_directories,
                 extension=self.extension,
@@ -110,7 +114,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 shuffle=False,
                 num_workers=self.num_workers,
             )
-        elif stage == "images":
+        elif stage == "images" and self.data_images is None:
             self.data_images = IllustrisSdssDataset(
                 data_directories=self.data_directories,
                 extension=self.extension,
@@ -123,7 +127,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 shuffle=False,
                 num_workers=self.num_workers,
             )
-        elif stage == "thumbnail_images":
+        elif stage == "thumbnail_images" and self.data_thumbnail_images is None:
             self.data_thumbnail_images = IllustrisSdssDataset(
                 data_directories=self.data_directories,
                 extension=self.extension,
@@ -136,16 +140,18 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 shuffle=False,
                 num_workers=self.num_workers,
             )
-        else:
-            raise ValueError(f"Unknown stage: {stage}")
 
     def write_catalog(self, model: SpherinatorModule, catalog_file: Path):
         """Writes a catalog to disk."""
+        self.setup("processing")
         with open(catalog_file, "w", encoding="utf-8") as output:
             output.write(
                 "#preview,simulation,snapshot data,subhalo id,subhalo data,RMSE,id,RA2000,DEC2000,rotation,x,y,z\n"
             )
-            for i in range(coordinates.shape[0]):
+
+            for batch in tqdm(self.dataloader_processing):
+                _, rotations, coordinates, losses = model.find_best_rotation(batch)
+
                 output.write("<a href='https://space.h-its.org/Illustris/jpg/")
                 output.write(str(dataloader.dataset[i]["metadata"]["simulation"]) + "/")
                 output.write(str(dataloader.dataset[i]["metadata"]["snapshot"]) + "/")
@@ -193,5 +199,3 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                     + str(coordinates[i, 2])
                     + "\n"
                 )
-
-            output.flush()
