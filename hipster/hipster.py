@@ -7,6 +7,7 @@ import os
 import sys
 from datetime import datetime
 from shutil import rmtree
+from pathlib import Path
 
 import healpy
 import numpy
@@ -17,6 +18,10 @@ import torchvision.transforms.functional as functional
 from astropy.io.votable import writeto
 from astropy.table import Table
 from PIL import Image
+from tqdm import tqdm
+
+from data.spherinator_data_module import SpherinatorDataModule
+from models.spherinator_module import SpherinatorModule
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(script_dir, "./"))
@@ -40,6 +45,8 @@ class Hipster(create_images.Mixin):
         output_size=128,
         distortion_correction=False,
         number_of_workers=-1,
+        catalog_file="catalog.csv",
+        votable_file="catalog.vot",
     ):
         """Initializes the Hipster
 
@@ -57,21 +64,31 @@ class Hipster(create_images.Mixin):
                 in the powers of 2. Defaults to 128.
             number_of_workers (int, optional): The number of CPU threads. Defaults to -1, which means
                 all available threads.
+            catalog_file (String, optional): The name of the catalog file to be generated.
+                Defaults to "catalog.csv".
+            votable_file (String, optional): The name of the votable file to be generated.
+                Defaults to "catalog.vot".
         """
         assert math.log2(output_size) == int(math.log2(output_size))
         assert max_order < 10
         self.output_folder = output_folder
         self.title = title
+        self.title_folder = self.output_folder / title
         self.max_order = max_order
         self.hierarchy = hierarchy
         self.crop_size = crop_size
         self.output_size = output_size
         self.distortion_correction = distortion_correction
+        self.catalog_file = self.title_folder / catalog_file
+        self.votable_file = self.title_folder / votable_file
 
         if number_of_workers == -1:
             self.number_of_workers = psutil.cpu_count(logical=False)
         else:
             self.number_of_workers = number_of_workers
+
+        if not self.title_folder.exists():
+            os.mkdir(self.title_folder)
 
     def check_folders(self, base_folder):
         """Checks whether the base folder exists and deletes it after prompting for user input
@@ -354,138 +371,47 @@ class Hipster(create_images.Mixin):
         table = Table.read(input_file, format="ascii.csv")
         writeto(table, output_file)
 
-    def project_dataset(self, model, dataloader, rotation_steps):
-        result_coordinates = torch.zeros((0, 3))
-        result_rotations = torch.zeros((0))
-        result_losses = torch.zeros((0))
-        for batch in dataloader:
-            print(".", end="", flush=True)
-            losses = torch.zeros((batch["id"].shape[0], rotation_steps))
-            coords = torch.zeros((batch["id"].shape[0], rotation_steps, 3))
-            images = batch["image"]
-            for r in range(rotation_steps):
-                rot_images = functional.rotate(
-                    images, 360 / rotation_steps * r, expand=False
-                )  # rotate
-                crop_images = functional.center_crop(
-                    rot_images, [self.crop_size, self.crop_size]
-                )  # crop
-                scaled_images = functional.resize(
-                    crop_images,
-                    [model.get_input_size(), model.get_input_size()],
-                    antialias=True,
-                )  # scale
-                with torch.no_grad():
-                    coordinates = model.project(scaled_images)
-                    reconstruction = model.reconstruct(coordinates)
-                    losses[:, r] = model.reconstruction_loss(
-                        scaled_images, reconstruction
-                    )
-                    coords[:, r] = coordinates
-            min = torch.argmin(losses, dim=1)
-            result_coordinates = torch.cat(
-                (result_coordinates, coords[torch.arange(batch["id"].shape[0]), min])
-            )
-            result_rotations = torch.cat(
-                (result_rotations, 360.0 / rotation_steps * min)
-            )
-            result_losses = torch.cat(
-                (result_losses, losses[torch.arange(batch["id"].shape[0]), min])
-            )
+    def project_dataset(self, model, dataloader):
+        result_coordinates = torch.zeros(0, 3)
+        result_rotations = torch.zeros(0)
+        result_losses = torch.zeros(0)
+
+        for batch in tqdm(dataloader):
+            _, rot, coord, loss = model.find_best_rotation(batch)
+            result_coordinates = torch.cat((result_coordinates, coord))
+            result_rotations = torch.cat((result_rotations, rot))
+            result_losses = torch.cat((result_losses, loss))
         return result_coordinates, result_rotations, result_losses
 
-    def generate_catalog(self, model, dataloader, catalog_file):
+    def generate_catalog(
+        self, model: SpherinatorModule, datamodule: SpherinatorDataModule
+    ):
         """Generates a catalog by mapping all provided data using the encoder of the
             trained model. The catalog will contain the id, coordinates in angles as well
             as unity vector coordinates, the reconstruction loss, and a link to the original
             image file.
 
         Args:
-            model (PT.module): A model that allows to call project_dataset(x) to encode elements
+            model (SpherinatorModule): A model that allows to call project_dataset(x) to encode elements
                 of a dataset to a sphere.
-            dataloader (DataLoader): A data loader to access the images that should get mapped.
-            catalog_file (String): Name of the csv file to be generated.
+            datamodule (SpherinatorDataModule): A datamodule to access the images that should get mapped.
         """
-        if not os.path.exists(self.output_folder):
-            os.mkdir(self.output_folder)
-        if not os.path.exists(os.path.join(self.output_folder, self.title)):
-            os.mkdir(os.path.join(self.output_folder, self.title))
-        if os.path.exists(
-            os.path.join(self.output_folder, self.title, catalog_file)
-        ):  # delete existing catalog
+
+        if self.catalog_file.exists():
             answer = input("catalog exists, overwrite? Yes,[No]")
             if answer != "Yes":
                 return
-        print("projecting dataset:")
-        coordinates, rotations, losses = self.project_dataset(
-            model, dataloader, model.rotations
-        )
-        coordinates = coordinates.cpu().detach().numpy()
-        rotations = rotations.cpu().detach().numpy()
-        losses = losses.cpu().detach().numpy()
-        angles = numpy.array(healpy.vec2ang(coordinates)) * 180.0 / math.pi
-        angles = angles.T
+
+        # print("projecting dataset:")
+        # coordinates, rotations, losses = self.project_dataset(model, dataloader)
+        # coordinates = coordinates.cpu().detach().numpy()
+        # rotations = rotations.cpu().detach().numpy()
+        # losses = losses.cpu().detach().numpy()
+        # angles = numpy.array(healpy.vec2ang(coordinates)) * 180.0 / math.pi
+        # angles = angles.T
 
         print("creating catalog file:")
-        with open(
-            os.path.join(self.output_folder, self.title, "catalog.csv"),
-            "w",
-            encoding="utf-8",
-        ) as output:
-            output.write(
-                "#preview,simulation,snapshot data,subhalo id,subhalo data,RMSE,id,RA2000,DEC2000,rotation,x,y,z\n"
-            )
-            for i in range(coordinates.shape[0]):
-                output.write("<a href='https://space.h-its.org/Illustris/jpg/")
-                output.write(str(dataloader.dataset[i]["metadata"]["simulation"]) + "/")
-                output.write(str(dataloader.dataset[i]["metadata"]["snapshot"]) + "/")
-                output.write(
-                    str(dataloader.dataset[i]["metadata"]["subhalo_id"])
-                    + ".jpg' target='_blank'>"
-                )
-                output.write("<img src='https://space.h-its.org/Illustris/thumbnails/")
-                output.write(str(dataloader.dataset[i]["metadata"]["simulation"]) + "/")
-                output.write(str(dataloader.dataset[i]["metadata"]["snapshot"]) + "/")
-                output.write(
-                    str(dataloader.dataset[i]["metadata"]["subhalo_id"]) + ".jpg'></a>,"
-                )
-
-                output.write(str(dataloader.dataset[i]["metadata"]["simulation"]) + ",")
-                output.write(str(dataloader.dataset[i]["metadata"]["snapshot"]) + ",")
-                output.write(str(dataloader.dataset[i]["metadata"]["subhalo_id"]) + ",")
-                output.write("<a href='")
-                output.write("https://www.tng-project.org/api/")
-                output.write(
-                    str(dataloader.dataset[i]["metadata"]["simulation"])
-                    + "-1/snapshots/"
-                )
-                output.write(
-                    str(dataloader.dataset[i]["metadata"]["snapshot"]) + "/subhalos/"
-                )
-                output.write(str(dataloader.dataset[i]["metadata"]["subhalo_id"]) + "/")
-                output.write("' target='_blank'>www.tng-project.org</a>,")
-                output.write(str(losses[i]) + ",")
-                output.write(
-                    str(i)
-                    + ","
-                    + str(angles[i, 1])
-                    + ","
-                    + str(90.0 - angles[i, 0])
-                    + ","
-                    + str(rotations[i])
-                    + ","
-                )
-                output.write(
-                    str(coordinates[i, 0])
-                    + ","
-                    + str(coordinates[i, 1])
-                    + ","
-                    + str(coordinates[i, 2])
-                    + "\n"
-                )
-
-            output.flush()
-        print("done!")
+        datamodule.write_catalog(model, self.catalog_file)
 
     def calculate_healpix_cells(self, catalog, numbers, order, pixels):
         healpix_cells = {}  # create an extra map to quickly find images in a cell
@@ -566,13 +492,15 @@ class Hipster(create_images.Mixin):
         result[q1.shape[0] :, q1.shape[1] :] = q4
         return result
 
-    def generate_dataset_projection(self, dataset, catalog_file):
+    def generate_dataset_projection(
+        self, datamodule: SpherinatorDataModule, catalog_file
+    ):
         """Generates a HiPS tiling by using the coordinates of every image to map the original
             images form the data set based on their distance to the closest heal pixel cell
             center.
 
         Args:
-            dataset (Dataset): The dataset to access the original images
+            datamodule (SpherinatorDataModule): The datamodule to access the original images
             catalog_file (String): The previously created catalog file that contains the
                 coordinates.
         """
@@ -580,6 +508,9 @@ class Hipster(create_images.Mixin):
         self.create_folders("projection")
         self.create_hips_properties("projection")
         self.create_index_file("projection")
+
+        datamodule.setup("processing")
+        dataset = datamodule.data_processing
 
         print("reading catalog")
         catalog = numpy.genfromtxt(

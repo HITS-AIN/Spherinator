@@ -4,6 +4,7 @@ import os
 from typing import Union
 
 import numpy as np
+import torch
 
 from .spherinator_dataset import SpherinatorDataset
 
@@ -71,6 +72,7 @@ class ShapesDataset(SpherinatorDataset):
         """
         self.current_index = index
         data = self.images[index]
+        data = torch.Tensor(data)
         if self.transform:
             data = self.transform(data)
         return data

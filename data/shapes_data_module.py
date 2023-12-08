@@ -1,16 +1,19 @@
 """ Defines access to the ShapesDataset.
 """
+from pathlib import Path
 from typing import Union
 
-import lightning.pytorch as pl
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from data.shapes_dataset import ShapesDataset
+from models.spherinator_module import SpherinatorModule
+
+from .spherinator_data_module import SpherinatorDataModule
 
 
-class ShapesDataModule(pl.LightningDataModule):
+class ShapesDataModule(SpherinatorDataModule):
     """Defines access to the ShapesDataset."""
 
     def __init__(
@@ -46,7 +49,6 @@ class ShapesDataModule(pl.LightningDataModule):
 
         self.transform_train = transforms.Compose(
             [
-                transforms.ToTensor(),
                 transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
                 transforms.Resize((self.image_size, self.image_size), antialias=True),
                 transforms.Lambda(  # Normalize
@@ -54,9 +56,14 @@ class ShapesDataModule(pl.LightningDataModule):
                 ),
             ]
         )
-
-        self.data_train = None
-        self.dataloader_train = None
+        self.transform_processing = self.transform_train
+        self.transform_images = self.transform_train
+        self.transform_thumbnail_images = transforms.Compose(
+            [
+                self.transform_train,
+                transforms.Resize((100, 100), antialias=True),
+            ]
+        )
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
@@ -65,25 +72,61 @@ class ShapesDataModule(pl.LightningDataModule):
             stage (str): Defines for which stage the data is needed.
                          For the moment just fitting is supported.
         """
-        if stage == "fit":
+        if not stage in ["fit", "processing", "images", "thumbnail_images"]:
+            raise ValueError(f"Stage {stage} not supported.")
+
+        if stage == "fit" and self.data_train is None:
             self.data_train = ShapesDataset(
                 data_directory=self.data_directory,
                 exclude_files=self.exclude_files,
                 transform=self.transform_train,
                 download=self.download,
             )
-
             self.dataloader_train = DataLoader(
                 self.data_train,
                 batch_size=self.batch_size,
                 shuffle=self.shuffle,
                 num_workers=self.num_workers,
             )
+        elif stage == "processing" and self.data_processing is None:
+            self.data_processing = ShapesDataset(
+                data_directory=self.data_directory,
+                exclude_files=self.exclude_files,
+                transform=self.transform_processing,
+            )
+            self.dataloader_processing = DataLoader(
+                self.data_processing,
+                batch_size=self.batch_size,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
+        elif stage == "images" and self.data_images is None:
+            self.data_images = ShapesDataset(
+                data_directory=self.data_directory,
+                exclude_files=self.exclude_files,
+                transform=self.transform_images,
+            )
+            self.dataloader_images = DataLoader(
+                self.data_images,
+                batch_size=1,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
+        elif stage == "thumbnail_images" and self.data_thumbnail_images is None:
+            self.data_thumbnail_images = ShapesDataset(
+                data_directory=self.data_directory,
+                exclude_files=self.exclude_files,
+                transform=self.transform_thumbnail_images,
+            )
+            self.dataloader_thumbnail_images = DataLoader(
+                self.data_thumbnail_images,
+                batch_size=1,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
 
-    def train_dataloader(self):
-        """Gets the data loader for training.
-
-        Returns:
-            torch.utils.data.DataLoader: The dataloader instance to use for training.
-        """
-        return self.dataloader_train
+    def write_catalog(self, model: SpherinatorModule, catalog_file: Path):
+        """Writes a catalog to disk."""
+        self.setup("processing")
+        with open(catalog_file, "w", encoding="utf-8") as output:
+            output.write("#filename,RMSD,rotation,x,y,z\n")

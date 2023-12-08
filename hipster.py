@@ -119,21 +119,21 @@ def main():
         crop_size=args.crop_size,
         output_size=args.output_size,
         distortion_correction=args.distortion,
+        catalog_file="catalog.csv",
+        votable_file="catalog.vot",
     )
 
     if "hips" in args.task:
         hipster.generate_hips(model)
 
     if "catalog" in args.task:
-        hipster.generate_catalog(
-            model, datamodule.processsing_dataloader(), "catalog.csv"
-        )
+        hipster.generate_catalog(model, datamodule)
 
     if "votable" in args.task:
         hipster.transform_csv_to_votable("catalog.csv", "catalog.vot")
 
     if "projection" in args.task:
-        hipster.generate_dataset_projection(datamodule.data_processing, "catalog.csv")
+        hipster.generate_dataset_projection(datamodule, "catalog.csv")
 
     if "images" in args.task:
         hipster.create_images(datamodule)

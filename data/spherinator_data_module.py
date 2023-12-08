@@ -1,7 +1,12 @@
+from abc import ABC, abstractmethod
+from pathlib import Path
+
 import lightning.pytorch as pl
 
+from models.spherinator_module import SpherinatorModule
 
-class SpherinatorDataModule(pl.LightningDataModule):
+
+class SpherinatorDataModule(ABC, pl.LightningDataModule):
     """
     Base class for all spherinator data modules.
     """
@@ -35,3 +40,7 @@ class SpherinatorDataModule(pl.LightningDataModule):
     def thumbnail_images_dataloader(self):
         """Gets the data loader for thumbnail images."""
         return self.dataloader_thumbnail_images
+
+    @abstractmethod
+    def write_catalog(self, model: SpherinatorModule, catalog_file: Path):
+        """Writes a catalog to disk."""

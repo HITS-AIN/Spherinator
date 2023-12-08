@@ -1,8 +1,11 @@
+from pathlib import Path
+
 import torchvision.transforms.v2 as transforms
 from torch.utils.data import DataLoader
 
 import data.preprocessing as preprocessing
 from data.illustris_sdss_dataset import IllustrisSdssDataset
+from models.spherinator_module import SpherinatorModule
 
 from .spherinator_data_module import SpherinatorDataModule
 
@@ -88,7 +91,6 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 minsize=self.minsize,
                 transform=self.transform_train,
             )
-
             self.dataloader_train = DataLoader(
                 self.data_train,
                 batch_size=self.batch_size,
@@ -102,7 +104,6 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 minsize=self.minsize,
                 transform=self.transform_processing,
             )
-
             self.dataloader_processing = DataLoader(
                 self.data_processing,
                 batch_size=self.batch_size,
@@ -116,7 +117,6 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 minsize=self.minsize,
                 transform=self.transform_images,
             )
-
             self.dataloader_images = DataLoader(
                 self.data_images,
                 batch_size=1,
@@ -130,7 +130,6 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 minsize=self.minsize,
                 transform=self.transform_thumbnail_images,
             )
-
             self.dataloader_thumbnail_images = DataLoader(
                 self.data_thumbnail_images,
                 batch_size=1,
@@ -139,3 +138,60 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
             )
         else:
             raise ValueError(f"Unknown stage: {stage}")
+
+    def write_catalog(self, model: SpherinatorModule, catalog_file: Path):
+        """Writes a catalog to disk."""
+        with open(catalog_file, "w", encoding="utf-8") as output:
+            output.write(
+                "#preview,simulation,snapshot data,subhalo id,subhalo data,RMSE,id,RA2000,DEC2000,rotation,x,y,z\n"
+            )
+            for i in range(coordinates.shape[0]):
+                output.write("<a href='https://space.h-its.org/Illustris/jpg/")
+                output.write(str(dataloader.dataset[i]["metadata"]["simulation"]) + "/")
+                output.write(str(dataloader.dataset[i]["metadata"]["snapshot"]) + "/")
+                output.write(
+                    str(dataloader.dataset[i]["metadata"]["subhalo_id"])
+                    + ".jpg' target='_blank'>"
+                )
+                output.write("<img src='https://space.h-its.org/Illustris/thumbnails/")
+                output.write(str(dataloader.dataset[i]["metadata"]["simulation"]) + "/")
+                output.write(str(dataloader.dataset[i]["metadata"]["snapshot"]) + "/")
+                output.write(
+                    str(dataloader.dataset[i]["metadata"]["subhalo_id"]) + ".jpg'></a>,"
+                )
+
+                output.write(str(dataloader.dataset[i]["metadata"]["simulation"]) + ",")
+                output.write(str(dataloader.dataset[i]["metadata"]["snapshot"]) + ",")
+                output.write(str(dataloader.dataset[i]["metadata"]["subhalo_id"]) + ",")
+                output.write("<a href='")
+                output.write("https://www.tng-project.org/api/")
+                output.write(
+                    str(dataloader.dataset[i]["metadata"]["simulation"])
+                    + "-1/snapshots/"
+                )
+                output.write(
+                    str(dataloader.dataset[i]["metadata"]["snapshot"]) + "/subhalos/"
+                )
+                output.write(str(dataloader.dataset[i]["metadata"]["subhalo_id"]) + "/")
+                output.write("' target='_blank'>www.tng-project.org</a>,")
+                output.write(str(losses[i]) + ",")
+                output.write(
+                    str(i)
+                    + ","
+                    + str(angles[i, 1])
+                    + ","
+                    + str(90.0 - angles[i, 0])
+                    + ","
+                    + str(rotations[i])
+                    + ","
+                )
+                output.write(
+                    str(coordinates[i, 0])
+                    + ","
+                    + str(coordinates[i, 1])
+                    + ","
+                    + str(coordinates[i, 2])
+                    + "\n"
+                )
+
+            output.flush()

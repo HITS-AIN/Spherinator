@@ -6,7 +6,6 @@ import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms.functional as functional
 from torch.optim import Adam
 
 from .spherinator_module import SpherinatorModule
@@ -25,14 +24,14 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         rotations: int = 36,
         beta: float = 1.0,
     ):
-        """
-        RotationalVariationalAutoencoderPower initializer
+        """RotationalVariationalAutoencoderPower initializer
 
-        :param h_dim: dimension of the hidden layers
-        :param z_dim: dimension of the latent representation
-        :param image_size: size of the input images
-        :param rotations: number of rotations
-        :param beta: factor for beta-VAE
+        Args:
+            h_dim (int, optional): dimension of the hidden layers. Defaults to 256.
+            z_dim (int, optional): dimension of the latent representation. Defaults to 2.
+            image_size (int, optional): size of the input images. Defaults to 91.
+            rotations (int, optional): number of rotations. Defaults to 36.
+            beta (float, optional): factor for beta-VAE. Defaults to 1.0.
         """
         super().__init__()
         self.save_hyperparameters()
@@ -147,37 +146,8 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         recon = self.decode(z)
         return (z_location, z_scale), (q_z, p_z), z, recon
 
-    def find_best_rotation(self, batch):
-        """Returns the rotated and scaled image with the lowest reconstruction loss."""
-        with torch.no_grad():
-            best_recon = torch.ones(batch.shape[0], device=batch.device) * 1e10
-            best_recon_idx = torch.zeros(batch.shape[0], device=batch.device)
-            best_scaled_image = torch.zeros(
-                (batch.shape[0], batch.shape[1], self.input_size, self.input_size),
-                device=batch.device,
-            )
-
-            for i in range(self.rotations):
-                rotate = functional.rotate(
-                    batch, 360.0 / self.rotations * i, expand=False
-                )
-                crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
-                scaled = functional.resize(
-                    crop, [self.input_size, self.input_size], antialias=True
-                )
-
-                coordinates = self.project(scaled)
-                reconstruction = self.reconstruct(coordinates)
-                loss_recon = self.reconstruction_loss(scaled, reconstruction)
-
-                best_recon_idx = torch.where(loss_recon < best_recon)
-                best_recon[best_recon_idx] = loss_recon[best_recon_idx]
-                best_scaled_image[best_recon_idx] = scaled[best_recon_idx]
-
-            return best_scaled_image, best_recon_idx
-
     def training_step(self, batch, batch_idx):
-        best_scaled_image, _ = self.find_best_rotation(batch)
+        best_scaled_image, _, _, _ = self.find_best_rotation(batch)
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(best_scaled_image)
 
         loss_recon = self.reconstruction_loss(best_scaled_image, recon)
