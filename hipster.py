@@ -67,7 +67,7 @@ def main():
         help="Output of HiPS (default = './HiPSter').",
     )
     parser.add_argument(
-        "--title", default="IllustrisV2", help="HiPS title (default = 'IllustrisV2')."
+        "--title", default="Illustris", help="HiPS title (default = 'Illustris')."
     )
     parser.add_argument(
         "--distortion", action="store_true", help="Enable distortion correction."

@@ -71,24 +71,23 @@ class Hipster(create_images.Mixin):
         """
         assert math.log2(output_size) == int(math.log2(output_size))
         assert max_order < 10
-        self.output_folder = output_folder
+        self.output_folder = Path(output_folder)
         self.title = title
-        self.title_folder = self.output_folder / title
+        self.title_folder = self.output_folder / Path(title)
         self.max_order = max_order
         self.hierarchy = hierarchy
         self.crop_size = crop_size
         self.output_size = output_size
         self.distortion_correction = distortion_correction
-        self.catalog_file = self.title_folder / catalog_file
-        self.votable_file = self.title_folder / votable_file
+        self.catalog_file = self.title_folder / Path(catalog_file)
+        self.votable_file = self.title_folder / Path(votable_file)
 
         if number_of_workers == -1:
             self.number_of_workers = psutil.cpu_count(logical=False)
         else:
             self.number_of_workers = number_of_workers
 
-        if not self.title_folder.exists():
-            os.mkdir(self.title_folder)
+        self.title_folder.mkdir(parents=True, exist_ok=True)
 
     def check_folders(self, base_folder):
         """Checks whether the base folder exists and deletes it after prompting for user input
