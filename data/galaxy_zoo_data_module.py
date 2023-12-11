@@ -61,9 +61,12 @@ class GalaxyZooDataModule(SpherinatorDataModule):
         Args:
             stage (str): Defines for which stage the data is needed.
         """
-        if stage == "fit":
+        if not stage in ["fit", "processing", "images", "thumbnail_images"]:
+            raise ValueError(f"Stage {stage} not supported.")
+
+        if stage == "fit" and self.data_train is None:
             self.data_train = GalaxyZooDataset(
-                data_directory=self.data_dir,
+                data_directory=self.data_directory,
                 extension=self.extension,
                 transform=self.train_transform,
             )
@@ -73,41 +76,39 @@ class GalaxyZooDataModule(SpherinatorDataModule):
                 shuffle=self.shuffle,
                 num_workers=self.num_workers,
             )
-        elif stage == "processing":
-            self.data_val = GalaxyZooDataset(
-                data_directory=self.data_dir,
+        elif stage == "processing" and self.data_processing is None:
+            self.data_processing = GalaxyZooDataset(
+                data_directory=self.data_directory,
                 extension=self.extension,
                 transform=self.processing_transform,
             )
-            self.dataloader_val = DataLoader(
+            self.dataloader_processing = DataLoader(
                 self.data_train,
                 batch_size=self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
             )
-        elif stage == "images":
-            self.data_val = GalaxyZooDataset(
-                data_directory=self.data_dir,
+        elif stage == "images" and self.data_images is None:
+            self.data_images = GalaxyZooDataset(
+                data_directory=self.data_directory,
                 extension=self.extension,
                 transform=self.images_transform,
             )
-            self.dataloader_val = DataLoader(
+            self.dataloader_images = DataLoader(
                 self.data_train,
                 batch_size=self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
             )
-        elif stage == "thumbnail_images":
-            self.data_val = GalaxyZooDataset(
-                data_directory=self.data_dir,
+        elif stage == "thumbnail_images" and self.data_thumbnail_images is None:
+            self.data_thumbnail_images = GalaxyZooDataset(
+                data_directory=self.data_directory,
                 extension=self.extension,
-                transform=self.transform_thumbnail_transform,
+                transform=self.thumbnail_images_transform,
             )
-            self.dataloader_val = DataLoader(
+            self.dataloader_thumbnail_images = DataLoader(
                 self.data_train,
                 batch_size=self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
             )
-        else:
-            raise ValueError(f"Unknown stage: {stage}")

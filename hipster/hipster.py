@@ -45,8 +45,9 @@ class Hipster(create_images.Mixin):
         output_size=128,
         distortion_correction=False,
         number_of_workers=-1,
-        catalog_file="catalog.csv",
-        votable_file="catalog.vot",
+        catalog_file: str = "catalog.csv",
+        votable_file: str = "catalog.vot",
+        hipster_url: str = "http://localhost:8082",
     ):
         """Initializes the Hipster
 
@@ -68,6 +69,8 @@ class Hipster(create_images.Mixin):
                 Defaults to "catalog.csv".
             votable_file (String, optional): The name of the votable file to be generated.
                 Defaults to "catalog.vot".
+            hips_url (String, optional): The url where the HiPS will be hosted.
+                Defaults to "http://localhost:8082".
         """
         assert math.log2(output_size) == int(math.log2(output_size))
         assert max_order < 10
@@ -81,6 +84,7 @@ class Hipster(create_images.Mixin):
         self.distortion_correction = distortion_correction
         self.catalog_file = self.title_folder / Path(catalog_file)
         self.votable_file = self.title_folder / Path(votable_file)
+        self.hipster_url = hipster_url
 
         if number_of_workers == -1:
             self.number_of_workers = psutil.cpu_count(logical=False)
@@ -401,16 +405,8 @@ class Hipster(create_images.Mixin):
             if answer != "Yes":
                 return
 
-        # print("projecting dataset:")
-        # coordinates, rotations, losses = self.project_dataset(model, dataloader)
-        # coordinates = coordinates.cpu().detach().numpy()
-        # rotations = rotations.cpu().detach().numpy()
-        # losses = losses.cpu().detach().numpy()
-        # angles = numpy.array(healpy.vec2ang(coordinates)) * 180.0 / math.pi
-        # angles = angles.T
-
-        print("creating catalog file:")
-        datamodule.write_catalog(model, self.catalog_file)
+        print("Creating catalog csv-file ...")
+        datamodule.write_catalog(model, self.catalog_file, self.hipster_url, self.title)
 
     def calculate_healpix_cells(self, catalog, numbers, order, pixels):
         healpix_cells = {}  # create an extra map to quickly find images in a cell

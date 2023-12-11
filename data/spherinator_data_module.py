@@ -42,5 +42,7 @@ class SpherinatorDataModule(ABC, pl.LightningDataModule):
         return self.dataloader_thumbnail_images
 
     @abstractmethod
-    def write_catalog(self, model: SpherinatorModule, catalog_file: Path):
+    def write_catalog(
+        self, model: SpherinatorModule, catalog_file: Path, hipster_url: str, title: str
+    ):
         """Writes a catalog to disk."""
