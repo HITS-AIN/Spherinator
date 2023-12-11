@@ -89,6 +89,7 @@ def main():
         config = yaml.load(stream, Loader=yaml.Loader)
 
     # Import the model class and create an instance of it
+    model = None
     if any(x in ["hips", "catalog"] for x in args.task):
         model_class_path = config["model"]["class_path"]
         module_name, class_name = model_class_path.rsplit(".", 1)
@@ -103,6 +104,7 @@ def main():
         model.eval()
 
     # Import the data module and create an instance of it
+    datamodule = None
     if any(x in ["catalog", "projection", "images", "thumbnails"] for x in args.task):
         data_class_path = config["data"]["class_path"]
         module_name, class_name = data_class_path.rsplit(".", 1)
@@ -130,10 +132,10 @@ def main():
         hipster.generate_catalog(model, datamodule)
 
     if "votable" in args.task:
-        hipster.transform_csv_to_votable("catalog.csv", "catalog.vot")
+        hipster.transform_csv_to_votable()
 
     if "projection" in args.task:
-        hipster.generate_dataset_projection(datamodule, "catalog.csv")
+        hipster.generate_dataset_projection(datamodule)
 
     if "images" in args.task:
         hipster.create_images(datamodule)
@@ -142,7 +144,7 @@ def main():
         raise NotImplementedError
 
     if "allsky" in args.task:
-        raise NotImplementedError
+        hipster.create_allsky()
 
 
 if __name__ == "__main__":

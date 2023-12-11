@@ -1,8 +1,11 @@
+from pathlib import Path
+
 import torchvision.transforms.v2 as transforms
 from torch.utils.data import DataLoader
 
 import data.preprocessing as preprocessing
 from data.galaxy_zoo_dataset import GalaxyZooDataset
+from models.spherinator_module import SpherinatorModule
 
 from .spherinator_data_module import SpherinatorDataModule
 
@@ -35,7 +38,7 @@ class GalaxyZooDataModule(SpherinatorDataModule):
         self.shuffle = shuffle
         self.num_workers = num_workers
 
-        self.train_transform = transforms.Compose(
+        self.transform_train = transforms.Compose(
             [
                 preprocessing.DielemanTransformation(
                     rotation_range=[0, 360],
@@ -47,10 +50,11 @@ class GalaxyZooDataModule(SpherinatorDataModule):
                 transforms.Resize((424, 424), antialias=True),
             ]
         )
-        self.processing_transform = transforms.CenterCrop((363, 363))
+        self.transform_processing = transforms.CenterCrop((363, 363))
+        self.transform_images = self.transform_train
         self.transform_thumbnail_images = transforms.Compose(
             [
-                self.processing_transform,
+                self.transform_processing,
                 transforms.Resize((100, 100), antialias=True),
             ]
         )
@@ -68,7 +72,7 @@ class GalaxyZooDataModule(SpherinatorDataModule):
             self.data_train = GalaxyZooDataset(
                 data_directory=self.data_directory,
                 extension=self.extension,
-                transform=self.train_transform,
+                transform=self.transform_train,
             )
             self.dataloader_train = DataLoader(
                 self.data_train,
@@ -80,7 +84,7 @@ class GalaxyZooDataModule(SpherinatorDataModule):
             self.data_processing = GalaxyZooDataset(
                 data_directory=self.data_directory,
                 extension=self.extension,
-                transform=self.processing_transform,
+                transform=self.transform_processing,
             )
             self.dataloader_processing = DataLoader(
                 self.data_train,
@@ -92,7 +96,7 @@ class GalaxyZooDataModule(SpherinatorDataModule):
             self.data_images = GalaxyZooDataset(
                 data_directory=self.data_directory,
                 extension=self.extension,
-                transform=self.images_transform,
+                transform=self.transform_images,
             )
             self.dataloader_images = DataLoader(
                 self.data_train,
@@ -104,7 +108,7 @@ class GalaxyZooDataModule(SpherinatorDataModule):
             self.data_thumbnail_images = GalaxyZooDataset(
                 data_directory=self.data_directory,
                 extension=self.extension,
-                transform=self.thumbnail_images_transform,
+                transform=self.transform_thumbnail_images,
             )
             self.dataloader_thumbnail_images = DataLoader(
                 self.data_train,
@@ -112,3 +116,11 @@ class GalaxyZooDataModule(SpherinatorDataModule):
                 shuffle=False,
                 num_workers=self.num_workers,
             )
+
+    def write_catalog(
+        self, model: SpherinatorModule, catalog_file: Path, hipster_url: str, title: str
+    ):
+        """Writes a catalog to disk."""
+        self.setup("processing")
+        with open(catalog_file, "w", encoding="utf-8") as output:
+            output.write("#filename,RMSD,rotation,x,y,z\n")

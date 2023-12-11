@@ -1,8 +1,10 @@
-from .illustris_sdss_dataset import IllustrisSdssDataset
+import numpy
+
+from .shapes_dataset import ShapesDataset
 
 
-class IllustrisSdssDatasetWithMetadata(IllustrisSdssDataset):
-    """Provides access to Illustris sdss images and metadata."""
+class ShapesDatasetWithMetadata(ShapesDataset):
+    """Provides access to shapes images and metadata."""
 
     def __getitem__(self, index: int):
         """Retrieves the item/items with the given indices from the dataset.
@@ -16,13 +18,11 @@ class IllustrisSdssDatasetWithMetadata(IllustrisSdssDataset):
         """
         data = super().__getitem__(index)
 
-        filename = self.files[index]
-        splits = filename[: -(len(self.extension) + 1)].split("/")
+        file_index = (
+            numpy.searchsorted(self.file_entries_offsets, index, side="right") - 1
+        )
         metadata = {
-            "filename": filename,
-            "simulation": splits[-5],
-            "snapshot": splits[-3].split("_")[1],
-            "subhalo_id": splits[-1].split("_")[1],
+            "filename": self.filenames[file_index],
         }
 
         return data, metadata

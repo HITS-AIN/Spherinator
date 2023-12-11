@@ -1,13 +1,16 @@
-""" Defines access to the ShapesDataset.
-"""
+import math
 from pathlib import Path
 from typing import Union
 
+import healpy
+import numpy
 import torch
+import torchvision.transforms.v2 as transforms
 from torch.utils.data import DataLoader
-from torchvision import transforms
+from tqdm import tqdm
 
 from data.shapes_dataset import ShapesDataset
+from data.shapes_dataset_with_metadata import ShapesDatasetWithMetadata
 from models.spherinator_module import SpherinatorModule
 
 from .spherinator_data_module import SpherinatorDataModule
@@ -89,7 +92,7 @@ class ShapesDataModule(SpherinatorDataModule):
                 num_workers=self.num_workers,
             )
         elif stage == "processing" and self.data_processing is None:
-            self.data_processing = ShapesDataset(
+            self.data_processing = ShapesDatasetWithMetadata(
                 data_directory=self.data_directory,
                 exclude_files=self.exclude_files,
                 transform=self.transform_processing,
@@ -125,8 +128,55 @@ class ShapesDataModule(SpherinatorDataModule):
                 num_workers=self.num_workers,
             )
 
-    def write_catalog(self, model: SpherinatorModule, catalog_file: Path):
-        """Writes a catalog to disk."""
+    def write_catalog(
+        self, model: SpherinatorModule, catalog_file: Path, hipster_url: str, title: str
+    ):
+        """Writes a catalog to disk.
+
+        Args:
+            model (SpherinatorModule): The model to use for the catalog.
+            catalog_file (Path): The path to the catalog file.
+            hipster_url (str): The domain to use for the HiPSter.
+            title (str): The title to use for the catalog.
+        """
         self.setup("processing")
         with open(catalog_file, "w", encoding="utf-8") as output:
-            output.write("#filename,RMSD,rotation,x,y,z\n")
+            output.write("#preview,RMSD,rotation,x,y,z\n")
+
+            for batch, metadata in tqdm(self.dataloader_processing):
+                _, rotations, coordinates, losses = model.find_best_rotation(batch)
+
+                rotations = rotations.cpu().detach().numpy()
+                coordinates = coordinates.cpu().detach().numpy()
+                losses = losses.cpu().detach().numpy()
+                angles = numpy.array(healpy.vec2ang(coordinates)) * 180.0 / math.pi
+                angles = angles.T
+
+                for i in range(len(batch)):
+                    output.write("<a href='" + hipster_url + "/" + title + "/jpg/")
+                    output.write(
+                        str(metadata["filename"][i]) + ".jpg' target='_blank'>"
+                    )
+                    output.write(
+                        "<img src='" + hipster_url + "/" + title + "/thumbnails/"
+                    )
+                    output.write(str(metadata["filename"][i]) + ".jpg'></a>,")
+                    output.write(str(losses[i]) + ",")
+                    output.write(
+                        str(i)
+                        + ","
+                        + str(angles[i, 1])
+                        + ","
+                        + str(90.0 - angles[i, 0])
+                        + ","
+                        + str(rotations[i])
+                        + ","
+                    )
+                    output.write(
+                        str(coordinates[i, 0])
+                        + ","
+                        + str(coordinates[i, 1])
+                        + ","
+                        + str(coordinates[i, 2])
+                        + "\n"
+                    )

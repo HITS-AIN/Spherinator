@@ -37,14 +37,14 @@ class Hipster(create_images.Mixin):
 
     def __init__(
         self,
-        output_folder,
-        title,
-        max_order=3,
-        hierarchy=1,
-        crop_size=64,
-        output_size=128,
-        distortion_correction=False,
-        number_of_workers=-1,
+        output_folder: str,
+        title: str,
+        max_order: int = 3,
+        hierarchy: int = 1,
+        crop_size: int = 64,
+        output_size: int = 128,
+        distortion_correction: bool = False,
+        number_of_workers: int = -1,
         catalog_file: str = "catalog.csv",
         votable_file: str = "catalog.vot",
         hipster_url: str = "http://localhost:8082",
@@ -63,13 +63,14 @@ class Hipster(create_images.Mixin):
                 case it might be larger. Defaults to 64.
             output_size (int, optional): Specifies the size the tilings should be scaled to. Must be
                 in the powers of 2. Defaults to 128.
+            distortion_correction (bool, optional): Wether or not to apply a distortion correction
             number_of_workers (int, optional): The number of CPU threads. Defaults to -1, which means
                 all available threads.
             catalog_file (String, optional): The name of the catalog file to be generated.
                 Defaults to "catalog.csv".
             votable_file (String, optional): The name of the votable file to be generated.
                 Defaults to "catalog.vot".
-            hips_url (String, optional): The url where the HiPS will be hosted.
+            hipster_url (String, optional): The url where the HiPSter will be hosted.
                 Defaults to "http://localhost:8082".
         """
         assert math.log2(output_size) == int(math.log2(output_size))
@@ -321,12 +322,12 @@ class Hipster(create_images.Mixin):
         result[q1.shape[0] :, q1.shape[1] :] = q4
         return result
 
-    def generate_hips(self, model):
+    def generate_hips(self, model: SpherinatorModule):
         """Generates a HiPS tiling following the standard defined in
             https://www.ivoa.net/documents/HiPS/20170519/REC-HIPS-1.0-20170519.pdf
 
         Args:
-            model (PT.module): A model that allows to call decode(x) for a three dimensional
+            model (SpherinatorModule): A model that allows to call decode(x) for a three dimensional
             vector x. The resulting reconstructions are used to generate the tiles for HiPS.
         """
         self.check_folders("model")
@@ -368,23 +369,9 @@ class Hipster(create_images.Mixin):
             print(" done", flush=True)
         print("done!")
 
-    def transform_csv_to_votable(self, csv_filename, votable_filename):
-        input_file = os.path.join(self.output_folder, self.title, csv_filename)
-        output_file = os.path.join(self.output_folder, self.title, votable_filename)
-        table = Table.read(input_file, format="ascii.csv")
-        writeto(table, output_file)
-
-    def project_dataset(self, model, dataloader):
-        result_coordinates = torch.zeros(0, 3)
-        result_rotations = torch.zeros(0)
-        result_losses = torch.zeros(0)
-
-        for batch in tqdm(dataloader):
-            _, rot, coord, loss = model.find_best_rotation(batch)
-            result_coordinates = torch.cat((result_coordinates, coord))
-            result_rotations = torch.cat((result_rotations, rot))
-            result_losses = torch.cat((result_losses, loss))
-        return result_coordinates, result_rotations, result_losses
+    def transform_csv_to_votable(self):
+        table = Table.read(self.catalog_file, format="ascii.csv")
+        writeto(table, self.votable_file)
 
     def generate_catalog(
         self, model: SpherinatorModule, datamodule: SpherinatorDataModule
@@ -401,7 +388,7 @@ class Hipster(create_images.Mixin):
         """
 
         if self.catalog_file.exists():
-            answer = input("catalog exists, overwrite? Yes,[No]")
+            answer = input("Catalog exists, overwrite? Yes,[No] ")
             if answer != "Yes":
                 return
 
@@ -487,17 +474,13 @@ class Hipster(create_images.Mixin):
         result[q1.shape[0] :, q1.shape[1] :] = q4
         return result
 
-    def generate_dataset_projection(
-        self, datamodule: SpherinatorDataModule, catalog_file
-    ):
+    def generate_dataset_projection(self, datamodule: SpherinatorDataModule):
         """Generates a HiPS tiling by using the coordinates of every image to map the original
             images form the data set based on their distance to the closest heal pixel cell
             center.
 
         Args:
             datamodule (SpherinatorDataModule): The datamodule to access the original images
-            catalog_file (String): The previously created catalog file that contains the
-                coordinates.
         """
         self.check_folders("projection")
         self.create_folders("projection")
@@ -509,7 +492,7 @@ class Hipster(create_images.Mixin):
 
         print("reading catalog")
         catalog = numpy.genfromtxt(
-            os.path.join(self.output_folder, self.title, catalog_file),
+            self.catalog_file,
             delimiter=",",
             skip_header=1,
             usecols=[6, 7, 8, 9, 10, 11, 12],

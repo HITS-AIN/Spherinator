@@ -62,6 +62,8 @@ The following command generates a HiPS representation and a catalog showing the 
 
 Call `./hipster.py --help` for more information.
 
+For visualization, a Python HTTP server can be started by executing `python3 -m http.server 8082` within the HiPSter output file.
+
 
 ## Profiling
 
