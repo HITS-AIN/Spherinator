@@ -5,6 +5,7 @@ import importlib
 
 import torch
 import yaml
+from lightning.pytorch.trainer.trainer import Trainer
 
 from hipster import Hipster
 
@@ -112,6 +113,10 @@ def main():
         data_class = getattr(module, class_name)
         data_init_args = config["data"]["init_args"]
         datamodule = data_class(**data_init_args)
+
+    trainer = None
+    if "trainer" in config:
+        trainer = Trainer(**config["trainer"])
 
     hipster = Hipster(
         args.output_folder,
