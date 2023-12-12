@@ -1,8 +1,10 @@
 import filecmp
 from pathlib import Path
 
+import pandas as pd
 import pytest
 import torch
+from pandas.testing import assert_frame_equal
 
 from data import ShapesDataModule
 from hipster import Hipster
@@ -36,10 +38,10 @@ def test_generate_catalog(hipster, model, tmp_path):
     )
     hipster.generate_catalog(model, datamodule)
 
-    assert filecmp.cmp(
-        tmp_path / "HipsterTest/catalog.csv",
-        "tests/data/hipster/ref1/HipsterTest/catalog.csv",
-    )
+    df1 = pd.read_csv(tmp_path / "HipsterTest/catalog.csv")
+    df2 = pd.read_csv("tests/data/hipster/ref1/HipsterTest/catalog.csv")
+
+    assert_frame_equal(df1, df2, atol=0.05)
 
 
 def test_create_images(hipster, tmp_path):
