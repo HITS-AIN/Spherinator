@@ -160,8 +160,8 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         self.log("loss_recon", loss_recon, prog_bar=True)
         self.log("loss_KL", loss_KL)
         self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
-        self.log("mean(z_location) ", torch.mean(z_location))
-        self.log("mean(z_scale) ", torch.mean(z_scale))
+        self.log("mean(z_location)", torch.mean(z_location))
+        self.log("mean(z_scale)", torch.mean(z_scale))
         return loss
 
     def configure_optimizers(self):

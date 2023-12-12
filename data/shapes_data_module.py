@@ -142,7 +142,7 @@ class ShapesDataModule(SpherinatorDataModule):
         """
         self.setup("processing")
         with open(catalog_file, "w", encoding="utf-8") as output:
-            output.write("#preview,RMSD,RA2000,DEC2000,rotation,x,y,z\n")
+            output.write("#preview,RMSE,id,RA2000,DEC2000,rotation,x,y,z\n")
 
             for batch, metadata in tqdm(self.dataloader_processing):
                 _, rotations, coordinates, losses = model.find_best_rotation(batch)

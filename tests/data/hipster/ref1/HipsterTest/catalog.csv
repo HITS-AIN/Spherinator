@@ -1,4 +1,4 @@
-#preview,RMSD,RA2000,DEC2000,rotation,x,y,z
+#preview,RMSE,id,RA2000,DEC2000,rotation,x,y,z
 <a href='http://localhost:8082/HipsterTest/jpg/tests/data/shapes/crosses.npy.jpg' target='_blank'><img src='http://localhost:8082/HipsterTest/thumbnails/tests/data/shapes/crosses.npy.jpg'></a>,0.22894703,0,211.70195,13.306846618652344,0.0,-0.8279507,-0.51139146,0.23016603
 <a href='http://localhost:8082/HipsterTest/jpg/tests/data/shapes/crosses.npy.jpg' target='_blank'><img src='http://localhost:8082/HipsterTest/thumbnails/tests/data/shapes/crosses.npy.jpg'></a>,0.22972585,1,212.2494,13.536300659179688,0.0,-0.8222405,-0.5187832,0.23406138
 <a href='http://localhost:8082/HipsterTest/jpg/tests/data/shapes/crosses.npy.jpg' target='_blank'><img src='http://localhost:8082/HipsterTest/thumbnails/tests/data/shapes/crosses.npy.jpg'></a>,0.22937506,2,211.5445,13.524818420410156,0.0,-0.8286005,-0.50865275,0.23386653
