@@ -1,4 +1,5 @@
 import numpy
+from pathlib import Path
 
 from .shapes_dataset import ShapesDataset
 
@@ -23,6 +24,8 @@ class ShapesDatasetWithMetadata(ShapesDataset):
         )
         metadata = {
             "filename": self.filenames[file_index],
+            "shape": Path(self.filenames[file_index]).stem,
+            "id": str(index),
         }
 
         return data, metadata

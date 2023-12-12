@@ -1,4 +1,5 @@
 import filecmp
+from pathlib import Path
 
 import pytest
 import torch
@@ -39,6 +40,15 @@ def test_generate_catalog(hipster, model, tmp_path):
         tmp_path / "HipsterTest/catalog.csv",
         "tests/data/hipster/ref1/HipsterTest/catalog.csv",
     )
+
+
+def test_create_images(hipster, tmp_path):
+    datamodule = ShapesDataModule(
+        "tests/data/shapes", exclude_files=["boxes.npy", "circles.npy", "triangles.npy"]
+    )
+    hipster.create_images(datamodule)
+
+    assert Path(tmp_path / "HipsterTest/jpg/crosses_0.jpg").exists()
 
 
 def test_contains_equal_element():

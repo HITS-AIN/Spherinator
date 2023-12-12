@@ -6,6 +6,7 @@ import healpy
 import numpy
 import torch
 import torchvision.transforms.v2 as transforms
+from PIL import Image
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -104,7 +105,7 @@ class ShapesDataModule(SpherinatorDataModule):
                 num_workers=self.num_workers,
             )
         elif stage == "images" and self.data_images is None:
-            self.data_images = ShapesDataset(
+            self.data_images = ShapesDatasetWithMetadata(
                 data_directory=self.data_directory,
                 exclude_files=self.exclude_files,
                 transform=self.transform_images,
@@ -116,7 +117,7 @@ class ShapesDataModule(SpherinatorDataModule):
                 num_workers=self.num_workers,
             )
         elif stage == "thumbnail_images" and self.data_thumbnail_images is None:
-            self.data_thumbnail_images = ShapesDataset(
+            self.data_thumbnail_images = ShapesDatasetWithMetadata(
                 data_directory=self.data_directory,
                 exclude_files=self.exclude_files,
                 transform=self.transform_thumbnail_images,
@@ -170,26 +171,29 @@ class ShapesDataModule(SpherinatorDataModule):
                     output.write(str(coordinates[i, 1]) + ",")
                     output.write(str(coordinates[i, 2]) + "\n")
 
-    def create_images(self):
-        """Writes preview images to disk."""
+    def create_images(self, output_path: Path):
+        """Writes preview images to disk.
+
+        Args:
+            output_path (Path): The path to the output directory.
+        """
         self.setup("images")
 
-        for i, image in enumerate(self.dataloader_images):
-            image = torch.swapaxes(image, 0, 2)
-            image = Image.fromarray(
-                (numpy.clip(image.numpy(), 0, 1) * 255).astype(numpy.uint8), mode="RGB"
-            )
-            metadata = datamodule.data_images.dataset.get_metadata[i]
-            filename = (
-                output_path
-                / Path("jpg")
-                / Path(
-                    self.output_folder,
-                    self.title,
-                    "thumbnails",
-                    metadata["simulation"],
-                    metadata["snapshot"],
-                    metadata["subhalo_id"] + ".jpg",
+        for batch, metadata in self.dataloader_images:
+            for i, image in enumerate(batch):
+                image = Image.fromarray(
+                    (numpy.clip(image.numpy(), 0, 1) * 255).astype(numpy.uint8),
+                    mode="RGB",
                 )
-            )
-            image.save(filename)
+                filename = output_path / Path(
+                    metadata["shape"][i] + "_" + metadata["id"][i] + ".jpg",
+                )
+                image.save(filename)
+
+    def create_thumbnails(self, output_path: Path):
+        """Writes preview images to disk.
+
+        Args:
+            output_path (Path): The path to the output directory.
+        """
+        self.setup("thumbnail_images")

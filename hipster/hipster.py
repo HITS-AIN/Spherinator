@@ -4,7 +4,6 @@
 import copy
 import math
 import os
-import sys
 from datetime import datetime
 from pathlib import Path
 from shutil import rmtree
@@ -23,13 +22,8 @@ from tqdm import tqdm
 from data.spherinator_data_module import SpherinatorDataModule
 from models.spherinator_module import SpherinatorModule
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(script_dir, "./"))
 
-import create_images
-
-
-class Hipster(create_images.Mixin):
+class Hipster:
     """
     Provides all functions to automatically generate a HiPS representation for a machine learning
     model that projects images on a sphere.
@@ -552,6 +546,16 @@ class Hipster(create_images.Mixin):
             print(" done", flush=True)
 
         print("done!")
+
+    def create_images(self, datamodule: SpherinatorDataModule):
+        output_path = self.title_folder / Path("jpg")
+        output_path.mkdir(parents=True, exist_ok=True)
+        datamodule.create_images(output_path)
+
+    def create_thumbnails(self, datamodule: SpherinatorDataModule):
+        output_path = self.title_folder / Path("thumbnails")
+        output_path.mkdir(parents=True, exist_ok=True)
+        datamodule.create_thumbnails(output_path)
 
 
 def create_embeded_tile(hipster, dataset, catalog, healpix_cells, i, range_j):

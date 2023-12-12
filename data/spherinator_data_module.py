@@ -46,3 +46,11 @@ class SpherinatorDataModule(ABC, pl.LightningDataModule):
         self, model: SpherinatorModule, catalog_file: Path, hipster_url: str, title: str
     ):
         """Writes a catalog to disk."""
+
+    def create_images(self, output_path: Path):
+        """Writes images to disk."""
+        raise NotImplementedError
+
+    def create_thumbnails(self, output_path: Path):
+        """Writes thumbnails to disk."""
+        raise NotImplementedError

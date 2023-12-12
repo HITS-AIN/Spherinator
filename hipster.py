@@ -146,7 +146,7 @@ def main():
         hipster.create_images(datamodule)
 
     if "thumbnails" in args.task:
-        raise NotImplementedError
+        hipster.create_thumbnails(datamodule)
 
     if "allsky" in args.task:
         hipster.create_allsky()
