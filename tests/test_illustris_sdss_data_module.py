@@ -24,7 +24,6 @@ def test_empty():
 
 
 def test_dataloader():
-    torch.manual_seed(0)
     dataset = IllustrisSdssDataset(
         ["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],
         transform=transforms.Compose(
@@ -47,7 +46,6 @@ def test_dataloader():
 
 
 def test_datamodule():
-    torch.manual_seed(0)
     data = IllustrisSdssDataModule(
         ["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],
         num_workers=1,
@@ -81,7 +79,6 @@ def test_metadata():
 
 
 def test_dataloader_with_metadata():
-    torch.manual_seed(0)
     dataset = IllustrisSdssDatasetWithMetadata(
         ["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],
         transform=IllustrisSdssDataModule([]).transform_processing,

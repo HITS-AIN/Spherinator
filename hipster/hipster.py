@@ -6,8 +6,8 @@ import math
 import os
 import sys
 from datetime import datetime
-from shutil import rmtree
 from pathlib import Path
+from shutil import rmtree
 
 import healpy
 import numpy

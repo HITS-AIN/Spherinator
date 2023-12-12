@@ -48,7 +48,6 @@ class MyDataset(Dataset):
 
 
 def test_batch_sampler():
-    torch.manual_seed(0)
     dataset = MyDataset()
     sampler = BatchSampler(RandomSampler(dataset), batch_size=10, drop_last=False)
 

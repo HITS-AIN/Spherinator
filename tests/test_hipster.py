@@ -3,9 +3,9 @@ import filecmp
 import pytest
 import torch
 
+from data import ShapesDataModule
 from hipster import Hipster
 from models import RotationalVariationalAutoencoderPower
-from data import ShapesDataModule
 
 
 @pytest.fixture
@@ -30,7 +30,9 @@ def test_generate_hips(hipster, model, tmp_path):
 
 
 def test_generate_catalog(hipster, model, tmp_path):
-    datamodule = ShapesDataModule("tests/data/shapes", num_workers=1)
+    datamodule = ShapesDataModule(
+        "tests/data/shapes", exclude_files=["boxes.npy", "circles.npy", "triangles.npy"]
+    )
     hipster.generate_catalog(model, datamodule)
 
     assert filecmp.cmp(
@@ -49,7 +51,6 @@ def test_contains_equal_element():
 
 
 def test_find_best_rotation(model):
-    torch.manual_seed(0)
     batch = torch.randn(2, 3, 4, 4)
 
     best_image, rot, coord, loss = model.find_best_rotation(batch)

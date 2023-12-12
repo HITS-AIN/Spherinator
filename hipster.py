@@ -114,7 +114,7 @@ def main():
         data_init_args = config["data"]["init_args"]
         datamodule = data_class(**data_init_args)
 
-    trainer = None
+    trainer = Trainer()
     if "trainer" in config:
         trainer = Trainer(**config["trainer"])
 

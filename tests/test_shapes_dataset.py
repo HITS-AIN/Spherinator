@@ -6,7 +6,6 @@ from data import ShapesDataset
 
 
 def test_dataset():
-    torch.manual_seed(0)
     dataset = ShapesDataset("tests/data/shapes")
 
     assert len(dataset) == 4000
@@ -20,7 +19,6 @@ def test_dataset():
 
 
 def test_dataloader():
-    torch.manual_seed(0)
     dataset = ShapesDataset("tests/data/shapes")
     dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
@@ -30,7 +28,6 @@ def test_dataloader():
 
 
 def test_batch_sampler():
-    torch.manual_seed(0)
     dataset = ShapesDataset("tests/data/shapes")
     sampler = BatchSampler(RandomSampler(dataset), batch_size=3, drop_last=False)
     loader = DataLoader(dataset, sampler=sampler)

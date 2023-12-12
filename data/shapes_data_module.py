@@ -141,7 +141,7 @@ class ShapesDataModule(SpherinatorDataModule):
         """
         self.setup("processing")
         with open(catalog_file, "w", encoding="utf-8") as output:
-            output.write("#preview,RMSD,rotation,x,y,z\n")
+            output.write("#preview,RMSD,RA2000,DEC2000,rotation,x,y,z\n")
 
             for batch, metadata in tqdm(self.dataloader_processing):
                 _, rotations, coordinates, losses = model.find_best_rotation(batch)
@@ -162,21 +162,34 @@ class ShapesDataModule(SpherinatorDataModule):
                     )
                     output.write(str(metadata["filename"][i]) + ".jpg'></a>,")
                     output.write(str(losses[i]) + ",")
-                    output.write(
-                        str(i)
-                        + ","
-                        + str(angles[i, 1])
-                        + ","
-                        + str(90.0 - angles[i, 0])
-                        + ","
-                        + str(rotations[i])
-                        + ","
-                    )
-                    output.write(
-                        str(coordinates[i, 0])
-                        + ","
-                        + str(coordinates[i, 1])
-                        + ","
-                        + str(coordinates[i, 2])
-                        + "\n"
-                    )
+                    output.write(str(i) + ",")
+                    output.write(str(angles[i, 1]) + ",")
+                    output.write(str(90.0 - angles[i, 0]) + ",")
+                    output.write(str(rotations[i]) + ",")
+                    output.write(str(coordinates[i, 0]) + ",")
+                    output.write(str(coordinates[i, 1]) + ",")
+                    output.write(str(coordinates[i, 2]) + "\n")
+
+    def create_images(self):
+        """Writes preview images to disk."""
+        self.setup("images")
+
+        for i, image in enumerate(self.dataloader_images):
+            image = torch.swapaxes(image, 0, 2)
+            image = Image.fromarray(
+                (numpy.clip(image.numpy(), 0, 1) * 255).astype(numpy.uint8), mode="RGB"
+            )
+            metadata = datamodule.data_images.dataset.get_metadata[i]
+            filename = (
+                output_path
+                / Path("jpg")
+                / Path(
+                    self.output_folder,
+                    self.title,
+                    "thumbnails",
+                    metadata["simulation"],
+                    metadata["snapshot"],
+                    metadata["subhalo_id"] + ".jpg",
+                )
+            )
+            image.save(filename)
