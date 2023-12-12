@@ -84,7 +84,7 @@ def test_dataloader_with_metadata():
     torch.manual_seed(0)
     dataset = IllustrisSdssDatasetWithMetadata(
         ["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],
-        transform=IllustrisSdssDataModule.transform_processing,
+        transform=IllustrisSdssDataModule([]).transform_processing,
     )
     dataloader = DataLoader(dataset, batch_size=2)
 
