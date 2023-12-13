@@ -6,8 +6,8 @@
 The `Spherinator` uses [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/) to implement a convolutional neural network (CNN) based variational autoencoder (VAE) with a spherical latent space.
 The `HiPSter` creates the HiPS tilings and the catalog which can be visualized interactively on the surface of a sphere with [Aladin Lite](https://github.com/cds-astro/aladin-lite).
 
-![HiPSter model](docs/P404_f1.png "Reconstruction of the trained HVAE model.")
-![HiPSter projection](docs/P404_f2.png "Embedded original images of the galaxies closest to the center of each tile.")
+<img src="docs/P404_f1.png" width="200" height="200" alt="Reconstruction of the trained HVAE model.">
+<img src="docs/P404_f2.png" width="200" height="200" alt="Embedded original images of the galaxies closest to the center of each tile.">
 
 
 ## Git clone with submodules
