@@ -41,6 +41,10 @@ def test_generate_catalog(hipster, model, tmp_path):
     df1 = pd.read_csv(tmp_path / "HipsterTest/catalog.csv")
     df2 = pd.read_csv("tests/data/hipster/ref1/HipsterTest/catalog.csv")
 
+    # healpy is not fully reproducible
+    df1.drop(columns=["DEC2000"], inplace=True)
+    df2.drop(columns=["DEC2000"], inplace=True)
+
     assert_frame_equal(df1, df2, atol=0.05)
 
 
