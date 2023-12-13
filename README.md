@@ -1,11 +1,13 @@
 [![Build Status](https://github.com/HITS-AIN/Spherinator/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/HITS-AIN/Spherinator/actions/workflows/python-package.yml?branch=main)
 ![versions](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue)
 
-# Spherinator
+# Spherinator & HiPSter
 
-Provides simple autoencoders to project images to the surface of a sphere inluding a tool to creat HiPS representations for browsing.
+The `Spherinator` uses [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/) to implement a convolutional neural network (CNN) based variational autoencoder (VAE) with a spherical latent space.
+The `HiPSter` creates the HiPS tilings and the catalog which can be visualized interactively on the surface of a sphere with [Aladin Lite](https://github.com/cds-astro/aladin-lite).
 
-![HiPSter example](docs/P404_f2.png "Example of autoencoded HiPS tiling for Illustris galaxies")
+![HiPSter model](docs/P404_f1.png "Reconstruction of the trained HVAE model.")
+![HiPSter projection](docs/P404_f2.png "Embedded original images of the galaxies closest to the center of each tile.")
 
 
 ## Git clone with submodules
