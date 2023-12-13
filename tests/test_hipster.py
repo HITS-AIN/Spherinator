@@ -68,14 +68,14 @@ def test_find_best_rotation(model):
     best_image, rot, coord, loss = model.find_best_rotation(batch)
 
     assert best_image.shape == torch.Size([2, 3, 128, 128])
-    assert torch.allclose(rot, torch.Tensor([0, 0]), rtol=1e-3)
+    assert torch.allclose(rot, torch.Tensor([270.0, 270.0]), rtol=1e-3)
 
     assert coord.shape == torch.Size([2, 3])
-    # assert torch.allclose(
-    #     coord,
-    #     torch.Tensor([[-0.4980, 0.4326, -0.7515], [-0.5011, 0.4362, -0.7474]]),
-    #     rtol=1e-3,
-    # )
+    assert torch.allclose(
+        coord,
+        torch.Tensor([[-0.8248, -0.5107, 0.2425], [-0.8249, -0.5111, 0.2412]]),
+        rtol=1e-3,
+    )
 
     assert loss.shape == torch.Size([2])
-    # assert torch.allclose(loss, torch.Tensor([0.2119, 0.2122]), rtol=1e-3)
+    assert torch.allclose(loss, torch.Tensor([0.1121, 0.1131]), rtol=1e-3)

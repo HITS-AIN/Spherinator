@@ -56,7 +56,11 @@ class SpherinatorModule(ABC, pl.LightningModule):
                 best_scaled_image[best_recon_idx] = scaled[best_recon_idx]
                 best_coordinates[best_recon_idx] = coordinates[best_recon_idx]
 
-            # best_rotations = 360.0 / self.rotations * best_recon_idx
+                for j in range(batch.shape[0]):
+                    if j in best_recon_idx[0]:
+                        best_rotations[j] = i
+
+            best_rotations *= 360.0 / self.rotations
             return best_scaled_image, best_rotations, best_coordinates, best_recon
 
     @abstractmethod
