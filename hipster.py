@@ -73,6 +73,9 @@ def main():
     parser.add_argument(
         "--distortion", action="store_true", help="Enable distortion correction."
     )
+    parser.add_argument(
+        "--verbose", "-v", default=0, action="count", help="Print level."
+    )
 
     args = parser.parse_args()
 
@@ -114,10 +117,6 @@ def main():
         data_init_args = config["data"]["init_args"]
         datamodule = data_class(**data_init_args)
 
-    trainer = Trainer()
-    if "trainer" in config:
-        trainer = Trainer(**config["trainer"])
-
     hipster = Hipster(
         args.output_folder,
         args.title,
@@ -128,6 +127,7 @@ def main():
         distortion_correction=args.distortion,
         catalog_file="catalog.csv",
         votable_file="catalog.vot",
+        verbose=args.verbose,
     )
 
     if "hips" in args.task:

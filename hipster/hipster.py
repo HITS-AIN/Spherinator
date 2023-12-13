@@ -10,6 +10,7 @@ from shutil import rmtree
 
 import healpy
 import numpy
+import pandas as pd
 import psutil
 import torch
 import torch.multiprocessing as multiprocessing
@@ -42,6 +43,7 @@ class Hipster:
         catalog_file: str = "catalog.csv",
         votable_file: str = "catalog.vot",
         hipster_url: str = "http://localhost:8082",
+        verbose: int = 0,
     ):
         """Initializes the Hipster
 
@@ -66,6 +68,7 @@ class Hipster:
                 Defaults to "catalog.vot".
             hipster_url (String, optional): The url where the HiPSter will be hosted.
                 Defaults to "http://localhost:8082".
+            verbose (int, optional): The verbosity level. Defaults to 0.
         """
         assert math.log2(output_size) == int(math.log2(output_size))
         assert max_order < 10
@@ -80,11 +83,15 @@ class Hipster:
         self.catalog_file = self.title_folder / Path(catalog_file)
         self.votable_file = self.title_folder / Path(votable_file)
         self.hipster_url = hipster_url
+        self.verbose = verbose
 
         if number_of_workers == -1:
             self.number_of_workers = psutil.cpu_count(logical=False)
         else:
             self.number_of_workers = number_of_workers
+
+        if self.verbose > 0:
+            print("number of workers: ", self.number_of_workers)
 
         self.title_folder.mkdir(parents=True, exist_ok=True)
 
@@ -364,8 +371,14 @@ class Hipster:
         print("done!")
 
     def transform_csv_to_votable(self):
+        if self.verbose > 0:
+            print("Transforming catalog.csv to votable ...")
+
         table = Table.read(self.catalog_file, format="ascii.csv")
-        writeto(table, self.votable_file)
+        writeto(table, str(self.votable_file))
+
+        if self.verbose > 0:
+            print("Transforming catalog.csv to votable ... done.")
 
     def generate_catalog(
         self, model: SpherinatorModule, datamodule: SpherinatorDataModule
@@ -396,9 +409,9 @@ class Hipster:
         for number in numbers:
             pixel = healpy.vec2pix(
                 2**order,
+                catalog[number][2],
+                catalog[number][3],
                 catalog[number][4],
-                catalog[number][5],
-                catalog[number][6],
                 nest=True,
             )
             if pixel in healpix_cells:
@@ -419,8 +432,8 @@ class Hipster:
                     numpy.square(catalog[numpy.array(idx)][:, 4:7] - vector), axis=1
                 )
                 best = idx[numpy.argmin(distances)]
-                data = dataset[int(catalog[best][0])]["image"]
-                data = functional.rotate(data, catalog[best][3], expand=False)
+                data, _ = dataset[int(catalog[best][0])]
+                data = functional.rotate(data, catalog[best][1], expand=False)
                 data = functional.center_crop(
                     data, [self.crop_size, self.crop_size]
                 )  # crop
@@ -476,6 +489,9 @@ class Hipster:
         Args:
             datamodule (SpherinatorDataModule): The datamodule to access the original images
         """
+        if self.verbose > 0:
+            print("Generating dataset projection ...")
+
         self.check_folders("projection")
         self.create_folders("projection")
         self.create_hips_properties("projection")
@@ -484,15 +500,11 @@ class Hipster:
         datamodule.setup("processing")
         dataset = datamodule.data_processing
 
-        print("reading catalog")
-        catalog = numpy.genfromtxt(
+        catalog = pd.read_csv(
             self.catalog_file,
-            delimiter=",",
-            skip_header=1,
-            usecols=[6, 7, 8, 9, 10, 11, 12],
-        )  ##id,RA2000,DEC2000,rotation,x,y,z
+            usecols=["id", "rotation", "x", "y", "z"],
+        ).to_numpy()
 
-        print("creating tiles:")
         for i in range(self.max_order + 1):
             healpix_cells = self.calculate_healpix_cells(
                 catalog, range(catalog.shape[0]), i, range(12 * 4**i)
@@ -545,7 +557,8 @@ class Hipster:
                 process.join()
             print(" done", flush=True)
 
-        print("done!")
+        if self.verbose > 0:
+            print("Generating dataset projection ... done.")
 
     def create_images(self, datamodule: SpherinatorDataModule):
         output_path = self.title_folder / Path("jpg")

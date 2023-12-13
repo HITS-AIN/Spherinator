@@ -181,6 +181,7 @@ class ShapesDataModule(SpherinatorDataModule):
 
         for batch, metadata in self.dataloader_images:
             for i, image in enumerate(batch):
+                image = torch.swapaxes(image, 0, 2)
                 image = Image.fromarray(
                     (numpy.clip(image.numpy(), 0, 1) * 255).astype(numpy.uint8),
                     mode="RGB",
@@ -197,3 +198,15 @@ class ShapesDataModule(SpherinatorDataModule):
             output_path (Path): The path to the output directory.
         """
         self.setup("thumbnail_images")
+
+        for batch, metadata in self.dataloader_thumbnail_images:
+            for i, image in enumerate(batch):
+                image = torch.swapaxes(image, 0, 2)
+                image = Image.fromarray(
+                    (numpy.clip(image.numpy(), 0, 1) * 255).astype(numpy.uint8),
+                    mode="RGB",
+                )
+                filename = output_path / Path(
+                    metadata["shape"][i] + "_" + metadata["id"][i] + ".jpg",
+                )
+                image.save(filename)

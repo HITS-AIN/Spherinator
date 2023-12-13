@@ -79,3 +79,17 @@ def test_find_best_rotation(model):
 
     assert loss.shape == torch.Size([2])
     assert torch.allclose(loss, torch.Tensor([0.1121, 0.1131]), rtol=1e-3)
+
+
+def test_pandas_catalog():
+    catalog = pd.read_csv(
+        "tests/data/hipster/ref1/HipsterTest/catalog.csv",
+        usecols=["id", "rotation", "x", "y", "z"],
+    )
+    assert catalog.shape == (1000, 5)
+    assert len(catalog) == 1000
+    assert catalog["x"][0] == pytest.approx(-0.8279507, abs=1e-6, rel=1e-9)
+
+    catalog = catalog.to_numpy()
+
+    assert catalog[0][2] == pytest.approx(-0.8279507, abs=1e-6, rel=1e-9)
