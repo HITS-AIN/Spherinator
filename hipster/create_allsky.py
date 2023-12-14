@@ -15,12 +15,11 @@ def create_allsky(
     max_order: int = 4,
     extension: str = "jpg",
 ):
-    for order in range(max_order):
+    for order in range(max_order + 1):
         width = math.floor(math.sqrt(12 * 4**order))
         height = math.ceil(12 * 4**order / width)
         result = torch.zeros((edge_width * height, edge_width * width, 3))
 
-        print("order " + str(order) + " - ", end="", flush=True)
         for i in range(12 * 4**order):
             file = (
                 data_directory
