@@ -23,6 +23,7 @@ from tqdm import tqdm
 from data.spherinator_data_module import SpherinatorDataModule
 from models.spherinator_module import SpherinatorModule
 
+import .create_allsky as create_allsky
 
 class Hipster:
     """
@@ -569,6 +570,14 @@ class Hipster:
         output_path = self.title_folder / Path("thumbnails")
         output_path.mkdir(parents=True, exist_ok=True)
         datamodule.create_thumbnails(output_path)
+
+    def create_allsky(self):
+        if self.verbose > 0:
+            print("Create allsky images ...")
+        create_allsky(self.title_folder / "model", max_order=self.max_order)
+        create_allsky(self.title_folder / "projection", max_order=self.max_order)
+        if self.verbose > 0:
+            print("Create allsky images ... done.")
 
 
 def create_embeded_tile(hipster, dataset, catalog, healpix_cells, i, range_j):

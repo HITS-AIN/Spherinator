@@ -202,3 +202,47 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                     output.write(str(coordinates[i, 0]) + ",")
                     output.write(str(coordinates[i, 1]) + ",")
                     output.write(str(coordinates[i, 2]) + "\n")
+
+    def create_images(self, output_path: Path):
+        """Writes preview images to disk.
+
+        Args:
+            output_path (Path): The path to the output directory.
+        """
+        self.setup("images")
+
+        for batch, metadata in self.dataloader_images:
+            for i, image in enumerate(batch):
+                image = torch.swapaxes(image, 0, 2)
+                image = Image.fromarray(
+                    (numpy.clip(image.numpy(), 0, 1) * 255).astype(numpy.uint8),
+                    mode="RGB",
+                )
+                filename = output_path / Path(
+                    metadata["simulation"][i],
+                    metadata["snapshot"][i],
+                    metadata["subhalo_id"][i] + ".jpg",
+                )
+                image.save(filename)
+
+    def create_thumbnails(self, output_path: Path):
+        """Writes preview images to disk.
+
+        Args:
+            output_path (Path): The path to the output directory.
+        """
+        self.setup("thumbnail_images")
+
+        for batch, metadata in self.dataloader_thumbnail_images:
+            for i, image in enumerate(batch):
+                image = torch.swapaxes(image, 0, 2)
+                image = Image.fromarray(
+                    (numpy.clip(image.numpy(), 0, 1) * 255).astype(numpy.uint8),
+                    mode="RGB",
+                )
+                filename = output_path / Path(
+                    metadata["simulation"][i],
+                    metadata["snapshot"][i],
+                    metadata["subhalo_id"][i] + ".jpg",
+                )
+                image.save(filename)
