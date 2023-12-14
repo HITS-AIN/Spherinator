@@ -3,7 +3,9 @@ from pathlib import Path
 
 import healpy
 import numpy
+import torch
 import torchvision.transforms.v2 as transforms
+from PIL import Image
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -121,7 +123,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 num_workers=self.num_workers,
             )
         elif stage == "images" and self.data_images is None:
-            self.data_images = IllustrisSdssDataset(
+            self.data_images = IllustrisSdssDatasetWithMetadata(
                 data_directories=self.data_directories,
                 extension=self.extension,
                 minsize=self.minsize,
@@ -134,7 +136,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 num_workers=self.num_workers,
             )
         elif stage == "thumbnail_images" and self.data_thumbnail_images is None:
-            self.data_thumbnail_images = IllustrisSdssDataset(
+            self.data_thumbnail_images = IllustrisSdssDatasetWithMetadata(
                 data_directories=self.data_directories,
                 extension=self.extension,
                 minsize=self.minsize,
@@ -218,11 +220,12 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                     (numpy.clip(image.numpy(), 0, 1) * 255).astype(numpy.uint8),
                     mode="RGB",
                 )
-                filename = output_path / Path(
+                filepath = output_path / Path(
                     metadata["simulation"][i],
                     metadata["snapshot"][i],
-                    metadata["subhalo_id"][i] + ".jpg",
                 )
+                filepath.mkdir(parents=True, exist_ok=True)
+                filename = filepath / Path(metadata["subhalo_id"][i] + ".jpg")
                 image.save(filename)
 
     def create_thumbnails(self, output_path: Path):
@@ -240,9 +243,10 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                     (numpy.clip(image.numpy(), 0, 1) * 255).astype(numpy.uint8),
                     mode="RGB",
                 )
-                filename = output_path / Path(
+                filepath = output_path / Path(
                     metadata["simulation"][i],
                     metadata["snapshot"][i],
-                    metadata["subhalo_id"][i] + ".jpg",
                 )
+                filepath.mkdir(parents=True, exist_ok=True)
+                filename = filepath / Path(metadata["subhalo_id"][i] + ".jpg")
                 image.save(filename)
