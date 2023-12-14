@@ -23,7 +23,8 @@ from tqdm import tqdm
 from data.spherinator_data_module import SpherinatorDataModule
 from models.spherinator_module import SpherinatorModule
 
-import .create_allsky as create_allsky
+from .create_allsky import create_allsky
+
 
 class Hipster:
     """
