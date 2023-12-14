@@ -221,7 +221,9 @@ class Hipster:
                 + "'sphere projection of data from "
                 + self.title
                 + "', "
-                + "'http://localhost:8082/"
+                + "'"
+                + self.hipster_url
+                + "/"
                 + self.title
                 + "/"
                 + base_folder

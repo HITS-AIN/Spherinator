@@ -20,6 +20,7 @@ class IllustrisSdssDatasetWithMetadata(IllustrisSdssDataset):
         splits = filename[: -(len(self.extension) + 1)].split("/")
         metadata = {
             "filename": filename,
+            "id": index,
             "simulation": splits[-5],
             "snapshot": splits[-3].split("_")[1],
             "subhalo_id": splits[-1].split("_")[1],

@@ -163,7 +163,7 @@ class ShapesDataModule(SpherinatorDataModule):
                     )
                     output.write(str(metadata["filename"][i]) + ".jpg'></a>,")
                     output.write(str(losses[i]) + ",")
-                    output.write(str(i) + ",")
+                    output.write(str(metadata["id"][i]) + ",")
                     output.write(str(angles[i, 1]) + ",")
                     output.write(str(90.0 - angles[i, 0]) + ",")
                     output.write(str(rotations[i]) + ",")
