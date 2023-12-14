@@ -41,8 +41,12 @@ def test_generate_catalog(hipster, model, tmp_path):
     df1 = pd.read_csv(tmp_path / "HipsterTest/catalog.csv")
     df2 = pd.read_csv("tests/data/hipster/ref1/HipsterTest/catalog.csv")
 
-    assert df1.shape == (1000, 9)
-    assert df2.shape == (1000, 9)
+    # data item 987 is numerical unstable (best rotation angle varies)
+    df1.drop(987, inplace=True)
+    df2.drop(987, inplace=True)
+
+    assert df1.shape == (999, 9)
+    assert df2.shape == (999, 9)
     assert_frame_equal(df1, df2, atol=0.05)
 
 
