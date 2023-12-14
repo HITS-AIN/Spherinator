@@ -1,9 +1,0 @@
-program: train.py
-method: bayes
-metric:
-  name: train_loss
-  goal: minimize
-parameters:
-  optimizer.init_args.lr:
-    min: 0.0001
-    max: 0.1

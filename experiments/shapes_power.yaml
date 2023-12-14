@@ -39,15 +39,3 @@ trainer:
   accelerator: gpu
   devices: 1
   precision: 32
-  logger:
-    class_path: lightning.pytorch.loggers.WandbLogger
-    init_args:
-      project: spherinator
-      log_model: True
-      entity: bernddoser
-      tags:
-        - shapes
-  callbacks:
-    - class_path: callbacks.LogReconstructionCallback
-      init_args:
-        num_samples: 6

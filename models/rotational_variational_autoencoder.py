@@ -12,21 +12,21 @@ from torch.optim import Adam
 from .spherinator_module import SpherinatorModule
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(script_dir, '../external/s-vae-pytorch/'))
-from hyperspherical_vae.distributions import (HypersphericalUniform,
-                                              VonMisesFisher)
+sys.path.append(os.path.join(script_dir, "../external/s-vae-pytorch/"))
+from hyperspherical_vae.distributions import HypersphericalUniform, VonMisesFisher
 
 
 class RotationalVariationalAutoencoder(SpherinatorModule):
-
-    def __init__(self,
-                 h_dim: int = 256,
-                 z_dim: int = 2,
-                 distribution: str = 'normal',
-                 image_size: int = 91,
-                 rotations: int = 36,
-                 beta: float = 1.0,
-                 spherical_loss_weight: float = 1e-4):
+    def __init__(
+        self,
+        h_dim: int = 256,
+        z_dim: int = 2,
+        distribution: str = "normal",
+        image_size: int = 91,
+        rotations: int = 36,
+        beta: float = 1.0,
+        spherical_loss_weight: float = 1e-4,
+    ):
         """
         RotationalVariationalAutoencoder initializer
 
@@ -55,31 +55,49 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
 
         self.example_input_array = torch.randn(1, 3, self.input_size, self.input_size)
 
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(5,5), stride=2, padding=2)
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5,5), stride=2, padding=2)
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(5,5), stride=2, padding=2)
-        self.conv4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(5,5), stride=2, padding=2)
+        self.conv1 = nn.Conv2d(
+            in_channels=3, out_channels=32, kernel_size=(5, 5), stride=2, padding=2
+        )
+        self.conv2 = nn.Conv2d(
+            in_channels=32, out_channels=64, kernel_size=(5, 5), stride=2, padding=2
+        )
+        self.conv3 = nn.Conv2d(
+            in_channels=64, out_channels=128, kernel_size=(5, 5), stride=2, padding=2
+        )
+        self.conv4 = nn.Conv2d(
+            in_channels=128, out_channels=256, kernel_size=(5, 5), stride=2, padding=2
+        )
 
-        self.fc1 = nn.Linear(256*4*4, h_dim)
+        self.fc1 = nn.Linear(256 * 4 * 4, h_dim)
 
         self.fc_mean = nn.Linear(h_dim, z_dim)
-        if self.distribution == 'normal':
+        if self.distribution == "normal":
             # compute mean and std of the normal distribution
-            self.fc_var =  nn.Linear(h_dim, z_dim)
-        elif self.distribution == 'vmf':
+            self.fc_var = nn.Linear(h_dim, z_dim)
+        elif self.distribution == "vmf":
             # compute mean and concentration of the von Mises-Fisher
             self.fc_var = nn.Linear(h_dim, 1)
         else:
             raise NotImplementedError
 
         self.fc2 = nn.Linear(z_dim, h_dim)
-        self.fc3 = nn.Linear(h_dim, 256*4*4)
+        self.fc3 = nn.Linear(h_dim, 256 * 4 * 4)
 
-        self.deconv1 = nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=(4,4), stride=2, padding=1)
-        self.deconv2 = nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=(4,4), stride=2, padding=1)
-        self.deconv3 = nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=(4,4), stride=2, padding=1)
-        self.deconv4 = nn.ConvTranspose2d(in_channels=32, out_channels=16, kernel_size=(4,4), stride=2, padding=1)
-        self.deconv5 = nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=(5,5), stride=1, padding=2)
+        self.deconv1 = nn.ConvTranspose2d(
+            in_channels=256, out_channels=128, kernel_size=(4, 4), stride=2, padding=1
+        )
+        self.deconv2 = nn.ConvTranspose2d(
+            in_channels=128, out_channels=64, kernel_size=(4, 4), stride=2, padding=1
+        )
+        self.deconv3 = nn.ConvTranspose2d(
+            in_channels=64, out_channels=32, kernel_size=(4, 4), stride=2, padding=1
+        )
+        self.deconv4 = nn.ConvTranspose2d(
+            in_channels=32, out_channels=16, kernel_size=(4, 4), stride=2, padding=1
+        )
+        self.deconv5 = nn.ConvTranspose2d(
+            in_channels=16, out_channels=3, kernel_size=(5, 5), stride=1, padding=2
+        )
 
     def get_input_size(self):
         return self.input_size
@@ -90,16 +108,16 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         x = F.relu(self.conv3(x))
         x = F.relu(self.conv4(x))
 
-        x = x.view(-1, 256*4*4)
+        x = x.view(-1, 256 * 4 * 4)
         x = F.tanh(self.fc1(x))
 
         z_mean = self.fc_mean(x)
-        if self.distribution == 'normal':
+        if self.distribution == "normal":
             z_var = F.softplus(self.fc_var(x))
-        elif self.distribution == 'vmf':
+        elif self.distribution == "vmf":
             z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=1)
             # the `+ 1` prevent collapsing behaviors
-            z_var = F.softplus(self.fc_var(x)) + 1.e-6
+            z_var = F.softplus(self.fc_var(x)) + 1.0e-6
         else:
             raise NotImplementedError
 
@@ -117,10 +135,12 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         return x
 
     def reparameterize(self, z_mean, z_var):
-        if self.distribution == 'normal':
+        if self.distribution == "normal":
             q_z = torch.distributions.normal.Normal(z_mean, z_var)
-            p_z = torch.distributions.normal.Normal(torch.zeros_like(z_mean), torch.ones_like(z_var))
-        elif self.distribution == 'vmf':
+            p_z = torch.distributions.normal.Normal(
+                torch.zeros_like(z_mean), torch.ones_like(z_var)
+            )
+        elif self.distribution == "vmf":
             q_z = VonMisesFisher(z_mean, z_var)
             p_z = HypersphericalUniform(self.z_dim - 1, device=z_mean.device)
         else:
@@ -138,16 +158,21 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         return torch.square(1 - torch.sum(torch.square(coordinates), dim=1))
 
     def training_step(self, batch, batch_idx):
-        images = batch["image"]
-        best_recon = torch.ones(images.shape[0], device = images.device) * 1e10
-        best_scaled = torch.zeros((images.shape[0], images.shape[1], self.input_size, self.input_size),
-                                  device = images.device)
+        best_recon = torch.ones(batch.shape[0], device=batch.device) * 1e10
+        best_scaled = torch.zeros(
+            (batch.shape[0], batch.shape[1], self.input_size, self.input_size),
+            device=batch.device,
+        )
 
         with torch.no_grad():
             for i in range(self.rotations):
-                rotate = functional.rotate(images, 360.0 / self.rotations * i, expand=False)
+                rotate = functional.rotate(
+                    batch, 360.0 / self.rotations * i, expand=False
+                )
                 crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
-                scaled = functional.resize(crop, [self.input_size, self.input_size], antialias=False)
+                scaled = functional.resize(
+                    crop, [self.input_size, self.input_size], antialias=True
+                )
 
                 (_, _), (_, _), _, recon = self.forward(scaled)
                 loss_recon = self.reconstruction_loss(scaled, recon)
@@ -161,9 +186,12 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
 
         loss_recon = self.reconstruction_loss(best_scaled, recon)
 
-        if self.distribution == 'normal':
-            loss_KL = self.beta * torch.distributions.kl.kl_divergence(q_z, p_z).sum(-1).mean()
-        elif self.distribution == 'vmf':
+        if self.distribution == "normal":
+            loss_KL = (
+                self.beta
+                * torch.distributions.kl.kl_divergence(q_z, p_z).sum(-1).mean()
+            )
+        elif self.distribution == "vmf":
             loss_KL = self.beta * torch.distributions.kl.kl_divergence(q_z, p_z).mean()
         else:
             raise NotImplementedError
@@ -172,12 +200,12 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         loss_recon = loss_recon.mean()
         loss_KL = loss_KL.mean()
 
-        self.log('train_loss', loss, prog_bar=True)
-        self.log('loss_recon', loss_recon, prog_bar=True)
-        self.log('loss_KL', loss_KL)
-        self.log('learning_rate', self.optimizers().param_groups[0]['lr'])
-        self.log('mean(z_mean) ', torch.mean(z_mean))
-        self.log('mean(z_var) ', torch.mean(z_var))
+        self.log("train_loss", loss, prog_bar=True)
+        self.log("loss_recon", loss_recon, prog_bar=True)
+        self.log("loss_KL", loss_KL)
+        self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
+        self.log("mean(z_mean)", torch.mean(z_mean))
+        self.log("mean(z_var)", torch.mean(z_var))
         return loss
 
     def configure_optimizers(self):
@@ -192,6 +220,9 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         return self.decode(coordinates)
 
     def reconstruction_loss(self, images, reconstructions):
-        return torch.sqrt(nn.MSELoss(reduction='none')(
-            reconstructions.reshape(-1, self.total_input_size),
-            images.reshape(-1, self.total_input_size)).mean(dim=1))
+        return torch.sqrt(
+            nn.MSELoss(reduction="none")(
+                reconstructions.reshape(-1, self.total_input_size),
+                images.reshape(-1, self.total_input_size),
+            ).mean(dim=1)
+        )

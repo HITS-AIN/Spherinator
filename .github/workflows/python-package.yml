@@ -38,7 +38,7 @@ jobs:
           path: ~/.local
           key: poetry-1.7.1-0
 
-      - name: Install peotry
+      - name: Install poetry
         uses: snok/install-poetry@v1
         with:
           version: 1.7.1

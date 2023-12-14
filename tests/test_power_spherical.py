@@ -8,7 +8,6 @@ from power_spherical import PowerSpherical, HypersphericalUniform
 
 
 def test_power_spherical_2d():
-    torch.manual_seed(0)
     dist = PowerSpherical(torch.Tensor([0.0, 0.0]), torch.Tensor([1.0]))
 
     assert dist.has_rsample == True
@@ -17,7 +16,6 @@ def test_power_spherical_2d():
 
 
 def test_power_spherical_large_scale():
-    torch.manual_seed(0)
     z_mean = torch.Tensor([1.0, 0.0, 0.0])
     z_mean = torch.nn.functional.normalize(z_mean, p=2.0, dim=0)
     z_scale = torch.Tensor([1.0e38])
@@ -33,7 +31,6 @@ def test_power_spherical_large_scale():
 
 
 def test_power_spherical_2d_batch():
-    torch.manual_seed(0)
     batch_size = 32
     loc = torch.randn(batch_size, 3)
     scale = torch.ones(batch_size)

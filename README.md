@@ -1,11 +1,14 @@
 [![Build Status](https://github.com/HITS-AIN/Spherinator/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/HITS-AIN/Spherinator/actions/workflows/python-package.yml?branch=main)
 ![versions](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-blue)
 
-# Spherinator
+# Spherinator & HiPSter
 
-Provides simple autoencoders to project images to the surface of a sphere inluding a tool to creat HiPS representations for browsing.
+The `Spherinator` uses [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/) to implement a convolutional neural network (CNN) based variational autoencoder (VAE) with a spherical latent space.
+The `HiPSter` creates the HiPS tilings and the catalog which can be visualized interactively on the surface of a sphere with [Aladin Lite](https://github.com/cds-astro/aladin-lite).
 
-![HiPSter example](efigi.png "Example of autoencoded HiPS tiling for efigi data of nearby galaxies in SDSS")
+<p align="center">
+  <img src="docs/P404_f2.png" width="400" height="400">
+</p>
 
 
 ## Git clone with submodules
@@ -57,10 +60,12 @@ Examples:
 The following command generates a HiPS representation and a catalog showing the real images located on the latent space using the trained model.
 
 ```bash
-./hipster.py all --checkpoint <checkpoint-file>.ckpt
+./hipster.py --checkpoint <checkpoint-file>.ckpt
 ```
 
 Call `./hipster.py --help` for more information.
+
+For visualization, a Python HTTP server can be started by executing `python3 -m http.server 8082` within the HiPSter output file.
 
 
 ## Profiling

@@ -5,17 +5,18 @@ from typing import Union
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+
+from .spherinator_dataset import SpherinatorDataset
 
 
-class ShapesDataset(Dataset):
+class ShapesDataset(SpherinatorDataset):
     """Test images with four shapes in random rotations."""
 
     def __init__(
         self,
         data_directory: str,
         exclude_files: Union[list[str], str] = [],
-        transform = None,
+        transform=None,
         download: bool = False,
     ):
         """Initializes the data set.
@@ -23,7 +24,7 @@ class ShapesDataset(Dataset):
         Args:
             data_directory (str): The data directory.
             exclude_files (list[str] | str, optional): A list of files to exclude. Defaults to [].
-            transform (torchvision.transforms.Compose, optional): A single or a set of
+            transform (torchvision.transforms, optional): A single or a set of
                 transformations to modify the images. Defaults to None.
             download (bool, optional): Wether or not to download the data. Defaults to False.
         """
@@ -31,20 +32,24 @@ class ShapesDataset(Dataset):
         if isinstance(exclude_files, str):
             exclude_files = [exclude_files]
 
-        self.data_directory = data_directory
-        self.exclude_files = exclude_files
         self.transform = transform
-        self.download = download
+        self.filenames = []
+        self.file_entries_offsets = [0]
 
-        if self.download:
+        if download:
             raise NotImplementedError("Download not implemented yet.")
 
         self.images = np.empty((0, 64, 64), np.float32)
-        for file in os.listdir(data_directory):
+        for file in sorted(os.listdir(data_directory)):
             if file in exclude_files:
                 continue
+            self.filenames.append(os.path.join(data_directory, file))
             images = np.load(os.path.join(data_directory, file)).astype(np.float32)
             self.images = np.append(self.images, images, axis=0)
+            self.file_entries_offsets.append(
+                self.file_entries_offsets[-1] + images.shape[0]
+            )
+        self.current_index = []
 
     def __len__(self):
         """Return the number of items in the dataset.
@@ -54,21 +59,33 @@ class ShapesDataset(Dataset):
         """
         return len(self.images)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, index: int):
         """Retrieves the item/items with the given indices from the dataset.
 
         Args:
-            idx (int or tensor): The index of the item to retrieve.
+            index: The index of the item to retrieve.
 
         Returns:
-            dictionary: A dictionary mapping image, filename and id.
+            data: Data of the item/items with the given indices.
+            index: Index of the item/items
+
         """
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-        image = torch.Tensor(self.images[idx])
+        self.current_index = index
+        data = self.images[index]
+        data = torch.Tensor(data)
         if self.transform:
-            image = self.transform(image)
-        dummy_filename = "dummy"
-        dummy_metadata = {"simulation": "shapes", "snapshot": "0", "subhalo_id": "0"}
-        sample = {'image': image, 'filename': dummy_filename, 'id': idx, 'metadata': dummy_metadata}
-        return sample
+            data = self.transform(data)
+        return data
+
+    def get_metadata(self, index: int):
+        """Retrieves the metadata of the item/items with the given indices from the dataset.
+
+        Args:
+            index: The index of the item to retrieve.
+
+        Returns:
+            metadata: Metadata of the item/items with the given indices.
+        """
+        file_index = np.searchsorted(self.file_entries_offsets, index, side="right") - 1
+        metadata = {"filename": self.filenames[file_index]}
+        return metadata

@@ -13,6 +13,7 @@ It contains the following modules:
 """
 
 from .illustris_sdss_dataset import IllustrisSdssDataset
+from .illustris_sdss_dataset_with_metadata import IllustrisSdssDatasetWithMetadata
 from .illustris_sdss_data_module import IllustrisSdssDataModule
 from .galaxy_zoo_dataset import GalaxyZooDataset
 from .galaxy_zoo_data_module import GalaxyZooDataModule
@@ -20,10 +21,11 @@ from .shapes_dataset import ShapesDataset
 from .shapes_data_module import ShapesDataModule
 
 __all__ = [
-    'IllustrisSdssDataset',
-    'IllustrisSdssDataModule',
-    'GalaxyZooDataset',
-    'GalaxyZooDataModule',
-    'ShapesDataset',
-    'ShapesDataModule'
+    "IllustrisSdssDataset",
+    "IllustrisSdssDatasetWithMetadata",
+    "IllustrisSdssDataModule",
+    "GalaxyZooDataset",
+    "GalaxyZooDataModule",
+    "ShapesDataset",
+    "ShapesDataModule",
 ]

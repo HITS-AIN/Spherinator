@@ -40,17 +40,3 @@ trainer:
   accelerator: gpu
   devices: 1
   precision: 32
-  logger:
-    class_path: lightning.pytorch.loggers.WandbLogger
-    init_args:
-      project: spherinator
-      name: shapes-svae
-      log_model: True
-  callbacks:
-    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
-      init_args:
-        monitor: train_loss
-        filename: "{epoch}-{train_loss:.2f}"
-        save_top_k: 1
-        mode: min
-        every_n_epochs: 1
