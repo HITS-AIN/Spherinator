@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import argparse
 import importlib
 
@@ -10,7 +11,7 @@ from lightning.pytorch.trainer.trainer import Trainer
 from hipster import Hipster
 
 
-def main():
+def main() -> int:
     list_of_tasks = [
         "hips",
         "catalog",
@@ -151,6 +152,8 @@ def main():
     if "allsky" in args.task:
         hipster.create_allsky()
 
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
