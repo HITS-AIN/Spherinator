@@ -10,13 +10,14 @@ authors = [
 ]
 license = "Apache-2.0"
 readme = "README.md"
+repository = "https://github.com/HITS-AIN/Spherinator"
 include = [
-    { path = "tests" },
-    { path = "hipster.py" },
+    { path = "tests", format = "sdist" },
 ]
 
 [tool.poetry.scripts]
 hipster = 'hipster:main'
+spherinator = 'spherinator:main'
 
 [tool.poetry.dependencies]
 astropy = "^6.0.0"

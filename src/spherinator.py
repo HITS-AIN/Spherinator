@@ -16,5 +16,10 @@ else:
 # See https://github.com/Lightning-AI/lightning/discussions/16698
 torch.set_float32_matmul_precision("high")
 
+
+def main():
+    LightningCLI(save_config_kwargs={"overwrite": True})
+
+
 if __name__ == "__main__":
-    cli = LightningCLI(save_config_kwargs={"overwrite": True})
+    main()
