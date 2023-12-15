@@ -1,7 +1,7 @@
-[submodule "external/s-vae-pytorch"]
+[submodule "src/external/s-vae-pytorch"]
 	path = src/external/s-vae-pytorch
 	url = https://github.com/nicola-decao/s-vae-pytorch
-[submodule "external/power_spherical"]
+[submodule "src/external/power_spherical"]
 	path = src/external/power_spherical
 	url = https://github.com/HITS-AIN/power_spherical.git
 	branch = jit
