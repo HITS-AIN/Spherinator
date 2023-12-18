@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-import sys
 import argparse
 import importlib
+import sys
 
 import torch
 import yaml
-from lightning.pytorch.trainer.trainer import Trainer
 
 from hipster import Hipster
 

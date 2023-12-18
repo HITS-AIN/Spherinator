@@ -1,12 +1,7 @@
-import os
-import sys
 import torch
-from torch.distributions.von_mises import VonMises
-from torch.distributions.normal import Normal
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(script_dir, "../external/s-vae-pytorch/"))
 from hyperspherical_vae.distributions import VonMisesFisher
+from torch.distributions.normal import Normal
+from torch.distributions.von_mises import VonMises
 
 
 def test_von_mises_fisher_1d():
