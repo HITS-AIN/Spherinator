@@ -28,7 +28,7 @@ scipy = "^1.11.4"
 torch = "^2.1.1"
 torchvision = "^0.16.1"
 jsonargparse = {extras = ["signatures"], version = "^4.27.1"}
-psutil = "^5.9.6"
+psutil = "^5.9.7"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^6.1.0"
