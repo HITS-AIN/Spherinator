@@ -20,28 +20,35 @@ hipster = 'hipster:main'
 
 [tool.poetry.dependencies]
 astropy = "^6.0.0"
+healpy = "^1.16.6"
+hyperspherical-vae = {git = "https://github.com/nicola-decao/s-vae-pytorch.git"}
+ipykernel = "^6.27.1"
+jsonargparse = {extras = ["signatures"], version = "^4.27.1"}
 lightning = "^2.1.2"
 matplotlib = "^3.8.2"
-python = "^3.9"
-scikit-image = "^0.22.0"
-scipy = "^1.11.4"
-jsonargparse = {extras = ["signatures"], version = "^4.27.1"}
-psutil = "^5.9.7"
-torch = "^2.1.2"
-torchvision = "^0.16.2"
-power-spherical = {git = "https://github.com/HITS-AIN/power_spherical.git", branch = "jit"}
-hyperspherical-vae = {git = "https://github.com/nicola-decao/s-vae-pytorch.git"}
-
-[tool.poetry.group.dev.dependencies]
-flake8 = "^6.1.0"
-healpy = "^1.16.6"
-ipykernel = "^6.27.1"
-jsonargparse = "^4.27.1"
-jupytext = "^1.15.2"
 numpy = "^1.26.2"
 onnx = "^1.15.0"
 onnxruntime = "^1.16.3"
 pandas = "^2.1.3"
+power-spherical = {git = "https://github.com/HITS-AIN/power_spherical.git", branch = "jit"}
+psutil = "^5.9.7"
+python = "^3.9"
+scikit-image = "^0.22.0"
+scipy = "^1.11.4"
+torch = [
+  { version = "^2.1.2", markers = "extra!='nightly'" },
+  { version = "^2.3.0", source = "pytorch-nightly-cu121", markers = "extra=='nightly'" },
+  #{ url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.3.0.dev20231221%2Bcu121-cp39-cp39-linux_x86_64.whl", markers = "extra=='nightly'" }
+]
+torchvision = [
+  { version = "^0.16.2", markers = "extra!='nightly'" },
+  { version = "^0.18.0", source = "pytorch-nightly-cu121", markers = "extra=='nightly'" },
+  #{ url = "https://download.pytorch.org/whl/nightly/cu121/torchvision-0.18.0.dev20231221%2Bcu121-cp39-cp39-linux_x86_64.whl", markers = "extra=='nightly'" }
+]
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^6.1.0"
+jupytext = "^1.15.2"
 pip-licenses = "^4.3.3"
 pytest = "^7.4.3"
 pytest-cov = "^4.1.0"
@@ -50,13 +57,13 @@ tensorboard = "^2.15.1"
 wandb = "^0.16.1"
 
 [[tool.poetry.source]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/nightly/cu121"
-priority = "explicit"
-
-[[tool.poetry.source]]
 name = "pypi"
 priority = "primary"
+
+[[tool.poetry.source]]
+name = "pytorch-nightly-cu121"
+url = "https://download.pytorch.org/whl/nightly/cu121"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
