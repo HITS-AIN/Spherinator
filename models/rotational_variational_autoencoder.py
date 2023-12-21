@@ -1,5 +1,3 @@
-import os
-import sys
 import math
 
 import torch
@@ -7,13 +5,10 @@ import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as functional
+from hyperspherical_vae.distributions import HypersphericalUniform, VonMisesFisher
 from torch.optim import Adam
 
 from .spherinator_module import SpherinatorModule
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(script_dir, "../external/s-vae-pytorch/"))
-from hyperspherical_vae.distributions import HypersphericalUniform, VonMisesFisher
 
 
 class RotationalVariationalAutoencoder(SpherinatorModule):

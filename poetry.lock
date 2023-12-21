@@ -1168,6 +1168,26 @@ files = [
 pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_version >= \"3.8\""}
 
 [[package]]
+name = "hyperspherical_vae"
+version = "0.1.1"
+description = "Pytorch implementation of Hyperspherical Variational Auto-Encoders"
+optional = false
+python-versions = "*"
+files = []
+develop = false
+
+[package.dependencies]
+numpy = "*"
+scipy = ">=1.0.0"
+torch = ">=0.4.1"
+
+[package.source]
+type = "git"
+url = "https://github.com/nicola-decao/s-vae-pytorch.git"
+reference = "HEAD"
+resolved_reference = "671c46c0772a2c92a602252311864c48c816bc44"
+
+[[package]]
 name = "idna"
 version = "3.6"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -2596,6 +2616,24 @@ files = [
 [package.extras]
 dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
+
+[[package]]
+name = "power-spherical"
+version = "0.1.0"
+description = "Pytorch implementation of the Power Spherical distribution"
+optional = false
+python-versions = "*"
+files = []
+develop = false
+
+[package.dependencies]
+torch = ">=1.5.0"
+
+[package.source]
+type = "git"
+url = "https://github.com/HITS-AIN/power_spherical.git"
+reference = "jit"
+resolved_reference = "ec1b17e8533ae5765188d3207954eeffea34abf8"
 
 [[package]]
 name = "prettytable"
@@ -4168,4 +4206,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "246d3a6e9ae8ac07bee5d1fb0cf10dd68ea6edcee01472c1931a4270e32ac689"
+content-hash = "89b7cbb26da69298ee4442b1d0b876620223a2e70388aec9eeefba57b787cb00"

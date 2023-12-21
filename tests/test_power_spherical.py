@@ -1,10 +1,5 @@
-import os
-import sys
 import torch
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(script_dir, "../external/power_spherical/"))
-from power_spherical import PowerSpherical, HypersphericalUniform
+from power_spherical import HypersphericalUniform, PowerSpherical
 
 
 def test_power_spherical_2d():
