@@ -11,32 +11,13 @@ The `HiPSter` creates the HiPS tilings and the catalog which can be visualized i
 </p>
 
 
-## Git clone with submodules
+## Installation
 
-This repository contains git submodules. To clone the repository including the submodules use the following command:
-
-```bash
-git clone --recurse-submodules https://github.com/HITS-AIN/Spherinator.git
-```
-
-or after cloning with
+[Poetry](https://python-poetry.org/) is used for installation.
 
 ```bash
-git submodule init
-git submodule update
+poetry install
 ```
-
-
-## Dependency management with Poetry
-
-Based on [Poetry](https://python-poetry.org/) all dependencies can be installed in a virtual environment. The environment can be created and activated with the following commands:
-
-```bash
-poetry install --no-root
-poerty shell
-```
-
-The `--no-root` option is used to avoid installing the project itself as a dependency. The environment can be deactivated with `exit`.
 
 
 ## LightningCLI
