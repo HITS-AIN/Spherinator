@@ -35,16 +35,14 @@ psutil = "^5.9.7"
 python = "^3.9"
 scikit-image = "^0.22.0"
 scipy = "^1.11.4"
-torch = [
-  { version = "^2.1.2", markers = "extra!='nightly'" },
-  { version = "^2.3.0", source = "pytorch-nightly-cu121", markers = "extra=='nightly'" },
-  #{ url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.3.0.dev20231221%2Bcu121-cp39-cp39-linux_x86_64.whl", markers = "extra=='nightly'" }
-]
-torchvision = [
-  { version = "^0.16.2", markers = "extra!='nightly'" },
-  { version = "^0.18.0", source = "pytorch-nightly-cu121", markers = "extra=='nightly'" },
-  #{ url = "https://download.pytorch.org/whl/nightly/cu121/torchvision-0.18.0.dev20231221%2Bcu121-cp39-cp39-linux_x86_64.whl", markers = "extra=='nightly'" }
-]
+
+torch = "^2.1.2"
+#torch = {version = "^2.1.2", source = "pytorch-nightly-cu121"}
+#torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.3.0.dev20231221%2Bcu121-cp39-cp39-linux_x86_64.whl"}
+
+torchvision = "^0.16.2"
+#torchvision = {version = "0.18.0.dev20231221", source = "pytorch-nightly-cu121"}
+#torchvision = {url = "https://download.pytorch.org/whl/nightly/cu121/torchvision-0.18.0.dev20231221%2Bcu121-cp39-cp39-linux_x86_64.whl"}
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^6.1.0"

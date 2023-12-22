@@ -3850,7 +3850,7 @@ visual = ["SciencePlots (>=2.0.0)", "matplotlib (>=3.2.0)"]
 name = "torchvision"
 version = "0.16.2"
 description = "image and video datasets and models for torch deep learning"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "torchvision-0.16.2-cp310-cp310-macosx_10_13_x86_64.whl", hash = "sha256:bc86f2800cb2c0c1a09c581409cdd6bff66e62f103dc83fc63f73346264c3756"},
@@ -4206,4 +4206,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "e6577d82037b204a0ec7889a847bd0c67f1a8d9209c4adf26a7f6b3654899f81"
+content-hash = "7d3e2de25fdd14695129b527839f044d02778f4153e6a253942fd6771a6e3edd"
