@@ -2992,7 +2992,21 @@ version = "2.2.0+e28a256d71"
 description = "A language and compiler for custom Deep Learning operations"
 optional = false
 python-versions = "*"
-files = []
+files = [
+    {file = "pytorch_triton-2.2.0+e28a256d71-cp39-cp39-linux_x86_64.whl", hash = "sha256:a908ce93696eeb968b51f00b70deaa775d68f5c67d91341f2e77284aa9eea2d3"},
+]
+
+[package.dependencies]
+filelock = "*"
+
+[package.extras]
+build = ["cmake (>=3.20)", "lit"]
+tests = ["autopep8", "flake8", "isort", "numpy", "pytest", "scipy (>=1.7.1)", "torch"]
+tutorials = ["matplotlib", "pandas", "tabulate", "torch"]
+
+[package.source]
+type = "url"
+url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"
 
 [[package]]
 name = "pytz"
@@ -4194,4 +4208,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "b7bebe11a83e573d452cac6973465d92836d572f6d56410868c87156eec0305d"
+content-hash = "219e474d63b7e4259e8c4ffeeb285fe4c7a237149323b3e372c80e9c74c3fa54"
