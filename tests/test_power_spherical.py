@@ -51,7 +51,7 @@ def test_kl_divergence():
     )
 
 
-def test_dynamo_export():
+def test_dynamo_export_normal():
     class Model(torch.nn.Module):
         def __init__(self):
             self.normal = torch.distributions.normal.Normal(0, 1)
@@ -59,6 +59,26 @@ def test_dynamo_export():
 
         def forward(self, x):
             return self.normal.sample(x.shape)
+
+    x = torch.randn(2, 3)
+    exported_program = torch.export.export(Model(), args=(x,))
+    onnx_program = torch.onnx.dynamo_export(
+        exported_program,
+        x,
+    )
+    onnx_program.save("normal.onnx")
+
+
+def test_dynamo_export_spherical():
+    class Model(torch.nn.Module):
+        def __init__(self):
+            self.spherical = PowerSpherical(
+                torch.Tensor([0.0, 1.0]), torch.Tensor([1.0])
+            )
+            super().__init__()
+
+        def forward(self, x):
+            return self.spherical.sample(x.shape)
 
     x = torch.randn(2, 3)
     exported_program = torch.export.export(Model(), args=(x,))
