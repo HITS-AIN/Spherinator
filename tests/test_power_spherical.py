@@ -49,3 +49,20 @@ def test_kl_divergence():
         torch.distributions.kl_divergence(dist1, dist2),
         atol=1e-2,
     )
+
+
+def test_dynamo_export():
+    class Model(torch.nn.Module):
+        def __init__(self):
+            self.normal = torch.distributions.normal.Normal(0, 1)
+            super().__init__()
+
+        def forward(self, x):
+            return self.normal.sample(x.shape)
+
+    x = torch.randn(2, 3)
+    exported_program = torch.export.export(Model(), args=(x,))
+    _ = torch.onnx.dynamo_export(
+        exported_program,
+        x,
+    )
