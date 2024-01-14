@@ -7,12 +7,16 @@ import torch.nn.functional as F
 from power_spherical import HypersphericalUniform, PowerSpherical
 from torch.optim import Adam
 
+from .convolutional_decoder import ConvolutionalDecoder
+from .convolutional_encoder import ConvolutionalEncoder
 from .spherinator_module import SpherinatorModule
 
 
 class RotationalVariationalAutoencoderPower(SpherinatorModule):
     def __init__(
         self,
+        encoder: object = ConvolutionalEncoder,
+        decoder: object = ConvolutionalDecoder,
         h_dim: int = 256,
         z_dim: int = 2,
         image_size: int = 91,
@@ -43,51 +47,14 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
         self.example_input_array = torch.randn(1, 3, self.input_size, self.input_size)
 
-        self.conv0 = nn.Conv2d(
-            in_channels=3, out_channels=16, kernel_size=(3, 3), stride=1, padding=1
-        )  # 128x128
-        self.pool0 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 64x64
-        self.conv1 = nn.Conv2d(
-            in_channels=16, out_channels=32, kernel_size=(3, 3), stride=1, padding=1
-        )  # 64x64
-        self.pool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 32x32
-        self.conv2 = nn.Conv2d(
-            in_channels=32, out_channels=64, kernel_size=(3, 3), stride=1, padding=1
-        )  # 32x32
-        self.pool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 16x16
-        self.conv3 = nn.Conv2d(
-            in_channels=64, out_channels=128, kernel_size=(3, 3), stride=1, padding=1
-        )  # 16x16
-        self.pool3 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 8x8
-        self.conv4 = nn.Conv2d(
-            in_channels=128, out_channels=256, kernel_size=(3, 3), stride=1, padding=1
-        )  # 8x8
-        self.pool4 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 4x4
+        self.encoder = encoder()
+        self.decoder = decoder()
 
         self.fc1 = nn.Linear(256 * 4 * 4, h_dim)
         self.fc_location = nn.Linear(h_dim, z_dim)
         self.fc_scale = nn.Linear(h_dim, 1)
         self.fc2 = nn.Linear(z_dim, h_dim)
         self.fc3 = nn.Linear(h_dim, 256 * 4 * 4)
-
-        self.deconv1 = nn.ConvTranspose2d(
-            in_channels=256, out_channels=128, kernel_size=(4, 4), stride=2, padding=1
-        )  # 8x8
-        self.deconv2 = nn.ConvTranspose2d(
-            in_channels=128, out_channels=128, kernel_size=(4, 4), stride=2, padding=1
-        )  # 16x16
-        self.deconv3 = nn.ConvTranspose2d(
-            in_channels=128, out_channels=64, kernel_size=(4, 4), stride=2, padding=1
-        )  # 32x32
-        self.deconv4 = nn.ConvTranspose2d(
-            in_channels=64, out_channels=32, kernel_size=(4, 4), stride=2, padding=1
-        )  # 64x64
-        self.deconv5 = nn.ConvTranspose2d(
-            in_channels=32, out_channels=16, kernel_size=(3, 3), stride=2, padding=1
-        )  # 127x127
-        self.deconv6 = nn.ConvTranspose2d(
-            in_channels=16, out_channels=3, kernel_size=(2, 2), stride=1, padding=0
-        )  # 128x128
 
         with torch.no_grad():
             self.fc_scale.bias.fill_(1.0e3)
@@ -96,17 +63,9 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         return self.input_size
 
     def encode(self, x):
-        x = F.relu(self.conv0(x))
-        x = self.pool0(x)
-        x = F.relu(self.conv1(x))
-        x = self.pool1(x)
-        x = F.relu(self.conv2(x))
-        x = self.pool2(x)
-        x = F.relu(self.conv3(x))
-        x = self.pool3(x)
-        x = F.relu(self.conv4(x))
-        x = self.pool4(x)
-        x = x.view(-1, 256 * 4 * 4)
+        x = self.encoder(x)
+        # x = x.view(-1, 256 * 4 * 4)
+        x = torch.flatten(x, start_dim=1)
         x = F.relu(self.fc1(x))
 
         z_location = self.fc_location(x)
@@ -120,13 +79,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         x = F.relu(self.fc2(z))
         x = F.relu(self.fc3(x))
         x = x.view(-1, 256, 4, 4)
-
-        x = F.relu(self.deconv1(x))
-        x = F.relu(self.deconv2(x))
-        x = F.relu(self.deconv3(x))
-        x = F.relu(self.deconv4(x))
-        x = F.relu(self.deconv5(x))
-        x = self.deconv6(x)
+        x = self.decoder(x)
         return x
 
     def reparameterize(self, z_location, z_scale):
