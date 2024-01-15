@@ -46,7 +46,7 @@ torchvision = "^0.16.2"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.0.0"
-jupytext = "^1.15.2"
+jupytext = "^1.16.1"
 pip-licenses = "^4.3.3"
 pytest = "^7.4.4"
 pytest-cov = "^4.1.0"

@@ -1512,17 +1512,17 @@ test = ["ipykernel", "pre-commit", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
 name = "jupytext"
-version = "1.16.0"
+version = "1.16.1"
 description = "Jupyter notebooks as Markdown documents, Julia, Python or R scripts"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jupytext-1.16.0-py3-none-any.whl", hash = "sha256:c2b951ac72871f39cd6cd242b56bc43219b7ed8169598bae5359811fb1f54d28"},
-    {file = "jupytext-1.16.0.tar.gz", hash = "sha256:94c7e67775e90e1792c39ab7fca4e0459bf7c35656123e8dc2e9e1b3e953baf8"},
+    {file = "jupytext-1.16.1-py3-none-any.whl", hash = "sha256:796ec4f68ada663569e5d38d4ef03738a01284bfe21c943c485bc36433898bd0"},
+    {file = "jupytext-1.16.1.tar.gz", hash = "sha256:68c7b68685e870e80e60fda8286fbd6269e9c74dc1df4316df6fe46eabc94c99"},
 ]
 
 [package.dependencies]
-markdown-it-py = ">=1.0.0"
+markdown-it-py = ">=1.0"
 mdit-py-plugins = "*"
 nbformat = "*"
 packaging = "*"
@@ -4224,4 +4224,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "211cab1cb70f4c85de5f93520787b624d2b190b8a2a83a224c95b3bd1cde89a5"
+content-hash = "28a7840924c9fb0808937c02d638f92e62ce88e8c6cd9ad09740325fe940f91d"
