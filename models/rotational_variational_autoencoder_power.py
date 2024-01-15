@@ -15,8 +15,8 @@ from .spherinator_module import SpherinatorModule
 class RotationalVariationalAutoencoderPower(SpherinatorModule):
     def __init__(
         self,
-        encoder: object = ConvolutionalEncoder,
-        decoder: object = ConvolutionalDecoder,
+        encoder: nn.Module = ConvolutionalEncoder(),
+        decoder: nn.Module = ConvolutionalDecoder(),
         h_dim: int = 256,
         z_dim: int = 2,
         image_size: int = 91,
@@ -33,8 +33,10 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
             beta (float, optional): factor for beta-VAE. Defaults to 1.0.
         """
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["encoder", "decoder"])
 
+        self.encoder = encoder
+        self.decoder = decoder
         self.h_dim = h_dim
         self.z_dim = z_dim
         self.image_size = image_size
@@ -46,9 +48,6 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         self.total_input_size = self.input_size * self.input_size * 3
 
         self.example_input_array = torch.randn(1, 3, self.input_size, self.input_size)
-
-        self.encoder = encoder()
-        self.decoder = decoder()
 
         self.fc1 = nn.Linear(256 * 4 * 4, h_dim)
         self.fc_location = nn.Linear(h_dim, z_dim)
