@@ -17,4 +17,8 @@ else:
 torch.set_float32_matmul_precision("high")
 
 if __name__ == "__main__":
-    cli = LightningCLI(save_config_kwargs={"overwrite": True})
+    cli = LightningCLI(
+        save_config_kwargs={"overwrite": True},
+        subclass_mode_model=True,
+        subclass_mode_data=True,
+    )
