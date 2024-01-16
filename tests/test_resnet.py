@@ -1,14 +1,13 @@
-import torch
-import torchvision.models as models
-
-from models import RotationalVariationalAutoencoderPower
+import models
 
 
 def test_resnet():
     z_dim = 2
-    model = RotationalVariationalAutoencoderPower(
+    h_dim = 256
+    model = models.RotationalVariationalAutoencoderPower(
         z_dim=z_dim,
-        encoder=models.resnet18,
+        h_dim=h_dim,
+        encoder=models.resnet18(num_classes=h_dim),
     )
     input = model.example_input_array
     batch_size = input.shape[0]
