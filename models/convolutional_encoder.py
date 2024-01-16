@@ -1,10 +1,11 @@
+import lightning.pytorch as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
-class ConvolutionalEncoder(nn.Module):
-    def __init__(self):
+class ConvolutionalEncoder(pl.LightningModule):
+    def __init__(self, h_dim: int = 256):
         super().__init__()
 
         self.conv0 = nn.Conv2d(
@@ -28,6 +29,8 @@ class ConvolutionalEncoder(nn.Module):
         )  # 8x8
         self.pool4 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 4x4
 
+        self.fc1 = nn.Linear(256 * 4 * 4, h_dim)
+
     def forward(self, x: torch.tensor) -> torch.tensor:
         x = F.relu(self.conv0(x))
         x = self.pool0(x)
@@ -39,4 +42,6 @@ class ConvolutionalEncoder(nn.Module):
         x = self.pool3(x)
         x = F.relu(self.conv4(x))
         x = self.pool4(x)
+        x = torch.flatten(x, start_dim=1)
+        x = F.relu(self.fc1(x))
         return x

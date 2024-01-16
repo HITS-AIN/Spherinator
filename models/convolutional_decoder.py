@@ -1,9 +1,10 @@
+import lightning.pytorch as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
-class ConvolutionalDecoder(nn.Module):
+class ConvolutionalDecoder(pl.LightningModule):
     def __init__(self):
         super().__init__()
 
