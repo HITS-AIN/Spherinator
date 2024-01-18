@@ -23,7 +23,7 @@ astropy = "^6.0.0"
 healpy = "^1.16.6"
 hyperspherical-vae = {git = "https://github.com/nicola-decao/s-vae-pytorch.git"}
 ipykernel = "^6.27.1"
-jsonargparse = {extras = ["signatures"], version = "^4.27.1"}
+jsonargparse = {extras = ["signatures"], version = "^4.27.2"}
 lightning = "^2.1.2"
 matplotlib = "^3.8.2"
 numpy = "^1.26.2"
