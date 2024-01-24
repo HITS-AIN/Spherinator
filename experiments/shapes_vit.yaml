@@ -4,10 +4,13 @@ model:
   class_path: models.RotationalVariationalAutoencoderPower
   init_args:
     encoder:
-      class_path: torchvision.models.ResNet
+      class_path: torchvision.models.VisionTransformer
       init_args:
-        block: torchvision.models.resnet.BasicBlock
-        layers: [3, 4, 6, 3] # ResNet-50
+        patch_size: 16
+        num_layers: 12
+        num_heads: 12
+        hidden_dim: 768
+        mlp_dim: 3072
         num_classes: 256
     decoder:
       class_path: models.ConvolutionalDecoder
