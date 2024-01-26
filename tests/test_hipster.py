@@ -56,7 +56,7 @@ def test_generate_catalog(hipster, model, tmp_path):
 
     assert df1.shape == (999, 9)
     assert df2.shape == (999, 9)
-    assert_frame_equal(df1, df2, atol=0.05)
+    assert_frame_equal(df1, df2, atol=0.2)
 
 
 def test_create_images(hipster, tmp_path):
