@@ -8,12 +8,21 @@ from pandas.testing import assert_frame_equal
 
 from data import ShapesDataModule
 from hipster import Hipster
-from models import RotationalVariationalAutoencoderPower
+from models import (
+    ConvolutionalDecoder,
+    ConvolutionalEncoder,
+    RotationalVariationalAutoencoderPower,
+)
 
 
 @pytest.fixture
 def model():
-    model = RotationalVariationalAutoencoderPower(z_dim=3, rotations=4)
+    model = RotationalVariationalAutoencoderPower(
+        encoder=ConvolutionalEncoder(),
+        decoder=ConvolutionalDecoder(),
+        z_dim=3,
+        rotations=4,
+    )
     return model
 
 
@@ -74,17 +83,17 @@ def test_find_best_rotation(model):
     best_image, rot, coord, loss = model.find_best_rotation(batch)
 
     assert best_image.shape == torch.Size([2, 3, 128, 128])
-    assert torch.allclose(rot, torch.Tensor([270.0, 270.0]), rtol=1e-3)
+    assert torch.allclose(rot, torch.Tensor([180.0, 270.0]), rtol=1e-3)
 
     assert coord.shape == torch.Size([2, 3])
     assert torch.allclose(
         coord,
-        torch.Tensor([[-0.8248, -0.5107, 0.2425], [-0.8249, -0.5111, 0.2412]]),
+        torch.Tensor([[0.3004, -0.6826, -0.6662], [0.3027, -0.6826, -0.6651]]),
         rtol=1e-3,
     )
 
     assert loss.shape == torch.Size([2])
-    assert torch.allclose(loss, torch.Tensor([0.1121, 0.1131]), rtol=1e-3)
+    assert torch.allclose(loss, torch.Tensor([0.1791, 0.1798]), rtol=1e-3)
 
 
 def test_pandas_catalog():
@@ -94,8 +103,8 @@ def test_pandas_catalog():
     )
     assert catalog.shape == (1000, 5)
     assert len(catalog) == 1000
-    assert catalog["x"][0] == pytest.approx(-0.8279507, abs=1e-6, rel=1e-9)
+    assert catalog["x"][0] == pytest.approx(0.32369125, abs=1e-6, rel=1e-9)
 
     catalog = catalog.to_numpy()
 
-    assert catalog[0][2] == pytest.approx(-0.8279507, abs=1e-6, rel=1e-9)
+    assert catalog[0][2] == pytest.approx(0.32369125, abs=1e-6, rel=1e-9)
