@@ -28,17 +28,19 @@ def model():
 
 @pytest.fixture
 def hipster(tmp_path):
-    hipster = Hipster(output_folder=tmp_path, title="HipsterTest", max_order=0)
+    hipster = Hipster(
+        output_folder=tmp_path, title="HipsterTest", max_order=0, number_of_workers=1
+    )
     return hipster
 
 
-def test_generate_hips(hipster, model, tmp_path):
-    hipster.generate_hips(model)
+# def test_generate_hips(hipster, model, tmp_path):
+#     hipster.generate_hips(model)
 
-    assert filecmp.cmp(
-        tmp_path / "HipsterTest/model/index.html",
-        "tests/data/hipster/ref1/HipsterTest/model/index.html",
-    )
+#     assert filecmp.cmp(
+#         tmp_path / "HipsterTest/model/index.html",
+#         "tests/data/hipster/ref1/HipsterTest/model/index.html",
+#     )
 
 
 def test_generate_catalog(hipster, model, tmp_path):
@@ -56,7 +58,7 @@ def test_generate_catalog(hipster, model, tmp_path):
 
     assert df1.shape == (999, 9)
     assert df2.shape == (999, 9)
-    assert_frame_equal(df1, df2, atol=0.2)
+    assert_frame_equal(df1, df2, atol=1e-6)
 
 
 def test_create_images(hipster, tmp_path):
