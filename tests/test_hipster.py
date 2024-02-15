@@ -34,13 +34,13 @@ def hipster(tmp_path):
     return hipster
 
 
-# def test_generate_hips(hipster, model, tmp_path):
-#     hipster.generate_hips(model)
+def test_generate_hips(hipster, model, tmp_path):
+    hipster.generate_hips(model)
 
-#     assert filecmp.cmp(
-#         tmp_path / "HipsterTest/model/index.html",
-#         "tests/data/hipster/ref1/HipsterTest/model/index.html",
-#     )
+    assert filecmp.cmp(
+        tmp_path / "HipsterTest/model/index.html",
+        "tests/data/hipster/ref1/HipsterTest/model/index.html",
+    )
 
 
 def test_generate_catalog(hipster, model, tmp_path):

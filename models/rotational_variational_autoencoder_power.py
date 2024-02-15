@@ -20,6 +20,7 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         h_dim: int = 256,
         z_dim: int = 2,
         image_size: int = 91,
+        input_size: int = 128,
         rotations: int = 36,
         beta: float = 1.0,
     ):
@@ -40,11 +41,11 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         self.h_dim = h_dim
         self.z_dim = z_dim
         self.image_size = image_size
+        self.input_size = input_size
         self.rotations = rotations
         self.beta = beta
 
         self.crop_size = int(self.image_size * math.sqrt(2) / 2)
-        self.input_size = 128
         self.total_input_size = self.input_size * self.input_size * 3
 
         self.example_input_array = torch.randn(1, 3, self.input_size, self.input_size)

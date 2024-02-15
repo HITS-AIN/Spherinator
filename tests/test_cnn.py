@@ -1,6 +1,10 @@
 import torch
 
-from models import ConvolutionalEncoder, RotationalVariationalAutoencoderPower
+from models import (
+    ConvolutionalDecoder256,
+    ConvolutionalEncoder,
+    RotationalVariationalAutoencoderPower,
+)
 
 
 def test_convolutional_encoder():
@@ -21,3 +25,12 @@ def test_model():
     assert torch.isclose(
         model.encoder.conv0.weight[0, 0, 0, 0], torch.Tensor([-0.0014]), atol=1e-3
     ).all()
+
+
+def test_convolutional_decoder():
+    model = ConvolutionalDecoder256()
+    data = torch.randn([1, 256, 4, 4])
+
+    output = model(data)
+
+    assert output.shape == torch.Size([1, 3, 256, 256])

@@ -1,15 +1,33 @@
+import pytest
 import torchvision.models
 
 import models
 
 
-def test_resnet():
+@pytest.mark.parametrize(
+    "encoder, decoder, input_size",
+    [
+        (
+            torchvision.models.resnet18(num_classes=256),
+            models.ConvolutionalDecoder(),
+            128,
+        ),
+        (
+            torchvision.models.vit_b_16(num_classes=256),
+            models.ConvolutionalDecoder256(),
+            224,
+        ),
+    ],
+)
+def test_resnet(encoder, decoder, input_size):
     z_dim = 2
     h_dim = 256
     model = models.RotationalVariationalAutoencoderPower(
         z_dim=z_dim,
         h_dim=h_dim,
-        encoder=torchvision.models.resnet18(num_classes=h_dim),
+        input_size=input_size,
+        encoder=encoder,
+        decoder=decoder,
     )
     input = model.example_input_array
     batch_size = input.shape[0]
