@@ -2958,6 +2958,7 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
+    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -3611,12 +3612,12 @@ mpmath = ">=0.19"
 
 [[package]]
 name = "tensorboard"
-version = "2.16.1"
+version = "2.16.2"
 description = "TensorBoard lets you watch Tensors Flow"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "tensorboard-2.16.1-py3-none-any.whl", hash = "sha256:928b62567911a8eeb2ebeb7482a9e4599b35f6713a6f2c56655259c18a139569"},
+    {file = "tensorboard-2.16.2-py3-none-any.whl", hash = "sha256:9f2b4e7dad86667615c0e5cd072f1ea8403fc032a299f0072d6f74855775cc45"},
 ]
 
 [package.dependencies]
@@ -3628,7 +3629,6 @@ protobuf = ">=3.19.6,<4.24.0 || >4.24.0"
 setuptools = ">=41.0.0"
 six = ">1.9"
 tensorboard-data-server = ">=0.7.0,<0.8.0"
-tf-keras = ">=2.15.0"
 werkzeug = ">=1.0.1"
 
 [[package]]
@@ -3641,17 +3641,6 @@ files = [
     {file = "tensorboard_data_server-0.7.2-py3-none-any.whl", hash = "sha256:7e0610d205889588983836ec05dc098e80f97b7e7bbff7e994ebb78f578d0ddb"},
     {file = "tensorboard_data_server-0.7.2-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:9fe5d24221b29625dbc7328b0436ca7fc1c23de4acf4d272f1180856e32f9f60"},
     {file = "tensorboard_data_server-0.7.2-py3-none-manylinux_2_31_x86_64.whl", hash = "sha256:ef687163c24185ae9754ed5650eb5bc4d84ff257aabdc33f0cc6f74d8ba54530"},
-]
-
-[[package]]
-name = "tf-keras"
-version = "2.15.0"
-description = "Deep learning for humans."
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "tf_keras-2.15.0-py3-none-any.whl", hash = "sha256:48607ee60a4d1fa7c09d6a44293a803faf3136e7a43f92df089ac094117547d2"},
-    {file = "tf_keras-2.15.0.tar.gz", hash = "sha256:d7559c2ba40667679fcb2105d3e4b68bbc07ecafbf1037462ce7b3974c3c6798"},
 ]
 
 [[package]]
@@ -4154,4 +4143,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "4206b224bcdf8de6b8ac5ab497e2725fa2db901e67e3e1d23126be8ce48d98ff"
+content-hash = "d4ec78f7bae9d81ea47667e2223556eb5a2b7c8600ccd9a3a8f561e40b348eae"
