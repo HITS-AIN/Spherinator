@@ -68,6 +68,11 @@ python spherinator.sh fit -c experiments/illustris_power.yaml \
     -c experiments/callback_log_reconstructions.yaml
 ```
 
+## Acknowledgements
+
+Funded by the European Union. This work has received funding from the European High Performance Computing Joint Undertaking (JU) and Belgium, Czech Republic, France, Germany, Greece, Italy, Norway, and Spain under grant agreement No 101093441.
+
+Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the European High Performance Computing Joint Undertaking (JU) and Belgium, Czech Republic, France, Germany, Greece, Italy, Norway, and Spain. Neither the European Union nor the granting authority can be held responsible for them. 
 
 ## License
 
