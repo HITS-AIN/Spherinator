@@ -5,9 +5,10 @@ import torch.nn.functional as F
 
 
 class ConvolutionalDecoder(pl.LightningModule):
-    def __init__(self):
+    def __init__(self, h_dim: int = 256):
         super().__init__()
 
+        self.fc = nn.Linear(h_dim, 256 * 4 * 4)
         self.deconv1 = nn.ConvTranspose2d(
             in_channels=256, out_channels=128, kernel_size=(4, 4), stride=2, padding=1
         )  # 8x8
@@ -28,6 +29,8 @@ class ConvolutionalDecoder(pl.LightningModule):
         )  # 128x128
 
     def forward(self, x: torch.tensor) -> torch.tensor:
+        x = F.relu(self.fc(x))
+        x = x.view(-1, 256, 4, 4)
         x = F.relu(self.deconv1(x))
         x = F.relu(self.deconv2(x))
         x = F.relu(self.deconv3(x))

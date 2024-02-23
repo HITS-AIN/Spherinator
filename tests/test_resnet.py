@@ -14,7 +14,7 @@ import models
         ),
         (
             torchvision.models.vit_b_16(num_classes=256),
-            models.ConvolutionalDecoder256(),
+            models.ConvolutionalDecoder224(),
             224,
         ),
     ],

@@ -29,8 +29,8 @@ def test_model():
 
 def test_convolutional_decoder():
     model = ConvolutionalDecoder256()
-    data = torch.randn([1, 256, 4, 4])
+    data = torch.randn([2, 256])
 
     output = model(data)
 
-    assert output.shape == torch.Size([1, 3, 256, 256])
+    assert output.shape == torch.Size([2, 3, 256, 256])

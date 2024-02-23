@@ -53,7 +53,6 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         self.fc_location = nn.Linear(h_dim, z_dim)
         self.fc_scale = nn.Linear(h_dim, 1)
         self.fc2 = nn.Linear(z_dim, h_dim)
-        self.fc3 = nn.Linear(h_dim, 256 * 4 * 4)
 
         with torch.no_grad():
             self.fc_scale.bias.fill_(1.0e3)
@@ -73,8 +72,6 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
     def decode(self, z):
         x = F.relu(self.fc2(z))
-        x = F.relu(self.fc3(x))
-        x = x.view(-1, 256, 4, 4)
         x = self.decoder(x)
         return x
 

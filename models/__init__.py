@@ -13,6 +13,7 @@ It contains the following modules:
 """
 
 from .convolutional_decoder import ConvolutionalDecoder
+from .convolutional_decoder_224 import ConvolutionalDecoder224
 from .convolutional_decoder_256 import ConvolutionalDecoder256
 from .convolutional_encoder import ConvolutionalEncoder
 from .rotational_autoencoder import RotationalAutoencoder
@@ -23,6 +24,7 @@ from .rotational_variational_autoencoder_power import (
 
 __all__ = [
     "ConvolutionalDecoder",
+    "ConvolutionalDecoder224",
     "ConvolutionalDecoder256",
     "ConvolutionalEncoder",
     "RotationalAutoencoder",
