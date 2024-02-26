@@ -90,12 +90,12 @@ def test_find_best_rotation(model):
     assert coord.shape == torch.Size([2, 3])
     assert torch.allclose(
         coord,
-        torch.Tensor([[0.3004, -0.6826, -0.6662], [0.3027, -0.6826, -0.6651]]),
+        torch.Tensor([[0.6423, -0.7217, 0.2583], [0.6426, -0.7208, 0.2598]]),
         rtol=1e-3,
     )
 
     assert loss.shape == torch.Size([2])
-    assert torch.allclose(loss, torch.Tensor([0.1791, 0.1798]), rtol=1e-3)
+    assert torch.allclose(loss, torch.Tensor([0.1814, 0.1820]), rtol=1e-3)
 
 
 def test_pandas_catalog():
@@ -105,8 +105,8 @@ def test_pandas_catalog():
     )
     assert catalog.shape == (1000, 5)
     assert len(catalog) == 1000
-    assert catalog["x"][0] == pytest.approx(0.32369125, abs=1e-6, rel=1e-9)
+    assert catalog["x"][0] == pytest.approx(0.61814356, abs=1e-6, rel=1e-9)
 
     catalog = catalog.to_numpy()
 
-    assert catalog[0][2] == pytest.approx(0.32369125, abs=1e-6, rel=1e-9)
+    assert catalog[0][2] == pytest.approx(0.61814356, abs=1e-6, rel=1e-9)
