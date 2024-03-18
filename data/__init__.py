@@ -13,6 +13,7 @@ It contains the following modules:
 """
 
 from .illustris_sdss_dataset_multidim import IllustrisSdssDatasetMultidim
+from .illustris_sdss_data_module_multidim import IllustrisSdssDataModuleMultidim
 from .illustris_sdss_dataset import IllustrisSdssDataset
 from .illustris_sdss_dataset_with_metadata import IllustrisSdssDatasetWithMetadata
 from .illustris_sdss_data_module import IllustrisSdssDataModule
@@ -26,6 +27,7 @@ __all__ = [
     "IllustrisSdssDataset",
     "IllustrisSdssDatasetWithMetadata",
     "IllustrisSdssDataModule",
+    "IllustrisSdssDataModuleMultidim",
     "GalaxyZooDataset",
     "GalaxyZooDataModule",
     "ShapesDataset",

@@ -5,9 +5,8 @@ import open3d as o3d
 from matplotlib import cm
 
 
-def gas_potential_pointcloud(gas_coords, potential):
+def gas_potential_pointcloud(gas_coords, potential, radius=50.):
     # Circle mask
-    radius = 100.
     x = gas_coords[:, 0]
     y = gas_coords[:, 1]
     z = gas_coords[:, 2]

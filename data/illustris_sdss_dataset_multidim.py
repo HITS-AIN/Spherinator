@@ -66,15 +66,12 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDataset):
         return science_data
 
     def make_pointcloud(self, index):
-        dist_units_kpc = 1.476232654266312
-        mass_units_msun = 14762326542.663124
-
         science_data = self.get_sciencedata(index)
         cutout = self.get_cutout(index)
         if cutout.keys().__contains__(TngParticleTypes.GAS):
             gas = cutout[TngParticleTypes.GAS]
             center_pos = ast.literal_eval(str(science_data["center_position"]))
-            gas_coords = (np.array(gas['Coordinates'], dtype=np.float64) - center_pos) * dist_units_kpc
+            gas_coords = (np.array(gas['Coordinates'], dtype=np.float64) - center_pos)
             g_pot = np.array(gas['Potential'], dtype=np.float64)
             g_pot /= g_pot.mean()
 
