@@ -12,6 +12,7 @@ It contains the following modules:
 6. `shapes_data_module`: The shapes data module for training.
 """
 
+from .illustris_sdss_dataset_multidim import IllustrisSdssDatasetMultidim
 from .illustris_sdss_dataset import IllustrisSdssDataset
 from .illustris_sdss_dataset_with_metadata import IllustrisSdssDatasetWithMetadata
 from .illustris_sdss_data_module import IllustrisSdssDataModule
@@ -21,6 +22,7 @@ from .shapes_dataset import ShapesDataset
 from .shapes_data_module import ShapesDataModule
 
 __all__ = [
+    "IllustrisSdssDatasetMultidim",
     "IllustrisSdssDataset",
     "IllustrisSdssDatasetWithMetadata",
     "IllustrisSdssDataModule",
