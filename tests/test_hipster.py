@@ -29,7 +29,10 @@ def model():
 @pytest.fixture
 def hipster(tmp_path):
     hipster = Hipster(
-        output_folder=tmp_path, title="HipsterTest", max_order=0, number_of_workers=1
+        output_folder=tmp_path,
+        title="HipsterTest",
+        max_order=0,
+        number_of_workers=1,
     )
     return hipster
 
