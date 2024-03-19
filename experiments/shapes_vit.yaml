@@ -1,0 +1,52 @@
+seed_everything: 42
+
+model:
+  class_path: models.RotationalVariationalAutoencoderPower
+  init_args:
+    encoder:
+      class_path: torchvision.models.VisionTransformer
+      init_args:
+        patch_size: 16
+        num_layers: 12
+        num_heads: 12
+        hidden_dim: 768
+        mlp_dim: 3072
+        num_classes: 256
+    decoder:
+      class_path: models.ConvolutionalDecoder
+    h_dim: 256
+    z_dim: 3
+    image_size: 91
+    rotations: 36
+    beta: 1.0e-3
+
+data:
+  class_path: data.ShapesDataModule
+  init_args:
+    data_directory: /hits/basement/its/doserbd/projects/data/machine-learning/pink/shapes/
+    shuffle: True
+    image_size: 91
+    batch_size: 32
+    num_workers: 4
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.001
+
+lr_scheduler:
+  class_path: lightning.pytorch.cli.ReduceLROnPlateau
+  init_args:
+    mode: min
+    factor: 0.1
+    patience: 5
+    cooldown: 5
+    min_lr: 1.e-5
+    monitor: train_loss
+    verbose: True
+
+trainer:
+  max_epochs: -1
+  accelerator: gpu
+  devices: 1
+  precision: 32

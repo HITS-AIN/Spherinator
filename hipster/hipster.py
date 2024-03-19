@@ -3,6 +3,7 @@
 
 import copy
 import math
+import multiprocessing as mp
 import os
 from datetime import datetime
 from pathlib import Path
@@ -13,17 +14,67 @@ import numpy
 import pandas as pd
 import psutil
 import torch
-import torch.multiprocessing as multiprocessing
 import torchvision.transforms.functional as functional
 from astropy.io.votable import writeto
 from astropy.table import Table
 from PIL import Image
-from tqdm import tqdm
 
 from data.spherinator_data_module import SpherinatorDataModule
 from models.spherinator_module import SpherinatorModule
 
 from .create_allsky import create_allsky
+
+
+def create_embeded_tile(hipster, dataset, catalog, healpix_cells, i, range_j):
+    for j in range_j:
+        data = hipster.embed_tile(
+            dataset, catalog, i, j, hipster.hierarchy, healpix_cells[j]
+        )
+        image = Image.fromarray(
+            (numpy.clip(data.detach().numpy(), 0, 1) * 255).astype(numpy.uint8)
+        )
+        image.save(
+            os.path.join(
+                hipster.output_folder,
+                hipster.title,
+                "projection",
+                "Norder" + str(i),
+                "Dir" + str(int(math.floor(j / 10000)) * 10000),
+                "Npix" + str(j) + ".jpg",
+            )
+        )
+        print(".", end="", flush=True)
+
+
+def create_hips_tile(hipster, model, i, range_j):
+    for j in range_j:
+        vectors = torch.zeros(
+            (hipster.hierarchy**2, 3), dtype=torch.float32
+        )  # prepare vor n*n subtiles
+        for sub in range(
+            hipster.hierarchy**2
+        ):  # calculate coordinates for all n*n subpixels
+            vector = healpy.pix2vec(
+                2**i * hipster.hierarchy, j * hipster.hierarchy**2 + sub, nest=True
+            )
+            vectors[sub] = torch.tensor(vector).reshape(1, 3).type(dtype=torch.float32)
+        with torch.no_grad():  # calculating for many subtile minimizes synchronisation overhead
+            data = model.reconstruct(vectors)
+        image = hipster.generate_tile(data, i, j, hipster.hierarchy, 0)
+        image = Image.fromarray(
+            (numpy.clip(image.detach().numpy(), 0, 1) * 255).astype(numpy.uint8)
+        )
+        image.save(
+            os.path.join(
+                hipster.output_folder,
+                hipster.title,
+                "model",
+                "Norder" + str(i),
+                "Dir" + str(int(math.floor(j / 10000)) * 10000),
+                "Npix" + str(j) + ".jpg",
+            )
+        )
+        print(".", end="", flush=True)
 
 
 class Hipster:
@@ -345,32 +396,35 @@ class Hipster:
                 "  order "
                 + str(i)
                 + " ["
-                + str(12 * 4**i).rjust(
-                    int(math.log10(12 * 4**self.max_order)) + 1, " "
-                )
+                + str(12 * 4**i).rjust(int(math.log10(12 * 4**self.max_order)) + 1, " ")
                 + " tiles]:",
                 end="",
                 flush=True,
             )
-            mypool = []
-            for t in range(self.number_of_workers):
-                mypool.append(
-                    multiprocessing.Process(
-                        target=create_hips_tile,
-                        args=(
-                            self,
-                            model,
-                            i,
-                            range(
-                                t * 12 * 4**i // self.number_of_workers,
-                                (t + 1) * 12 * 4**i // self.number_of_workers,
-                            ),
-                        ),
-                    )
+            if self.number_of_workers == 1:
+                create_hips_tile(
+                    self, model, i, range(12 * 4**i // self.number_of_workers)
                 )
-                mypool[-1].start()
-            for process in mypool:
-                process.join()
+            else:
+                mypool = []
+                for t in range(self.number_of_workers):
+                    mypool.append(
+                        mp.Process(
+                            target=create_hips_tile,
+                            args=(
+                                self,
+                                model,
+                                i,
+                                range(
+                                    t * 12 * 4**i // self.number_of_workers,
+                                    (t + 1) * 12 * 4**i // self.number_of_workers,
+                                ),
+                            ),
+                        )
+                    )
+                    mypool[-1].start()
+                for process in mypool:
+                    process.join()
             print(" done", flush=True)
         print("done!")
 
@@ -517,9 +571,7 @@ class Hipster:
                 "\n  order "
                 + str(i)
                 + " ["
-                + str(12 * 4**i).rjust(
-                    int(math.log10(12 * 4**self.max_order)) + 1, " "
-                )
+                + str(12 * 4**i).rjust(int(math.log10(12 * 4**self.max_order)) + 1, " ")
                 + " tiles]:",
                 end="",
             )
@@ -541,7 +593,7 @@ class Hipster:
 
             for t in range(self.number_of_workers):
                 mypool.append(
-                    multiprocessing.Process(
+                    mp.Process(
                         target=create_embeded_tile,
                         args=(
                             self,
@@ -581,55 +633,3 @@ class Hipster:
         create_allsky(self.title_folder / "projection", max_order=self.max_order)
         if self.verbose > 0:
             print("Create allsky images ... done.")
-
-
-def create_embeded_tile(hipster, dataset, catalog, healpix_cells, i, range_j):
-    for j in range_j:
-        data = hipster.embed_tile(
-            dataset, catalog, i, j, hipster.hierarchy, healpix_cells[j]
-        )
-        image = Image.fromarray(
-            (numpy.clip(data.detach().numpy(), 0, 1) * 255).astype(numpy.uint8)
-        )
-        image.save(
-            os.path.join(
-                hipster.output_folder,
-                hipster.title,
-                "projection",
-                "Norder" + str(i),
-                "Dir" + str(int(math.floor(j / 10000)) * 10000),
-                "Npix" + str(j) + ".jpg",
-            )
-        )
-        print(".", end="", flush=True)
-
-
-def create_hips_tile(hipster, model, i, range_j):
-    for j in range_j:
-        vectors = torch.zeros(
-            (hipster.hierarchy**2, 3), dtype=torch.float32
-        )  # prepare vor n*n subtiles
-        for sub in range(
-            hipster.hierarchy**2
-        ):  # calculate coordinates for all n*n subpixels
-            vector = healpy.pix2vec(
-                2**i * hipster.hierarchy, j * hipster.hierarchy**2 + sub, nest=True
-            )
-            vectors[sub] = torch.tensor(vector).reshape(1, 3).type(dtype=torch.float32)
-        with torch.no_grad():  # calculating for many subtile minimizes synchronisation overhead
-            data = model.reconstruct(vectors)
-        image = hipster.generate_tile(data, i, j, hipster.hierarchy, 0)
-        image = Image.fromarray(
-            (numpy.clip(image.detach().numpy(), 0, 1) * 255).astype(numpy.uint8)
-        )
-        image.save(
-            os.path.join(
-                hipster.output_folder,
-                hipster.title,
-                "model",
-                "Norder" + str(i),
-                "Dir" + str(int(math.floor(j / 10000)) * 10000),
-                "Npix" + str(j) + ".jpg",
-            )
-        )
-        print(".", end="", flush=True)

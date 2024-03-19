@@ -12,12 +12,22 @@ It contains the following modules:
     A convolutional variational autoencoder using power spherical distribution.
 """
 
+from .convolutional_decoder import ConvolutionalDecoder
+from .convolutional_decoder_224 import ConvolutionalDecoder224
+from .convolutional_decoder_256 import ConvolutionalDecoder256
+from .convolutional_encoder import ConvolutionalEncoder
 from .rotational_autoencoder import RotationalAutoencoder
 from .rotational_variational_autoencoder import RotationalVariationalAutoencoder
-from .rotational_variational_autoencoder_power import RotationalVariationalAutoencoderPower
+from .rotational_variational_autoencoder_power import (
+    RotationalVariationalAutoencoderPower,
+)
 
 __all__ = [
-    'RotationalAutoencoder',
-    'RotationalVariationalAutoencoder',
-    'RotationalVariationalAutoencoderPower',
+    "ConvolutionalDecoder",
+    "ConvolutionalDecoder224",
+    "ConvolutionalDecoder256",
+    "ConvolutionalEncoder",
+    "RotationalAutoencoder",
+    "RotationalVariationalAutoencoder",
+    "RotationalVariationalAutoencoderPower",
 ]
