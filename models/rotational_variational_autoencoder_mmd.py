@@ -192,8 +192,9 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
             raise NotImplementedError
 
         ### MMD loss
-        z_random_sample = q_z.rsample(batch.shape[0])
-        loss_MMD = compute_mmd(q_z_sample, p_z_sample) # inputs are samples from q_z and p_z
+        qz_sample = q_z.rsample(batch.shape[0])
+        pz_sample = p_z.rsample(batch.shape[0])
+        loss_MMD = compute_mmd(qz_sample, pz_sample) # inputs are samples from q_z and p_z (how many??)
 
         loss = (loss_recon + loss_MMD).mean()
         loss_recon = loss_recon.mean()
