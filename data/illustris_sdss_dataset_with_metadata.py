@@ -15,15 +15,4 @@ class IllustrisSdssDatasetWithMetadata(IllustrisSdssDataset):
             metadata: Metadata of the item/items with the given indices.
         """
         data = super().__getitem__(index)
-
-        filename = self.files[index]
-        splits = filename[: -(len(self.extension) + 1)].split("/")
-        metadata = {
-            "filename": filename,
-            "id": index,
-            "simulation": splits[-5],
-            "snapshot": splits[-3].split("_")[1],
-            "subhalo_id": splits[-1].split("_")[1],
-        }
-
-        return data, metadata
+        return data, self.get_metadata(index)

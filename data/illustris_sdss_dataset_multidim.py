@@ -1,4 +1,4 @@
-from .illustris_sdss_dataset import IllustrisSdssDataset
+from .illustris_sdss_dataset_with_metadata import IllustrisSdssDatasetWithMetadata
 from . import visualization as vis
 import os
 import h5py
@@ -15,12 +15,13 @@ class TngParticleTypes(StrEnum):
     BLACKHOLE = "PartType5"
 
 
-class IllustrisSdssDatasetMultidim(IllustrisSdssDataset):
+class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
     def __init__(
             self,
             data_directories: list[str],
             cutout_directory: str,
             info_dir: str,
+            data_aspect: str = None,
             extension: str = "fits",
             minsize: int = 100,
             transform=None,
@@ -31,10 +32,24 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDataset):
         # We extend the constructor to store The h5 files with additional info
         self.cutout_directory = cutout_directory
         self.info_dir = info_dir
+        self.data_aspect = data_aspect
         self.info = []
         with open(info_dir, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             self.info = [ row for row in reader]
+
+    def __getitem__(self, index: int):
+        """Retrieves the item/items with the given indices from the dataset.
+
+        Args:
+            index (int): The index of the item to retrieve.
+
+        Returns:
+            data: Data of the item/items with the given indices.
+            metadata: Metadata of the item/items with the given indices.
+        """
+        data, metadata = super().__getitem__(index)
+        return data, metadata
 
     def get_cutout(self, index: int):
         subhalo_id = self.get_metadata(index)["subhalo_id"]
@@ -65,7 +80,12 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDataset):
         }
         return science_data
 
-    def make_pointcloud(self, index):
+    def get_visual_data(self, index):
+        if self.data_aspect is not None:
+            get_data_aspect = getattr(self, f"make_{self.data_aspect}")
+            return get_data_aspect(index)
+
+    def make_gas_pointcloud(self, index):
         science_data = self.get_sciencedata(index)
         cutout = self.get_cutout(index)
         if cutout.keys().__contains__(TngParticleTypes.GAS):
