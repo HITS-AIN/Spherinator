@@ -15,6 +15,21 @@ class TngParticleTypes(StrEnum):
     BLACKHOLE = "PartType5"
 
 
+def gas_temperature(gas):
+    # calculate the temperature because apparently, physicians love to do the math by themselves...
+    u = np.array(gas["InternalEnergy"])
+    x_e = np.array(gas["ElectronAbundance"])
+    x_h = 0.76
+    gamma = 5/3
+    k_b = 1.380649 * 10**(-16)
+    mu = (4/(1 + 3*x_h + 4*x_h*x_e)) * np.array(gas["Masses"])
+    unit_length = 3.086*(10**21) # 1 kpc
+    unit_time = 3.1536*(10**16) # 1 Gyr
+    print(unit_length**2 / unit_time**2)
+    temp = (gamma -1) * u/k_b * (unit_length**2 / unit_time**2) * mu
+    return temp
+
+
 class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
     def __init__(
             self,
@@ -37,6 +52,9 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
         with open(info_dir, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             self.info = [ row for row in reader]
+
+        self.dist_units_kpc = 1.476232654266312
+        self.to_msun = 14762326542.663124
 
     def __getitem__(self, index: int):
         """Retrieves the item/items with the given indices from the dataset.
@@ -82,22 +100,53 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
 
     def get_visual_data(self, index):
         if self.data_aspect is not None:
+            science_data = self.get_sciencedata(index)
+            cutout = self.get_cutout(index)
             get_data_aspect = getattr(self, f"make_{self.data_aspect}")
-            return get_data_aspect(index)
+            return get_data_aspect(science_data, cutout)
 
-    def make_gas_pointcloud(self, index):
-        science_data = self.get_sciencedata(index)
-        cutout = self.get_cutout(index)
+    def make_gas_pointcloud(self, science_data, cutout):
         if cutout.keys().__contains__(TngParticleTypes.GAS):
             gas = cutout[TngParticleTypes.GAS]
-            center_pos = ast.literal_eval(str(science_data["center_position"]))
-            gas_coords = (np.array(gas['Coordinates'], dtype=np.float64) - center_pos)
+            gas_coords = self.center_coordinates(gas['Coordinates'], science_data)
             g_pot = np.array(gas['Potential'], dtype=np.float64)
             g_pot /= g_pot.mean()
 
             return vis.gas_potential_pointcloud(gas_coords, g_pot)
 
+    def make_star_pointcloud(self, science_data, cutout):
+        if cutout.keys().__contains__(TngParticleTypes.STARS):
+            stars = cutout[TngParticleTypes.STARS]
+            star_coords = self.center_coordinates(stars['Coordinates'], science_data)
+            density = np.array(stars['SubfindDensity'])
+            mass = np.array(stars['Masses'])
+            volume = mass / density
+            radius = ((3 / 4) * (volume / np.pi))**(1 / 3) * self.dist_units_kpc
 
+            return vis.star_point_cloud(star_coords, radius)
 
+    def make_gas_temperature_field(self, science_data, cutout):
+        if cutout.keys().__contains__(TngParticleTypes.GAS):
+            gas = cutout[TngParticleTypes.GAS]
+            gas_coords = self.center_coordinates(gas['Coordinates'], science_data)
+            temperature = gas_temperature(gas)
+            min_max = [-20, 20]
 
+            t = vis.binned_stats_img(gas_coords, np.log(temperature), min_max)
+            extent = [min_max[0], min_max[1], min_max[0], min_max[1]]
+            return t, extent
+
+    def make_dark_matter_field(self, science_data, cutout):
+        if cutout.keys().__contains__(TngParticleTypes.DM):
+            dm = cutout[TngParticleTypes.DM]
+            dm_coords = self.center_coordinates(dm['Coordinates'], science_data)
+            dm_density = np.array(dm['SubfindDensity']) * self.to_msun
+            min_max = [-20, 20]
+            dmd = vis.binned_stats_img(dm_coords, np.log(np.array(dm_density)), min_max)
+            extent = [min_max[0], min_max[1], min_max[0], min_max[1]]
+            return dmd, extent
+
+    def center_coordinates(self, coordinates, science_data):
+        center_pos = ast.literal_eval(str(science_data["center_position"]))
+        return (np.array(coordinates, dtype=np.float64) - center_pos) * self.dist_units_kpc
 

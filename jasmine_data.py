@@ -18,10 +18,12 @@ if __name__ == "__main__":
     data_init_args = config["data"]["init_args"]
     datamodule = IllustrisSdssDataModuleMultidim(**data_init_args)
 
-    hipster = HipsterMultidim("jasmine-example", "TNG100", verbose=True)
+    hipster = HipsterMultidim("jasmine-example", "TNG100-h2", verbose=True, hierarchy=2,
+                              output_size=256, crop_size=256)
     hipster.generate_hips(model)
     hipster.generate_catalog(model, datamodule)
     hipster.generate_dataset_projection(datamodule)
-    hipster.create_images(datamodule)
-    hipster.create_thumbnails(datamodule)
-    hipster.create_gas_pointclouds(datamodule)
+    #hipster.transform_csv_to_votable()
+
+    #hipster.create_data_cube(datamodule, data_aspects=["images", "gas_pointclouds", "gas_temperature_fields",
+    #                                                   "dark_matter_fields"])

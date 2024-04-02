@@ -13,7 +13,7 @@ from .illustris_sdss_dataset import IllustrisSdssDataset
 from .illustris_sdss_data_module import IllustrisSdssDataModule
 from .illustris_sdss_dataset_multidim import IllustrisSdssDatasetMultidim
 import open3d as o3d
-
+from matplotlib import pyplot as plt
 
 class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
     def __init__(
@@ -32,8 +32,6 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
         self.info_directory = info_directory
 
     def setup(self, stage: str):
-        if not stage in ["fit", "processing", "images", "thumbnail_images", "gas_pointclouds"]:
-            raise ValueError(f"Stage {stage} not supported.")
 
         if stage == "fit" and self.data_train is None:
             self.data_train = IllustrisSdssDataset(
@@ -93,7 +91,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                 shuffle=False,
                 num_workers=self.num_workers,
             )
-        if stage == "gas_pointclouds":
+        elif stage == "gas_pointclouds":
             self.data_gas_pointclouds = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
                 cutout_directory=self.cutout_directory,
@@ -109,11 +107,87 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                 shuffle=False,
                 num_workers=self.num_workers,
             )
+        elif stage == "gas_temperature_fields":
+            self.data_gas_temperature_fields = IllustrisSdssDatasetMultidim(
+                data_directories=self.data_directories,
+                cutout_directory=self.cutout_directory,
+                info_dir=self.info_directory,
+                data_aspect="gas_temperature_field",
+                extension=self.extension,
+                minsize=self.minsize,
+                transform=self.transform_processing,
+            )
+            self.dataloader_gas_temperature_fields = DataLoader(
+                self.data_gas_temperature_fields,
+                batch_size=self.batch_size,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
+        elif stage == "dark_matter_fields":
+            self.data_dark_matter_fields = IllustrisSdssDatasetMultidim(
+                data_directories=self.data_directories,
+                cutout_directory=self.cutout_directory,
+                info_dir=self.info_directory,
+                data_aspect="dark_matter_field",
+                extension=self.extension,
+                minsize=self.minsize,
+                transform=self.transform_processing,
+            )
+            self.dataloader_dark_matter_fields = DataLoader(
+                self.data_dark_matter_fields,
+                batch_size=self.batch_size,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
 
     def write_catalog(
         self, model: SpherinatorModule, catalog_file: Path, hipster_url: str, title: str
     ):
-        raise NotImplementedError("This function does not exist for this data module.")
+        # Todo: Needs adjustment
+        self.setup("processing")
+        with open(catalog_file, "w", encoding="utf-8") as output:
+            output.write(
+                "#preview,simulation,snapshot data,subhalo id,subhalo data,RMSE,id,RA2000,DEC2000,rotation,x,y,z\n"
+            )
+
+            for batch, metadata in tqdm(self.dataloader_processing):
+                _, rotations, coordinates, losses = model.find_best_rotation(batch)
+
+                rotations = rotations.cpu().detach().numpy()
+                coordinates = coordinates.cpu().detach().numpy()
+                losses = losses.cpu().detach().numpy()
+                angles = numpy.array(healpy.vec2ang(coordinates)) * 180.0 / math.pi
+                angles = angles.T
+
+                for i in range(len(batch)):
+                    output.write("<a href='" + hipster_url + "/" + title + "/jpg/")
+                    output.write(str(metadata["simulation"][i]) + "/")
+                    output.write(str(metadata["snapshot"][i]) + "/")
+                    output.write(
+                        str(metadata["subhalo_id"][i]) + ".jpg' target='_blank'>"
+                    )
+                    output.write(
+                        "<img src='" + hipster_url + "/" + title + "/thumbnails/"
+                    )
+                    output.write(str(metadata["simulation"][i]) + "/")
+                    output.write(str(metadata["snapshot"][i]) + "/")
+                    output.write(str(metadata["subhalo_id"][i]) + ".jpg'></a>,")
+                    output.write(str(metadata["simulation"][i]) + ",")
+                    output.write(str(metadata["snapshot"][i]) + ",")
+                    output.write(str(metadata["subhalo_id"][i]) + ",")
+                    output.write("<a href='" + self.project_url + "/api/")
+                    output.write(str(metadata["simulation"][i]) + "-1/snapshots/")
+                    output.write(str(metadata["snapshot"][i]) + "/subhalos/")
+                    output.write(str(metadata["subhalo_id"][i]) + "/")
+                    output.write("' target='_blank'>" + self.project_url + "</a>,")
+                    output.write(str(losses[i]) + ",")
+                    output.write(str(metadata["id"][i].item()) + ",")
+                    output.write(str(angles[i, 1]) + ",")
+                    output.write(str(90.0 - angles[i, 0]) + ",")
+                    output.write(str(rotations[i]) + ",")
+                    output.write(str(coordinates[i, 0]) + ",")
+                    output.write(str(coordinates[i, 1]) + ",")
+                    output.write(str(coordinates[i, 2]) + "\n")
 
     def create_images(self, output_path: Path):
         """Writes preview images to disk.
@@ -130,8 +204,11 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                     mode="RGB",
                 )
                 output_path.mkdir(parents=True, exist_ok=True)
-                filename = output_path / Path(metadata["subhalo_id"][i] + ".jpg")
-                image.save(filename)
+                filename = "{simulation}_{snapshot}_{subhalo_id}.jpg".format(
+                    simulation=metadata["simulation"][i],
+                    snapshot=metadata["snapshot"][i],
+                    subhalo_id=metadata["subhalo_id"][i])
+                image.save(output_path / Path(filename))
 
     def create_thumbnails(self, output_path: Path):
         """Writes preview images to disk.
@@ -148,16 +225,62 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                     mode="RGB",
                 )
                 output_path.mkdir(parents=True, exist_ok=True)
-                filename = output_path / Path(metadata["subhalo_id"][i] + ".jpg")
-                image.save(filename)
+                filename = "{simulation}_{snapshot}_{subhalo_id}.jpg".format(
+                    simulation=metadata["simulation"][i],
+                    snapshot=metadata["snapshot"][i],
+                    subhalo_id=metadata["subhalo_id"][i])
+                image.save(output_path / Path(filename))
 
     def create_gas_pointclouds(self, output_path: Path):
         self.setup("gas_pointclouds")
         for batch, metadata in tqdm(self.dataloader_gas_pointclouds):
             for i, image in enumerate(batch):
                 output_path.mkdir(parents=True, exist_ok=True)
-                sid = metadata["subhalo_id"][i]
-                filename = output_path / Path(f"{sid}.ply")
-                o3d.io.write_point_cloud(str(filename), self.data_gas_pointclouds.get_visual_data(i))
+                filename = "{simulation}_{snapshot}_{subhalo_id}.ply".format(
+                    simulation=metadata["simulation"][i],
+                    snapshot=metadata["snapshot"][i],
+                    subhalo_id=metadata["subhalo_id"][i])
+                output_name = str(output_path / Path(filename))
+                o3d.io.write_point_cloud(output_name, self.data_gas_pointclouds.get_visual_data(i))
+
+    def create_gas_temperature_fields(self, output_path: Path):
+        self.setup("gas_temperature_fields")
+        for batch, metadata in tqdm(self.dataloader_gas_temperature_fields):
+            for i, image in enumerate(batch):
+                output_path.mkdir(parents=True, exist_ok=True)
+                filename = "{simulation}_{snapshot}_{subhalo_id}.png".format(
+                    simulation=metadata["simulation"][i],
+                    snapshot=metadata["snapshot"][i],
+                    subhalo_id=metadata["subhalo_id"][i])
+                vis_data, extent = self.data_gas_temperature_fields.get_visual_data(i)
+                plt.figure()
+                plt.imshow(vis_data, extent=extent)
+                plt.xlabel("Distance from Galactic center [kpc]")
+                plt.ylabel("Distance from Galactic center [kpc]")
+                plt.colorbar(label="Gas Temperature [log(K)]")
+                plt.savefig(str(output_path / filename))
+
+    def create_dark_matter_fields(self, output_path: Path):
+        self.setup("dark_matter_fields")
+        for batch, metadata in tqdm(self.dataloader_dark_matter_fields):
+            for i, image in enumerate(batch):
+                output_path.mkdir(parents=True, exist_ok=True)
+                filename = "{simulation}_{snapshot}_{subhalo_id}.png".format(
+                    simulation=metadata["simulation"][i],
+                    snapshot=metadata["snapshot"][i],
+                    subhalo_id=metadata["subhalo_id"][i])
+                vis_data, extent = self.data_dark_matter_fields.get_visual_data(i)
+                plt.figure()
+                plt.imshow(vis_data, extent=extent)
+                plt.xlabel("Distance from Galactic center [kpc]")
+                plt.ylabel("Distance from Galactic center [kpc]")
+                plt.colorbar(label="Dark Matter Density [log(Msun / kpc)]")
+                plt.savefig(str(output_path / filename))
+
+
+
+
+
+
 
 
