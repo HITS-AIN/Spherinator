@@ -107,6 +107,22 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                 shuffle=False,
                 num_workers=self.num_workers,
             )
+        elif stage == "dm_pointclouds":
+            self.data_dm_pointclouds = IllustrisSdssDatasetMultidim(
+                data_directories=self.data_directories,
+                cutout_directory=self.cutout_directory,
+                info_dir=self.info_directory,
+                data_aspect="dm_pointcloud",
+                extension=self.extension,
+                minsize=self.minsize,
+                transform=self.transform_processing,
+            )
+            self.dataloader_dm_pointclouds = DataLoader(
+                self.data_dm_pointclouds,
+                batch_size=self.batch_size,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
         elif stage == "gas_temperature_fields":
             self.data_gas_temperature_fields = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
@@ -242,6 +258,18 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                     subhalo_id=metadata["subhalo_id"][i])
                 output_name = str(output_path / Path(filename))
                 o3d.io.write_point_cloud(output_name, self.data_gas_pointclouds.get_visual_data(i))
+
+    def create_dm_pointclouds(self, output_path: Path):
+        self.setup("dm_pointclouds")
+        for batch, metadata in tqdm(self.dataloader_dm_pointclouds):
+            for i, image in enumerate(batch):
+                output_path.mkdir(parents=True, exist_ok=True)
+                filename = "{simulation}_{snapshot}_{subhalo_id}.ply".format(
+                    simulation=metadata["simulation"][i],
+                    snapshot=metadata["snapshot"][i],
+                    subhalo_id=metadata["subhalo_id"][i])
+                output_name = str(output_path / Path(filename))
+                o3d.io.write_point_cloud(output_name, self.data_dm_pointclouds.get_visual_data(i))
 
     def create_gas_temperature_fields(self, output_path: Path):
         self.setup("gas_temperature_fields")

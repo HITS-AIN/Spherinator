@@ -112,7 +112,16 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
             g_pot = np.array(gas['Potential'], dtype=np.float64)
             g_pot /= g_pot.mean()
 
-            return vis.gas_potential_pointcloud(gas_coords, g_pot)
+            return vis.make_pointcloud(gas_coords, g_pot)
+
+    def make_dm_pointcloud(self, science_data, cutout):
+        if cutout.keys().__contains__(TngParticleTypes.DM):
+            dm = cutout[TngParticleTypes.DM]
+            dm_coords = self.center_coordinates(dm['Coordinates'], science_data)
+            d_pot = np.array(dm['Potential'], dtype=np.float64)
+            d_pot /= d_pot.mean()
+
+            return vis.make_pointcloud(dm_coords, d_pot)
 
     def make_star_pointcloud(self, science_data, cutout):
         if cutout.keys().__contains__(TngParticleTypes.STARS):

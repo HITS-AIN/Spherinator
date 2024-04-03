@@ -25,9 +25,9 @@ def circle_mask(coords, values, radius):
     return np.array(new_x), np.array(new_y), np.array(new_z), np.array(new_values)
 
 
-def gas_potential_pointcloud(gas_coords, potential, mask_radius=100.):
+def make_pointcloud(coords, potential, mask_radius=100.):
     # Circle mask
-    x, y, z, values = circle_mask(gas_coords, potential, mask_radius)
+    x, y, z, values = circle_mask(coords, potential, mask_radius)
     gas_cloud = o3d.geometry.PointCloud()
     gas_cloud.points = o3d.utility.Vector3dVector(np.column_stack((x, y, z)))
 

@@ -12,18 +12,18 @@ if __name__ == "__main__":
         model_init_args = config["model"]["init_args"]
 
     model = RotationalVariationalAutoencoderPower(**model_init_args)
-    checkpoint = torch.load("model.ckpt")
+    checkpoint = torch.load("tng-models/model.ckpt")
     model.load_state_dict(checkpoint["state_dict"])
 
     data_init_args = config["data"]["init_args"]
     datamodule = IllustrisSdssDataModuleMultidim(**data_init_args)
 
-    hipster = HipsterMultidim("jasmine-example", "TNG100-h2", verbose=True, hierarchy=2,
+    hipster = HipsterMultidim("jasmine-example", "TNG100-h2", verbose=True, max_order=2, hierarchy=2,
                               output_size=256, crop_size=256)
-    hipster.generate_hips(model)
-    hipster.generate_catalog(model, datamodule)
-    hipster.generate_dataset_projection(datamodule)
+    #hipster.generate_hips(model)
+    #hipster.generate_catalog(model, datamodule)
+    #hipster.generate_dataset_projection(datamodule)
     #hipster.transform_csv_to_votable()
 
-    #hipster.create_data_cube(datamodule, data_aspects=["images", "gas_pointclouds", "gas_temperature_fields",
-    #                                                   "dark_matter_fields"])
+    hipster.create_data_cube(datamodule, data_aspects=["images", "gas_pointclouds", "gas_temperature_fields",
+                                                       "dm_pointclouds"])
