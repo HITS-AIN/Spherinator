@@ -123,6 +123,22 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                 shuffle=False,
                 num_workers=self.num_workers,
             )
+        elif stage == "stars":
+            self.data_stars = IllustrisSdssDatasetMultidim(
+                data_directories=self.data_directories,
+                cutout_directory=self.cutout_directory,
+                info_dir=self.info_directory,
+                data_aspect="stars",
+                extension=self.extension,
+                minsize=self.minsize,
+                transform=self.transform_processing,
+            )
+            self.dataloader_stars = DataLoader(
+                self.data_stars,
+                batch_size=self.batch_size,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
         elif stage == "gas_temperature_fields":
             self.data_gas_temperature_fields = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
@@ -204,6 +220,10 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                     output.write(str(coordinates[i, 0]) + ",")
                     output.write(str(coordinates[i, 1]) + ",")
                     output.write(str(coordinates[i, 2]) + "\n")
+
+    def create_morphology(self, output_path: Path):
+        # Just a wrapper for my own naming convention
+        self.create_images(output_path)
 
     def create_images(self, output_path: Path):
         """Writes preview images to disk.
@@ -305,6 +325,17 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                 plt.colorbar(label="Dark Matter Density [log(Msun / kpc)]")
                 plt.savefig(str(output_path / filename))
 
+    def create_stars(self, output_path: Path):
+        self.setup("stars")
+        for batch, metadata in tqdm(self.dataloader_stars):
+            for i, image in enumerate(batch):
+                output_path.mkdir(parents=True, exist_ok=True)
+                filename = "{simulation}_{snapshot}_{subhalo_id}.ply".format(
+                    simulation=metadata["simulation"][i],
+                    snapshot=metadata["snapshot"][i],
+                    subhalo_id=metadata["subhalo_id"][i])
+                output_name = str(output_path / Path(filename))
+                o3d.io.write_point_cloud(output_name, self.data_stars.get_visual_data(i))
 
 
 

@@ -25,5 +25,10 @@ if __name__ == "__main__":
     #hipster.generate_dataset_projection(datamodule)
     #hipster.transform_csv_to_votable()
 
-    hipster.create_data_cube(datamodule, data_aspects=["images", "gas_pointclouds", "gas_temperature_fields",
-                                                       "dm_pointclouds"])
+    hipster.create_data_cube(datamodule, data_aspects=[
+        #"morphology",
+        ##"gas_pointclouds",
+        #"gas_temperature_fields",
+        #"dm_pointclouds",
+        "stars"
+    ])

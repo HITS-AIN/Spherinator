@@ -123,16 +123,16 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
 
             return vis.make_pointcloud(dm_coords, d_pot)
 
-    def make_star_pointcloud(self, science_data, cutout):
+    def make_stars(self, science_data, cutout):
         if cutout.keys().__contains__(TngParticleTypes.STARS):
             stars = cutout[TngParticleTypes.STARS]
             star_coords = self.center_coordinates(stars['Coordinates'], science_data)
-            density = np.array(stars['SubfindDensity'])
-            mass = np.array(stars['Masses'])
-            volume = mass / density
-            radius = ((3 / 4) * (volume / np.pi))**(1 / 3) * self.dist_units_kpc
+            #radius = np.array(stars['StellarHsml']) * self.dist_units_kpc
+            radius = np.ones(star_coords.shape[0]) * 10**(-11)
 
-            return vis.star_point_cloud(star_coords, radius)
+            # Only stars, no star winds
+            mask = np.where(np.array(stars['GFM_StellarFormationTime']) > 0)
+            return vis.star_point_cloud(star_coords[mask], radius[mask])
 
     def make_gas_temperature_field(self, science_data, cutout):
         if cutout.keys().__contains__(TngParticleTypes.GAS):

@@ -41,14 +41,16 @@ def make_pointcloud(coords, potential, mask_radius=100.):
 
 def star_point_cloud(star_coords, radius, mask_radius=100.):
     x, y, z, radius = circle_mask(star_coords, radius, mask_radius)
-    print(radius.max())
-    print(radius.min())
-    star_meshes = []
-    for i in range(len(radius)):
-        star = o3d.geometry.TriangleMesh.create_sphere(radius=radius[i])
-        star.translate(np.array([x[i], y[i], z[i]]))
-        star_meshes.append(star)
-    return star_meshes
+    stars = o3d.geometry.PointCloud()
+    #for i in range(len(radius)):
+    #    star = o3d.geometry.TriangleMesh.create_sphere(radius=radius[i])
+    #    star.translate(np.array([x[i], y[i], z[i]]))
+    #    pc_star = star.sample_points_uniformly(number_of_points=500)
+    #    stars.points.extend(pc_star.points)
+    stars.points = o3d.utility.Vector3dVector(np.column_stack((x, y, z)))
+    color = np.ones((len(stars.points), 3))
+    stars.colors = o3d.utility.Vector3dVector(color)
+    return stars
 
 
 
