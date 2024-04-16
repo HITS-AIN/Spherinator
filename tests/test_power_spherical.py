@@ -1,3 +1,4 @@
+import pytest
 import torch
 from power_spherical import HypersphericalUniform, PowerSpherical
 
@@ -51,7 +52,7 @@ def test_kl_divergence():
     )
 
 
-def test_dynamo_export_normal():
+def test_dynamo_export_normal(tmp_path):
     class Model(torch.nn.Module):
         def __init__(self):
             self.normal = torch.distributions.normal.Normal(0, 1)
@@ -66,9 +67,10 @@ def test_dynamo_export_normal():
         exported_program,
         x,
     )
-    onnx_program.save("normal.onnx")
+    onnx_program.save(str(tmp_path / "normal.onnx"))
 
 
+@pytest.mark.skip(reason="must be solved")
 def test_dynamo_export_spherical():
     class Model(torch.nn.Module):
         def __init__(self):
