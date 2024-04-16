@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 import torch
 from power_spherical import HypersphericalUniform, PowerSpherical
@@ -52,6 +54,10 @@ def test_kl_divergence():
     )
 
 
+@pytest.mark.skipif(
+    sys.version_info >= (3, 12),
+    reason="Python 3.12+ not yet supported for torch.compile",
+)
 def test_dynamo_export_normal(tmp_path):
     class Model(torch.nn.Module):
         def __init__(self):
