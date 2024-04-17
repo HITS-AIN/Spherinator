@@ -2924,28 +2924,6 @@ strategies = ["deepspeed (>=0.8.2,<=0.9.3)"]
 test = ["cloudpickle (>=1.3)", "coverage (==7.3.1)", "fastapi", "onnx (>=0.14.0)", "onnxruntime (>=0.15.0)", "pandas (>1.0)", "psutil (<5.9.6)", "pytest (==7.4.0)", "pytest-cov (==4.1.0)", "pytest-random-order (==1.1.0)", "pytest-rerunfailures (==12.0)", "pytest-timeout (==2.1.0)", "scikit-learn (>0.22.1)", "tensorboard (>=2.9.1)", "uvicorn"]
 
 [[package]]
-name = "pytorch-triton"
-version = "2.2.0+e28a256d71"
-description = "A language and compiler for custom Deep Learning operations"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pytorch_triton-2.2.0+e28a256d71-cp39-cp39-linux_x86_64.whl", hash = "sha256:a908ce93696eeb968b51f00b70deaa775d68f5c67d91341f2e77284aa9eea2d3"},
-]
-
-[package.dependencies]
-filelock = "*"
-
-[package.extras]
-build = ["cmake (>=3.20)", "lit"]
-tests = ["autopep8", "flake8", "isort", "numpy", "pytest", "scipy (>=1.7.1)", "torch"]
-tutorials = ["matplotlib", "pandas", "tabulate", "torch"]
-
-[package.source]
-type = "url"
-url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"
-
-[[package]]
 name = "pytz"
 version = "2024.1"
 description = "World timezone definitions, modern and historical"
@@ -4166,4 +4144,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "fc55c13e958c29c22de559274dc3c02b4e63fb96f3e4d68b6d0d3bfa86737aba"
+content-hash = "a680954433ddcaeb9c97e172f5e7ee2205adeec6f97d9e97b095447f6ca40225"
