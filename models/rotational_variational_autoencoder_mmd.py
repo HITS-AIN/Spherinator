@@ -11,7 +11,7 @@ from torch.optim import Adam
 from .spherinator_module import SpherinatorModule
 
 
-class RotationalVariationalAutoencoder(SpherinatorModule):
+class RotationalVariationalAutoencoderMMD(SpherinatorModule):
     def __init__(
         self,
         h_dim: int = 256,
@@ -23,7 +23,7 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         spherical_loss_weight: float = 1e-4,
     ):
         """
-        RotationalVariationalAutoencoder initializer
+        RotationalVariationalAutoencoderMMD initializer
 
         :param h_dim: dimension of the hidden layers
         :param z_dim: dimension of the latent representation
@@ -191,10 +191,10 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         else:
             raise NotImplementedError
 
-        ### MMD loss
+        ### MMD loss between samples of q and p distributions
         qz_sample = q_z.rsample(batch.shape[0])
         pz_sample = p_z.rsample(batch.shape[0])
-        loss_MMD = compute_mmd(qz_sample, pz_sample) # inputs are samples from q_z and p_z (how many??)
+        loss_MMD = self.compute_mmd(qz_sample, pz_sample) # inputs are samples from q_z and p_z (how many??)
 
         loss = (loss_recon + loss_MMD).mean()
         loss_recon = loss_recon.mean()
@@ -240,8 +240,8 @@ class RotationalVariationalAutoencoder(SpherinatorModule):
         return torch.exp(-kernel_input) # (x_size, y_size)
 
     def compute_mmd(self, x, y):
-        x_kernel = compute_kernel(x, x)
-        y_kernel = compute_kernel(y, y)
-        xy_kernel = compute_kernel(x, y)
+        x_kernel = self.compute_kernel(x, x)
+        y_kernel = self.compute_kernel(y, y)
+        xy_kernel = self.compute_kernel(x, y)
         mmd = x_kernel.mean() + y_kernel.mean() - 2*xy_kernel.mean()
         return mmd
