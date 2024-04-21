@@ -2,4 +2,4 @@ trainer:
   callbacks:
     - class_path: callbacks.LogReconstructionCallback
       init_args:
-        num_samples: 6
+        num_samples: 10

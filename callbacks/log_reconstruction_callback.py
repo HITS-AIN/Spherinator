@@ -62,15 +62,15 @@ class LogReconstructionCallback(Callback):
                 best_recon[best_recon_idx] = recon[best_recon_idx]
 
         # Plot the original samples and their reconstructions side by side
-        fig = figure.Figure(figsize=(6, 2 * self.num_samples))
-        ax = fig.subplots(self.num_samples, 2)
+        fig = figure.Figure(figsize=(2 * self.num_samples, 6))
+        ax = fig.subplots(2, self.num_samples)
         for i in range(self.num_samples):
-            ax[i, 0].imshow(np.clip(best_scaled[i].cpu().detach().numpy().T, 0, 1))
-            ax[i, 0].set_title("Original")
-            ax[i, 0].axis("off")
-            ax[i, 1].imshow(np.clip(best_recon[i].cpu().detach().numpy().T, 0, 1))
-            ax[i, 1].set_title("Reconstruction")
-            ax[i, 1].axis("off")
+            ax[0, i].imshow(np.clip(best_scaled[i].cpu().detach().numpy().T, 0, 1))
+            ax[0, i].set_title("Original")
+            ax[0, i].axis("off")
+            ax[1, i].imshow(np.clip(best_recon[i].cpu().detach().numpy().T, 0, 1))
+            ax[1, i].set_title("Reconstruction")
+            ax[1, i].axis("off")
         fig.tight_layout()
 
         # Log the figure at W&B
