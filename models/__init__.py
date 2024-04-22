@@ -12,16 +12,20 @@ It contains the following modules:
     A convolutional variational autoencoder using power spherical distribution.
 4. `RotationalVariationalAutoencoderMMD`:
     A convolutional variational autoencoder (same as 2.) using MMD loss.
+5. `RotationalVariationalAutoencoderPowerMMD`:
+    A convolutional variational autoencoder using power spherical distribution and MMD loss.
 """
 
 from .rotational_autoencoder import RotationalAutoencoder
 from .rotational_variational_autoencoder import RotationalVariationalAutoencoder
 from .rotational_variational_autoencoder_power import RotationalVariationalAutoencoderPower
 from .rotational_variational_autoencoder_mmd import RotationalVariationalAutoencoderMMD
+from .rotational_variational_autoencoder_power_mmd import RotationalVariationalAutoencoderPowerMMD
 
 __all__ = [
     'RotationalAutoencoder',
     'RotationalVariationalAutoencoder',
     'RotationalVariationalAutoencoderPower',
     'RotationalVariationalAutoencoderMMD'
+    'RotationalVariationalAutoencoderPowerMMD'
 ]
