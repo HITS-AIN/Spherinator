@@ -76,7 +76,7 @@ def test_dynamo_export_normal(tmp_path):
     onnx_program.save(str(tmp_path / "normal.onnx"))
 
 
-@pytest.mark.skip(reason="must be solved")
+@pytest.mark.xfail(reason="not supported feature of ONNX")
 def test_dynamo_export_spherical():
     class Model(torch.nn.Module):
         def __init__(self):
