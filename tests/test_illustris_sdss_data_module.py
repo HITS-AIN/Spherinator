@@ -1,9 +1,9 @@
+import data.preprocessing as pp
 import pytest
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-import data.preprocessing as pp
 from data import (
     IllustrisSdssDataModule,
     IllustrisSdssDataset,
@@ -94,7 +94,7 @@ def test_dataloader_with_metadata():
     )
 
 
-@pytest.mark.skip(reason="must be solved")
+@pytest.mark.xfail(reason="'Tensor' object has no attribute or method '__init__'.")
 def test_jit():
     datamodule = IllustrisSdssDataModule(
         ["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],

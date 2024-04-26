@@ -54,7 +54,7 @@ def test_kl_divergence():
     )
 
 
-@pytest.mark.skipif(
+@pytest.mark.xfail(
     sys.version_info >= (3, 12),
     reason="Python 3.12+ not yet supported for torch.compile",
 )
