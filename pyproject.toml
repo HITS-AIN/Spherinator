@@ -29,34 +29,37 @@ matplotlib = "^3.8.2"
 numpy = "^1.26.2"
 onnx = "^1.15.0"
 onnxruntime = "^1.16.3"
+onnxscript = "^0"
 pandas = "^2.1.3"
 power-spherical = {git = "https://github.com/HITS-AIN/power_spherical.git", branch = "jit"}
 psutil = "^5.9.7"
 python = "^3.9"
 scikit-image = "^0.22.0"
 scipy = "^1.11.4"
-
-torch = "^2.2"
-#torch = {version = "^2.1.2", source = "pytorch-nightly-cu121"}
-#torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.3.0.dev20231221%2Bcu121-cp39-cp39-linux_x86_64.whl"}
-
-torchvision = "^0"
-#torchvision = {version = "0.18.0.dev20231221", source = "pytorch-nightly-cu121"}
-#torchvision = {url = "https://download.pytorch.org/whl/nightly/cu121/torchvision-0.18.0.dev20231221%2Bcu121-cp39-cp39-linux_x86_64.whl"}
 open3d = "^0.18.0"
 h5py = "^3.10.0"
 addict = "^2.4.0"
 strenum = "^0.4.15"
+
+torch = "^2.2"
+# torch = {version = "^2.1.2", source = "pytorch-nightly-cu121"}
+# torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.3.0.dev20240101%2Bcu121-cp39-cp39-linux_x86_64.whl"}
+
+torchvision = "^0"
+# torchvision = {version = "0.18.0.dev20231221", source = "pytorch-nightly-cu121"}
+# torchvision = {url = "https://download.pytorch.org/whl/nightly/cu121/torchvision-0.18.0.dev20240101%2Bcu121-cp39-cp39-linux_x86_64.whl"}
+
+# pytorch-triton = {url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"}
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.0.0"
 jupytext = "^1.15.2"
 pip-licenses = "^4.3.3"
 pytest = "^8.0.2"
-pytest-cov = "^4.1.0"
+pytest-cov = "^5.0"
 scikit-learn = "^1.3.2"
 tensorboard = "^2.15.1"
-wandb = "^0.16.1"
+wandb = "^0"
 
 [[tool.poetry.source]]
 name = "pypi"
