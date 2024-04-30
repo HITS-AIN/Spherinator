@@ -60,6 +60,7 @@ def test_on_train_epoch_end(z_dim):
         overfit_batches=2,
         log_every_n_steps=1,
         enable_checkpointing=False,
+        accelerator="cpu",
     )
     trainer.fit(model, datamodule=datamodule)
 

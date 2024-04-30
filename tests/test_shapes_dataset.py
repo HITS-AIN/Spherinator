@@ -1,6 +1,6 @@
 import pytest
 import torch
-from torch.utils.data import DataLoader, BatchSampler, RandomSampler
+from torch.utils.data import BatchSampler, DataLoader, RandomSampler
 
 from data import ShapesDataset
 
@@ -43,7 +43,9 @@ def test_metadata():
     assert dataset.get_metadata(1000)["filename"] == "tests/data/shapes/circles.npy"
 
 
-@pytest.mark.skip(reason="must be solved")
+@pytest.mark.xfail(
+    reason="Python builtin <built-in function empty> is currently not supported in Torchscript"
+)
 def test_jit():
     dataset = ShapesDataset("tests/data/shapes")
     torch.jit.script(dataset)
