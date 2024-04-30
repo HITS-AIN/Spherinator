@@ -25,18 +25,21 @@ def circle_mask(coords, values, radius):
     return np.array(new_x), np.array(new_y), np.array(new_z), np.array(new_values)
 
 
-def make_pointcloud(coords, potential, mask_radius=100.):
+def make_pointcloud(coords, value, mask_radius=100., cmap='magma'):
     # Circle mask
-    x, y, z, values = circle_mask(coords, potential, mask_radius)
+    x, y, z, values = circle_mask(coords, value, mask_radius)
     gas_cloud = o3d.geometry.PointCloud()
     gas_cloud.points = o3d.utility.Vector3dVector(np.column_stack((x, y, z)))
+    rgba = make_vertex_colors(values, cmap)
+    gas_cloud.colors = o3d.utility.Vector3dVector(rgba)
+    return gas_cloud
 
-    cmap = plt.get_cmap('magma')
+def make_vertex_colors(values, cmap_str):
+    cmap = plt.get_cmap(cmap_str)
     norm = c.Normalize(vmin=values.min(), vmax=values.max())
     scalar_map = cm.ScalarMappable(norm=norm, cmap=cmap)
     rgba = scalar_map.to_rgba(values)[:, :3]
-    gas_cloud.colors = o3d.utility.Vector3dVector(rgba)
-    return gas_cloud
+    return rgba
 
 
 def star_point_cloud(star_coords, radius, mask_radius=100.):

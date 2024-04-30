@@ -15,26 +15,13 @@ class TngParticleTypes(StrEnum):
     BLACKHOLE = "PartType5"
 
 
-def gas_temperature(gas):
-    # calculate the temperature because apparently, physicians love to do the math by themselves...
-    u = np.array(gas["InternalEnergy"])
-    x_e = np.array(gas["ElectronAbundance"])
-    x_h = 0.76
-    gamma = 5/3
-    k_b = 1.380649 * 10**(-16)
-    mu = (4/(1 + 3*x_h + 4*x_h*x_e)) * np.array(gas["Masses"])
-    unit_length = 3.086*(10**21) # 1 kpc
-    unit_time = 3.1536*(10**16) # 1 Gyr
-    print(unit_length**2 / unit_time**2)
-    temp = (gamma -1) * u/k_b * (unit_length**2 / unit_time**2) * mu
-    return temp
+
 
 
 class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
     def __init__(
             self,
             data_directories: list[str],
-            cutout_directory: str,
             info_dir: str,
             data_aspect: str = None,
             extension: str = "fits",
@@ -45,7 +32,15 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
         super().__init__(data_directories, extension, minsize, transform)
 
         # We extend the constructor to store The h5 files with additional info
-        self.cutout_directory = cutout_directory
+        self.hdf_files = {}
+        for data_directory in data_directories:
+            for file in sorted(os.listdir(data_directory)):
+                if file.endswith('hdf5'):
+                    fname, _ = file.split('.')
+                    _, subhalo_id = fname.split('_')
+                    hdf_filename = os.path.join(data_directory, file)
+                    self.hdf_files[subhalo_id] = hdf_filename
+
         self.info_dir = info_dir
         self.data_aspect = data_aspect
         self.info = []
@@ -71,7 +66,7 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
 
     def get_cutout(self, index: int):
         subhalo_id = self.get_metadata(index)["subhalo_id"]
-        h5_path = os.path.join(self.cutout_directory, "cutout_{0}.hdf5".format(subhalo_id))
+        h5_path = self.hdf_files[subhalo_id]
         cutout = h5py.File(h5_path, 'r')
         return cutout
 
@@ -138,10 +133,9 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
         if cutout.keys().__contains__(TngParticleTypes.GAS):
             gas = cutout[TngParticleTypes.GAS]
             gas_coords = self.center_coordinates(gas['Coordinates'], science_data)
-            temperature = gas_temperature(gas)
+            temperature = self.gas_temperature(gas)
             min_max = [-20, 20]
-
-            t = vis.binned_stats_img(gas_coords, np.log(temperature), min_max)
+            t = vis.binned_stats_img(gas_coords, np.log10(temperature), min_max)
             extent = [min_max[0], min_max[1], min_max[0], min_max[1]]
             return t, extent
 
@@ -155,7 +149,71 @@ class IllustrisSdssDatasetMultidim(IllustrisSdssDatasetWithMetadata):
             extent = [min_max[0], min_max[1], min_max[0], min_max[1]]
             return dmd, extent
 
+    def make_particle_clouds(self, science_data, cutout):
+        pointclouds = {}
+        if cutout.keys().__contains__(TngParticleTypes.GAS):
+            particles = cutout[TngParticleTypes.GAS]
+            gas_coords = self.center_coordinates(particles['Coordinates'], science_data)
+            attribute_keys = ['temperature', 'potential', 'metallicity', 'velocity']
+            cmaps = ['hot', 'magma', 'viridis', 'turbo']
+            gas_attributes = [self.gas_temperature(particles),
+                              np.array(particles['Potential'], dtype=np.float64),
+                              np.array(particles['GFM_Metallicity'], dtype=np.float64),
+                              np.array(particles['SubfindVelDisp'], dtype=np.float64)]
+            pointclouds['gas'] = self.make_pointcloud(gas_coords, attribute_keys, gas_attributes, cmaps)
+        if cutout.keys().__contains__(TngParticleTypes.DM):
+            particles = cutout[TngParticleTypes.DM]
+            dm_coords = self.center_coordinates(particles['Coordinates'], science_data)
+            attribute_keys = ['potential', 'density', 'velocity']
+            cmaps = ['magma', 'jet', 'turbo']
+            dm_attributes = [ np.array(particles['Potential'], dtype=np.float64),
+                              np.array(particles['SubfindDensity'], dtype=np.float64),
+                              np.array(particles['SubfindVelDisp'], dtype=np.float64)]
+            pointclouds['dm'] = self.make_pointcloud(dm_coords, attribute_keys,dm_attributes, cmaps)
+        if cutout.keys().__contains__(TngParticleTypes.STARS):
+            particles = cutout[TngParticleTypes.STARS]
+            star_coords = self.center_coordinates(particles['Coordinates'], science_data)
+            attribute_keys = ['mass', 'metallicity']
+            cmaps = ['gnuplot', 'viridis']
+            star_attributes = [np.array(particles['Masses'], dtype=np.float64),
+                               np.array(particles['GFM_Metallicity'], dtype=np.float64)]
+            pointclouds['stars'] = self.make_pointcloud(star_coords, attribute_keys, star_attributes, cmaps)
+        return pointclouds
+
+    def make_pointcloud(self, coordinates, keys, attributes, cmaps):
+        pointcloud_map = {}
+        for i in range(len(attributes)):
+            pointcloud_map[keys[i]] = vis.make_pointcloud(coordinates, attributes[i], cmap=cmaps[i])
+        return pointcloud_map
+    def make_gas_particle_cloud_bin(self, science_data, cutout):
+        particle_dict = {}
+        if cutout.keys().__contains__(TngParticleTypes.GAS):
+            particles = cutout[TngParticleTypes.GAS]
+            particle_dict['coordinates'] = self.center_coordinates(particles['Coordinates'], science_data).tolist()
+            particle_dict['temperature'] = self.gas_temperature(particles).tolist()
+            pot = np.array(particles['Potential'], dtype=np.float64)
+            pot /= pot.mean()
+            particle_dict["potential"] = pot.tolist()
+            particle_dict['metallicity'] = np.array(particles['GFM_Metallicity'], dtype=np.float64).tolist()
+            particle_dict['velocity'] = np.array(particles['SubfindVelDisp']).tolist()
+        return particle_dict
+
+
+
     def center_coordinates(self, coordinates, science_data):
         center_pos = ast.literal_eval(str(science_data["center_position"]))
-        return (np.array(coordinates, dtype=np.float64) - center_pos) * self.dist_units_kpc
+        return (np.array(coordinates) - center_pos) * self.dist_units_kpc
+
+    def gas_temperature(self, gas):
+        # calculate the temperature because apparently, physicians love to do the math by themselves...
+        u = np.array(gas["InternalEnergy"], dtype=np.float64) * 100000. ** 2  # CGS Units
+        x_e = np.array(gas["ElectronAbundance"], dtype=np.float64)
+        x_h = 0.76
+        gamma = 5 / 3
+        k_b = 1.380649 * 10 ** (-16) # CGS Units
+        mass = np.array(gas["Masses"], dtype=np.float64) * self.to_msun * 2. * 10**33 # First to Sun Masses, then to gram
+        mu = (4. / (1. + 3. * x_h + 4. * x_h * x_e)) * mass
+        temp = np.array((gamma - 1.) * (u / k_b) * mu, dtype=np.float64)
+        return np.log10(temp)
+
 

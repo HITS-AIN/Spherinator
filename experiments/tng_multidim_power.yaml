@@ -13,8 +13,7 @@ data:
   class_path: data.IllustrisSdssDataModuleMultidim
   init_args:
     data_directories: ["/home/kollasfa/_DATA/tng-example/TNG100-Multidim"]
-    cutout_directory: "/home/kollasfa/_DATA/tng-example/TNG100-Multidim"
-    info_directory: "/home/kollasfa/_DATA/tng-example/TNG100-Multidim/TNG100-1_99.csv"
+    info_path: "/home/kollasfa/_DATA/tng-example/TNG100-Multidim/TNG100-1_99.csv"
     extension: fits
     minsize: 100
     batch_size: 8

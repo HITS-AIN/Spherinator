@@ -14,13 +14,13 @@ from .illustris_sdss_data_module import IllustrisSdssDataModule
 from .illustris_sdss_dataset_multidim import IllustrisSdssDatasetMultidim
 import open3d as o3d
 from matplotlib import pyplot as plt
+import pickle
 
 class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
     def __init__(
             self,
             data_directories: list[str],
-            cutout_directory: str,
-            info_directory: str,
+            info_path: str,
             extension: str = "fits",
             minsize: int = 100,
             shuffle: bool = True,
@@ -28,8 +28,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
             num_workers: int = 16,
     ):
         super().__init__(data_directories, extension, minsize, shuffle, batch_size, num_workers)
-        self.cutout_directory = cutout_directory
-        self.info_directory = info_directory
+        self.info_path = info_path
 
     def setup(self, stage: str):
 
@@ -49,8 +48,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
         elif stage == "processing" and self.data_processing is None:
             self.data_processing = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
-                cutout_directory=self.cutout_directory,
-                info_dir=self.info_directory,
+                info_dir=self.info_path,
                 extension=self.extension,
                 minsize=self.minsize,
                 transform=self.transform_processing,
@@ -64,8 +62,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
         elif stage == "images" and self.data_images is None:
             self.data_images = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
-                cutout_directory=self.cutout_directory,
-                info_dir=self.info_directory,
+                info_dir=self.info_path,
                 extension=self.extension,
                 minsize=self.minsize,
                 transform=self.transform_processing,
@@ -79,8 +76,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
         elif stage == "thumbnail_images" and self.data_thumbnail_images is None:
             self.data_thumbnail_images = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
-                cutout_directory=self.cutout_directory,
-                info_dir=self.info_directory,
+                info_dir=self.info_path,
                 extension=self.extension,
                 minsize=self.minsize,
                 transform=self.transform_processing,
@@ -94,8 +90,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
         elif stage == "gas_pointclouds":
             self.data_gas_pointclouds = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
-                cutout_directory=self.cutout_directory,
-                info_dir=self.info_directory,
+                info_dir=self.info_path,
                 data_aspect="gas_pointcloud",
                 extension=self.extension,
                 minsize=self.minsize,
@@ -110,8 +105,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
         elif stage == "dm_pointclouds":
             self.data_dm_pointclouds = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
-                cutout_directory=self.cutout_directory,
-                info_dir=self.info_directory,
+                info_dir=self.info_path,
                 data_aspect="dm_pointcloud",
                 extension=self.extension,
                 minsize=self.minsize,
@@ -126,8 +120,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
         elif stage == "stars":
             self.data_stars = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
-                cutout_directory=self.cutout_directory,
-                info_dir=self.info_directory,
+                info_dir=self.info_path,
                 data_aspect="stars",
                 extension=self.extension,
                 minsize=self.minsize,
@@ -142,8 +135,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
         elif stage == "gas_temperature_fields":
             self.data_gas_temperature_fields = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
-                cutout_directory=self.cutout_directory,
-                info_dir=self.info_directory,
+                info_dir=self.info_path,
                 data_aspect="gas_temperature_field",
                 extension=self.extension,
                 minsize=self.minsize,
@@ -158,8 +150,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
         elif stage == "dark_matter_fields":
             self.data_dark_matter_fields = IllustrisSdssDatasetMultidim(
                 data_directories=self.data_directories,
-                cutout_directory=self.cutout_directory,
-                info_dir=self.info_directory,
+                info_dir=self.info_path,
                 data_aspect="dark_matter_field",
                 extension=self.extension,
                 minsize=self.minsize,
@@ -167,6 +158,22 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
             )
             self.dataloader_dark_matter_fields = DataLoader(
                 self.data_dark_matter_fields,
+                batch_size=self.batch_size,
+                shuffle=False,
+                num_workers=self.num_workers,
+            )
+
+        elif stage == "particle_clouds":
+            self.data_particle_clouds = IllustrisSdssDatasetMultidim(
+                data_directories=self.data_directories,
+                info_dir=self.info_path,
+                data_aspect="particle_clouds",
+                extension=self.extension,
+                minsize=self.minsize,
+                transform=self.transform_processing,
+            )
+            self.dataloader_particle_clouds = DataLoader(
+                self.data_particle_clouds,
                 batch_size=self.batch_size,
                 shuffle=False,
                 num_workers=self.num_workers,
@@ -221,7 +228,7 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                     output.write(str(coordinates[i, 1]) + ",")
                     output.write(str(coordinates[i, 2]) + "\n")
 
-    def create_morphology(self, output_path: Path):
+    def create_mock(self, output_path: Path):
         # Just a wrapper for my own naming convention
         self.create_images(output_path)
 
@@ -336,6 +343,25 @@ class IllustrisSdssDataModuleMultidim(IllustrisSdssDataModule):
                     subhalo_id=metadata["subhalo_id"][i])
                 output_name = str(output_path / Path(filename))
                 o3d.io.write_point_cloud(output_name, self.data_stars.get_visual_data(i))
+
+    def create_particle_clouds(self, output_path: Path):
+        self.setup("particle_clouds")
+        for batch, metadata in tqdm(self.dataloader_particle_clouds):
+            for i, image in enumerate(batch):
+                pcs = self.data_particle_clouds.get_visual_data(i)
+                for component_key in pcs.keys():
+                    comp_path = output_path / Path(component_key)
+                    component = pcs[component_key]
+                    for attribute_key in component.keys():
+                        attr_path = comp_path / Path(attribute_key)
+                        attr_path.mkdir(parents=True, exist_ok=True)
+                        filename = "{simulation}_{snapshot}_{subhalo_id}.pcd".format(
+                            simulation=metadata["simulation"][i],
+                            snapshot=metadata["snapshot"][i],
+                            subhalo_id=metadata["subhalo_id"][i])
+                        output_name = str(attr_path / Path(filename))
+                        o3d.io.write_point_cloud(output_name, component[attribute_key])
+
 
 
 
