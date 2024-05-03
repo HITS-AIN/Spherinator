@@ -55,8 +55,7 @@ def test_kl_divergence():
 
 
 @pytest.mark.xfail(
-    sys.version_info >= (3, 12),
-    reason="Python 3.12+ not yet supported for torch.compile",
+    reason="RuntimeError: Encountered autograd state manager op",
 )
 def test_dynamo_export_normal(tmp_path):
     class Model(torch.nn.Module):

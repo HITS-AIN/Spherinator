@@ -28,7 +28,6 @@ spherinator = 'spherinator:main'
 [tool.poetry.dependencies]
 astropy = "^6.0.0"
 healpy = "^1.16.6"
-hyperspherical-vae = {git = "https://github.com/nicola-decao/s-vae-pytorch.git"}
 ipykernel = "^6.27.1"
 jsonargparse = {extras = ["signatures"], version = "^4.27.1"}
 lightning = "^2.1.2"
@@ -38,7 +37,7 @@ onnx = "^1.15.0"
 onnxruntime = "^1.16.3"
 onnxscript = "^0"
 pandas = "^2.1.3"
-power-spherical = {git = "https://github.com/HITS-AIN/power_spherical.git", branch = "jit"}
+power-spherical = "^0.2.2"
 psutil = "^5.9.7"
 python = "^3.9"
 scikit-image = "^0.22.0"
@@ -68,10 +67,17 @@ wandb = "^0"
 name = "pypi"
 priority = "primary"
 
+
 [[tool.poetry.source]]
 name = "pytorch-nightly-cu121"
 url = "https://download.pytorch.org/whl/nightly/cu121"
 priority = "explicit"
+
+
+[[tool.poetry.source]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+priority = "primary"
 
 [build-system]
 requires = ["poetry-core"]
