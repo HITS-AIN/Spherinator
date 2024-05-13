@@ -7,7 +7,7 @@ import torch
 from pandas.testing import assert_frame_equal
 
 from data import ShapesDataModule
-from hipster import Hipster
+from inference import Hipster
 from models import (
     ConvolutionalDecoder,
     ConvolutionalEncoder,

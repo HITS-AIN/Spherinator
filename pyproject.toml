@@ -14,7 +14,7 @@ repository = "https://github.com/HITS-AIN/Spherinator"
 packages = [
     { include = "callbacks", from = "src" },
     { include = "data", from = "src" },
-    { include = "hipster", from = "src" },
+    { include = "inference", from = "src" },
     { include = "models", from = "src" },
 ]
 include = [
