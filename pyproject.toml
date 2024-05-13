@@ -52,8 +52,6 @@ torchvision = "^0"
 # torchvision = {url = "https://download.pytorch.org/whl/nightly/cu121/torchvision-0.18.0.dev20240101%2Bcu121-cp39-cp39-linux_x86_64.whl"}
 
 # pytorch-triton = {url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"}
-sphinx-autodoc-typehints = "^2.1.0"
-recommonmark = "^0.7.1"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.0.0"
@@ -69,19 +67,18 @@ wandb = "^0"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
+recommonmark = "^0.7.1"
 sphinx = "^7.3.7"
-
+sphinx-autodoc-typehints = "^2.1.0"
 
 [[tool.poetry.source]]
 name = "pypi"
 priority = "primary"
 
-
 [[tool.poetry.source]]
 name = "pytorch-nightly-cu121"
 url = "https://download.pytorch.org/whl/nightly/cu121"
 priority = "explicit"
-
 
 [[tool.poetry.source]]
 name = "testpypi"
