@@ -7,4 +7,6 @@
   <img src="assets/P404_f2.png" width="400" height="400">
 </p>
 
-[Model Training](training.md)
+```{toctree}
+training
+```
