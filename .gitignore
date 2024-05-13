@@ -7,3 +7,5 @@ dist/
 HiPSter/
 lightning_logs/
 wandb/
+docs/_build/
+docs/html/
