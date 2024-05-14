@@ -6,9 +6,9 @@
 ![](assets/P404_f2.png)
 
 ```{toctree}
-:maxdepth: 1
-:caption: Introduction
+:maxdepth: 2
 
+installation.md
 training.md
 hipster.md
 ```
