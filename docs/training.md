@@ -1,4 +1,4 @@
-# Training
+# Spherinator Model Training
 
 ## LightningCLI
 

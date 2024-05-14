@@ -2084,6 +2084,32 @@ files = [
 ]
 
 [[package]]
+name = "myst-parser"
+version = "3.0.1"
+description = "An extended [CommonMark](https://spec.commonmark.org/) compliant parser,"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "myst_parser-3.0.1-py3-none-any.whl", hash = "sha256:6457aaa33a5d474aca678b8ead9b3dc298e89c68e67012e73146ea6fd54babf1"},
+    {file = "myst_parser-3.0.1.tar.gz", hash = "sha256:88f0cb406cb363b077d176b51c476f62d60604d68a8dcdf4832e080441301a87"},
+]
+
+[package.dependencies]
+docutils = ">=0.18,<0.22"
+jinja2 = "*"
+markdown-it-py = ">=3.0,<4.0"
+mdit-py-plugins = ">=0.4,<1.0"
+pyyaml = "*"
+sphinx = ">=6,<8"
+
+[package.extras]
+code-style = ["pre-commit (>=3.0,<4.0)"]
+linkify = ["linkify-it-py (>=2.0,<3.0)"]
+rtd = ["ipython", "sphinx (>=7)", "sphinx-autodoc2 (>=0.5.0,<0.6.0)", "sphinx-book-theme (>=1.1,<2.0)", "sphinx-copybutton", "sphinx-design", "sphinx-pyscript", "sphinx-tippy (>=0.4.3)", "sphinx-togglebutton", "sphinxext-opengraph (>=0.9.0,<0.10.0)", "sphinxext-rediraffe (>=0.2.7,<0.3.0)"]
+testing = ["beautifulsoup4", "coverage[toml]", "defusedxml", "pytest (>=8,<9)", "pytest-cov", "pytest-param-files (>=0.6.0,<0.7.0)", "pytest-regressions", "sphinx-pytest"]
+testing-docutils = ["pygments", "pytest (>=8,<9)", "pytest-param-files (>=0.6.0,<0.7.0)"]
+
+[[package]]
 name = "nbformat"
 version = "5.10.4"
 description = "The Jupyter Notebook format"
@@ -2411,13 +2437,13 @@ sympy = "*"
 
 [[package]]
 name = "onnxscript"
-version = "0.1.0.dev20240513"
+version = "0.1.0.dev20240514"
 description = "Naturally author ONNX functions and models using a subset of Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "onnxscript-0.1.0.dev20240513-py3-none-any.whl", hash = "sha256:e2533e3b7be2dc0091e488eccaa5b8e6460dc76445078b79e707630ee938fbac"},
-    {file = "onnxscript-0.1.0.dev20240513.tar.gz", hash = "sha256:8e20195a982fdd17de467604272e2bc317185fd1263c34510248326c1a83d4a6"},
+    {file = "onnxscript-0.1.0.dev20240514-py3-none-any.whl", hash = "sha256:6cd1adb6425ff3f02285c56acb4a626ffcd6627cb942b6d1ef6bcce1dda42832"},
+    {file = "onnxscript-0.1.0.dev20240514.tar.gz", hash = "sha256:65af3193834ab778299a8bccbc29be33da2e9e28b252dfaef4bdb64f30650981"},
 ]
 
 [package.dependencies]
@@ -4452,4 +4478,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "3a2ef96d1a9a9f7906c43987c81ffbe71252edb377b3fb5159e509aa8ba3e976"
+content-hash = "1bd2a2251e6804aab44b91ff5e6ced3bb427e3b589eebf1ad9069d1e1a9ea524"

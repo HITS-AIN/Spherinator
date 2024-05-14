@@ -3,9 +3,6 @@
 `Spherinator` uses [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/) to implement a convolutional neural network (CNN) based variational autoencoder (VAE) with a spherical latent space.
 `HiPSter` creates the HiPS tilings and the catalog which can be visualized interactively on the surface of a sphere with [Aladin Lite](https://github.com/cds-astro/aladin-lite).
 
-<!-- <p align="center">
-  <img src="assets/P404_f2.png" width="400" height="400">
-</p> -->
 ![](assets/P404_f2.png)
 
 ```{toctree}
@@ -13,4 +10,5 @@
 :caption: Introduction
 
 training.md
+hipster.md
 ```
