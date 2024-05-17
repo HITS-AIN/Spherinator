@@ -147,10 +147,10 @@ class RotationalVariationalAutoencoderPowerMMD(SpherinatorModule):
 
         loss_recon = self.reconstruction_loss(best_scaled_image, recon)
         # MMD loss between samples of q and p distributions
-        qz_sample = q_z.rsample(batch.shape[0])
-        pz_sample = p_z.rsample(batch.shape[0])
-        loss_MMD = self.compute_mmd(qz_sample, pz_sample) # inputs are samples from q_z and p_z (how many??)
-        loss = (loss_recon + loss_MMD).mean()
+        qz_sample = q_z.rsample()
+        pz_sample = p_z.rsample((batch.shape[0],))
+        loss_MMD = self.compute_mmd(qz_sample, pz_sample) # inputs are samples from q_z and p_z
+        loss = (loss_recon + 50.*loss_MMD).mean()
         loss_recon = loss_recon.mean()
         loss_MMD = loss_MMD.mean()
 

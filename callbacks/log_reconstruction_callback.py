@@ -79,7 +79,7 @@ class LogReconstructionCallback(Callback):
         # Clear the figure and free memory
         # Memory leak issue: https://github.com/matplotlib/matplotlib/issues/27138
         for i in range(self.num_samples):
-            ax[i, 0].clear()
-            ax[i, 1].clear()
+            ax[0, i].clear()
+            ax[1, i].clear()
         fig.clear()
         gc.collect()

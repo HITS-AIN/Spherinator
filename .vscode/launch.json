@@ -59,10 +59,11 @@
             "justMyCode": true
         },
         {
-            "name": "Python: Current File",
+            "name": "Python: Spherinator",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/spherinator.py",
+            "args": "fit -c experiments/illustris_power-mmd_loss.yaml -c experiments/wandb.yaml -c experiments/callback_log_reconstructions.yaml",
             "console": "integratedTerminal",
             "justMyCode": true
         }
