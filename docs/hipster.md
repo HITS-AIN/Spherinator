@@ -13,4 +13,4 @@ For visualization, a Python HTTP server can be started by executing `python3 -m 
 
 ## The HiPSter workflow
 
-![](assets/HiPSter.drawio.svg)
+![](assets/HiPSter_workflow.svg)
