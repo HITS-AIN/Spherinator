@@ -1,9 +1,9 @@
-import data.preprocessing as pp
 import pytest
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
+import data.preprocessing as pp
 from data import (
     IllustrisSdssDataModule,
     IllustrisSdssDataset,
@@ -38,8 +38,12 @@ def test_dataloader():
                 ),
             ]
         ),
+        minsize=10,
     )
     dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
+
+    assert len(dataloader) == 1
+
     batch = next(iter(dataloader))
 
     assert batch.shape == (2, 3, 200, 200)
@@ -51,6 +55,7 @@ def test_datamodule():
         num_workers=1,
         batch_size=4,
         shuffle=True,
+        minsize=10,
     )
     data.setup("fit")
 
@@ -59,7 +64,7 @@ def test_datamodule():
 
     batch = next(iter(dataloader))
 
-    assert batch.shape == (4, 3, 363, 363)
+    assert batch.shape == (2, 3, 363, 363)
     assert batch.dtype == torch.float32
     assert batch.min() >= 0.0
     assert batch.max() <= 1.0
@@ -71,17 +76,18 @@ def test_metadata():
     )
     assert (
         dataset.get_metadata(0)["filename"]
-        == "tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/broadband_117359.fits"
+        == "tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/broadband_99185.fits"
     )
     assert dataset.get_metadata(0)["simulation"] == "TNG50"
     assert dataset.get_metadata(0)["snapshot"] == "095"
-    assert dataset.get_metadata(0)["subhalo_id"] == "117359"
+    assert dataset.get_metadata(0)["subhalo_id"] == "99185"
 
 
 def test_dataloader_with_metadata():
     dataset = IllustrisSdssDatasetWithMetadata(
         ["tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/"],
         transform=IllustrisSdssDataModule([]).transform_processing,
+        minsize=10,
     )
     dataloader = DataLoader(dataset, batch_size=2)
 
@@ -90,7 +96,7 @@ def test_dataloader_with_metadata():
     assert batch.shape == (2, 3, 363, 363)
     assert (
         metadata["filename"][0]
-        == "tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/broadband_117359.fits"
+        == "tests/data/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/broadband_117378.fits"
     )
 
 
