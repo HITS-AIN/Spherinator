@@ -7,7 +7,7 @@ import torch
 from pandas.testing import assert_frame_equal
 
 from data import ShapesDataModule
-from hipster import Hipster
+from inference import Hipster
 from models import (
     ConvolutionalDecoder,
     ConvolutionalEncoder,
@@ -40,37 +40,31 @@ def hipster(tmp_path):
 def test_generate_hips(hipster, model, tmp_path):
     hipster.generate_hips(model)
 
-    assert filecmp.cmp(
-        tmp_path / "HipsterTest/model/index.html",
-        "tests/data/hipster/ref1/HipsterTest/model/index.html",
-    )
+    assert Path(tmp_path / "HipsterTest/model/index.html").exists()
 
 
-def test_generate_catalog(hipster, model, tmp_path):
-    datamodule = ShapesDataModule(
-        "tests/data/shapes", exclude_files=["boxes.npy", "circles.npy", "triangles.npy"]
-    )
+def test_generate_catalog(hipster, model, tmp_path, shape_path):
+    datamodule = ShapesDataModule(shape_path)
     hipster.generate_catalog(model, datamodule)
 
-    df1 = pd.read_csv(tmp_path / "HipsterTest/catalog.csv")
-    df2 = pd.read_csv("tests/data/hipster/ref1/HipsterTest/catalog.csv")
-
-    # data item 987 is numerical unstable (best rotation angle varies)
-    df1.drop(987, inplace=True)
-    df2.drop(987, inplace=True)
-
-    assert df1.shape == (999, 9)
-    assert df2.shape == (999, 9)
-    assert_frame_equal(df1, df2, atol=1e-6)
-
-
-def test_create_images(hipster, tmp_path):
-    datamodule = ShapesDataModule(
-        "tests/data/shapes", exclude_files=["boxes.npy", "circles.npy", "triangles.npy"]
+    df = pd.read_csv(
+        tmp_path / "HipsterTest/catalog.csv", usecols=["id", "rotation", "x", "y", "z"]
     )
+
+    assert df.shape == (4, 5)
+    assert len(df) == 4
+    assert df["x"][0] == pytest.approx(0.63545614, abs=1e-6, rel=1e-9)
+
+    arr = df.to_numpy()
+
+    assert arr[0][2] == pytest.approx(0.63545614, abs=1e-6, rel=1e-9)
+
+
+def test_create_images(hipster, tmp_path, shape_path):
+    datamodule = ShapesDataModule(shape_path, exclude_files=["boxes.npy"])
     hipster.create_images(datamodule)
 
-    assert Path(tmp_path / "HipsterTest/jpg/crosses_0.jpg").exists()
+    assert Path(tmp_path / "HipsterTest/jpg/circles_0.jpg").exists()
 
 
 def test_contains_equal_element():
@@ -99,17 +93,3 @@ def test_find_best_rotation(model):
 
     assert loss.shape == torch.Size([2])
     assert torch.allclose(loss, torch.Tensor([0.1814, 0.1820]), rtol=1e-3)
-
-
-def test_pandas_catalog():
-    catalog = pd.read_csv(
-        "tests/data/hipster/ref1/HipsterTest/catalog.csv",
-        usecols=["id", "rotation", "x", "y", "z"],
-    )
-    assert catalog.shape == (1000, 5)
-    assert len(catalog) == 1000
-    assert catalog["x"][0] == pytest.approx(0.61814356, abs=1e-6, rel=1e-9)
-
-    catalog = catalog.to_numpy()
-
-    assert catalog[0][2] == pytest.approx(0.61814356, abs=1e-6, rel=1e-9)

@@ -44,11 +44,11 @@ class MyLogger(Logger):
 
 
 @pytest.mark.parametrize("z_dim", [2, 3, 4])
-def test_on_train_epoch_end(z_dim):
+def test_on_train_epoch_end(z_dim, shape_path):
     # Set up the model and dataloader
     model = RotationalVariationalAutoencoderPower(z_dim=z_dim)
 
-    datamodule = ShapesDataModule("tests/data/shapes", batch_size=12, shuffle=False)
+    datamodule = ShapesDataModule(shape_path, batch_size=12, shuffle=False)
     datamodule.setup("fit")
     # data_loader = data_module.train_dataloader()
 
