@@ -1,5 +1,14 @@
 # Spherinator for Developers
 
+## Publish to TestPyPi
+
+```bash
+poerty build
+poetry publish -r testpypi -u __token__ -p <TOKEN>
+```
+
+
+
 ## Install from TestPyPi
 
 ```bash
