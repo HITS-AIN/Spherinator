@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from data import ShapesDataModule
+from spherinator.data import ShapesDataModule
 
 
 def test_fit(shape_path):

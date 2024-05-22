@@ -12,18 +12,16 @@ license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/HITS-AIN/Spherinator"
 packages = [
-    { include = "callbacks", from = "src" },
-    { include = "data", from = "src" },
-    { include = "inference", from = "src" },
-    { include = "models", from = "src" },
+    { include = "spherinator", from = "src" },
+    { include = "hipster", from = "src" },
 ]
 include = [
     { path = "tests", format = "sdist" },
 ]
 
 [tool.poetry.scripts]
-hipster = 'hipster:main'
-spherinator = 'spherinator:main'
+hipster = 'hipster.main:main'
+spherinator = 'spherinator.main:main'
 
 [tool.poetry.dependencies]
 astropy = "^6.0.0"

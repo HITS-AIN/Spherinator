@@ -4,9 +4,9 @@ from lightning.pytorch.loggers import Logger
 from lightning.pytorch.trainer import Trainer
 from lightning.pytorch.utilities import rank_zero_only
 
-from callbacks import LogReconstructionCallback
-from data import ShapesDataModule
-from models import RotationalVariationalAutoencoderPower
+from spherinator.callbacks import LogReconstructionCallback
+from spherinator.data import ShapesDataModule
+from spherinator.models import RotationalVariationalAutoencoderPower
 
 
 class MyLogger(Logger):

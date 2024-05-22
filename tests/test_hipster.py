@@ -1,14 +1,12 @@
-import filecmp
 from pathlib import Path
 
 import pandas as pd
 import pytest
 import torch
-from pandas.testing import assert_frame_equal
 
-from data import ShapesDataModule
-from inference import Hipster
-from models import (
+from hipster import Hipster
+from spherinator.data import ShapesDataModule
+from spherinator.models import (
     ConvolutionalDecoder,
     ConvolutionalEncoder,
     RotationalVariationalAutoencoderPower,

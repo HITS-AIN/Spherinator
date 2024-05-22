@@ -9,11 +9,11 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import data.preprocessing as preprocessing
-from data.illustris_sdss_dataset import IllustrisSdssDataset
-from data.illustris_sdss_dataset_with_metadata import IllustrisSdssDatasetWithMetadata
-from models.spherinator_module import SpherinatorModule
+from spherinator.models.spherinator_module import SpherinatorModule
 
+from .illustris_sdss_dataset import IllustrisSdssDataset
+from .illustris_sdss_dataset_with_metadata import IllustrisSdssDatasetWithMetadata
+from .preprocessing import CreateNormalizedRGBColors, DielemanTransformation
 from .spherinator_data_module import SpherinatorDataModule
 
 
@@ -52,7 +52,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
 
         self.transform_images = transforms.Compose(
             [
-                preprocessing.CreateNormalizedRGBColors(
+                CreateNormalizedRGBColors(
                     stretch=0.9,
                     range=5,
                     lower_limit=0.001,
@@ -70,7 +70,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
         self.transform_train = transforms.Compose(
             [
                 self.transform_processing,
-                preprocessing.DielemanTransformation(
+                DielemanTransformation(
                     rotation_range=[0, 360],
                     translation_range=[0, 0],  # 4./363,4./363],
                     scaling_range=[1, 1],  # 0.9,1.1],

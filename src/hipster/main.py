@@ -7,7 +7,7 @@ import sys
 import torch
 import yaml
 
-from inference import Hipster
+from .hipster import Hipster
 
 
 def main() -> int:

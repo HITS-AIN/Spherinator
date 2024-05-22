@@ -10,10 +10,10 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from data.shapes_dataset import ShapesDataset
-from data.shapes_dataset_with_metadata import ShapesDatasetWithMetadata
-from models.spherinator_module import SpherinatorModule
+from spherinator.models.spherinator_module import SpherinatorModule
 
+from .shapes_dataset import ShapesDataset
+from .shapes_dataset_with_metadata import ShapesDatasetWithMetadata
 from .spherinator_data_module import SpherinatorDataModule
 
 

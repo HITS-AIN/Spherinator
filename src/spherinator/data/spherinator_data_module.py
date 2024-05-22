@@ -3,7 +3,7 @@ from pathlib import Path
 
 import lightning.pytorch as pl
 
-from models.spherinator_module import SpherinatorModule
+from spherinator.models.spherinator_module import SpherinatorModule
 
 
 class SpherinatorDataModule(ABC, pl.LightningDataModule):

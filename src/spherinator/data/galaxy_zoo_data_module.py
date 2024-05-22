@@ -3,10 +3,10 @@ from pathlib import Path
 import torchvision.transforms.v2 as transforms
 from torch.utils.data import DataLoader
 
-import data.preprocessing as preprocessing
-from data.galaxy_zoo_dataset import GalaxyZooDataset
-from models.spherinator_module import SpherinatorModule
+from spherinator.models.spherinator_module import SpherinatorModule
 
+from .galaxy_zoo_dataset import GalaxyZooDataset
+from .preprocessing import DielemanTransformation
 from .spherinator_data_module import SpherinatorDataModule
 
 
@@ -40,7 +40,7 @@ class GalaxyZooDataModule(SpherinatorDataModule):
 
         self.transform_train = transforms.Compose(
             [
-                preprocessing.DielemanTransformation(
+                DielemanTransformation(
                     rotation_range=[0, 360],
                     translation_range=[4.0 / 424, 4.0 / 424],
                     scaling_range=[1 / 1.1, 1.1],

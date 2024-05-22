@@ -19,8 +19,8 @@ from astropy.io.votable import writeto
 from astropy.table import Table
 from PIL import Image
 
-from data.spherinator_data_module import SpherinatorDataModule
-from models.spherinator_module import SpherinatorModule
+from spherinator.data import SpherinatorDataModule
+from spherinator.models import SpherinatorModule
 
 from .create_allsky import create_allsky
 

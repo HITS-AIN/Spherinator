@@ -1,9 +1,8 @@
-import numpy as np
 import pytest
 import torch
 from torch.utils.data import BatchSampler, DataLoader, RandomSampler
 
-from data import ShapesDataset
+from spherinator.data import ShapesDataset
 
 
 def test_dataset(shape_path):

@@ -1,5 +1,6 @@
-from models import RotationalAutoencoder
 import torch
+
+from spherinator.models import RotationalAutoencoder
 
 
 def test_forward():

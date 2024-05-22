@@ -3,8 +3,8 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-import data.preprocessing as pp
-from data import (
+import spherinator.data.preprocessing as pp
+from spherinator.data import (
     IllustrisSdssDataModule,
     IllustrisSdssDataset,
     IllustrisSdssDatasetWithMetadata,
