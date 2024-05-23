@@ -7,6 +7,8 @@ from .galaxy_zoo_dataset import GalaxyZooDataset
 from .illustris_sdss_data_module import IllustrisSdssDataModule
 from .illustris_sdss_dataset import IllustrisSdssDataset
 from .illustris_sdss_dataset_with_metadata import IllustrisSdssDatasetWithMetadata
+from .images_data_module import ImagesDataModule
+from .images_dataset import ImagesDataset
 from .shapes_data_module import ShapesDataModule
 from .shapes_dataset import ShapesDataset
 from .spherinator_data_module import SpherinatorDataModule
@@ -18,6 +20,8 @@ __all__ = [
     "IllustrisSdssDataModule",
     "IllustrisSdssDataset",
     "IllustrisSdssDatasetWithMetadata",
+    "ImagesDataModule",
+    "ImagesDataset",
     "ShapesDataModule",
     "ShapesDataset",
     "SpherinatorDataModule",
