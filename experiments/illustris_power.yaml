@@ -1,7 +1,7 @@
 seed_everything: 42
 
 model:
-  class_path: models.RotationalVariationalAutoencoderPower
+  class_path: spherinator.models.RotationalVariationalAutoencoderPower
   init_args:
     h_dim: 256
     z_dim: 3
@@ -10,7 +10,7 @@ model:
     beta: 1.0e-3
 
 data:
-  class_path: data.IllustrisSdssDataModule
+  class_path: spherinator.data.IllustrisSdssDataModule
   init_args:
     data_directories: ["/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data/",
                        "/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_095/data/",
