@@ -1,6 +1,6 @@
 import torch
 
-from models import (
+from spherinator.models import (
     ConvolutionalDecoder256,
     ConvolutionalEncoder,
     RotationalVariationalAutoencoderPower,

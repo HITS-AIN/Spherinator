@@ -3,6 +3,9 @@ __pycache__
 *.ckpt
 *.ncu-rep
 config.yaml
+dist/
 HiPSter/
 lightning_logs/
 wandb/
+docs/_build/
+docs/html/

@@ -2,10 +2,6 @@
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.extraPaths": [
-        "./external/s-vae-pytorch",
-        "./external/power_spherical",
-    ],
     "python.testing.pytestArgs": [
         "tests"
     ],
