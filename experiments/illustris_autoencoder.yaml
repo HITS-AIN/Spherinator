@@ -1,14 +1,14 @@
 seed_everything: 42
 
 model:
-  class_path: models.RotationalAutoencoder
+  class_path: spherinator.models.RotationalAutoencoder
   init_args:
     image_size: 363
     bottleneck: 3
     rotations: 36
 
 data:
-  class_path: data.IllustrisSdssDataModule
+  class_path: spherinator.data.IllustrisSdssDataModule
   init_args:
     data_directories: ["/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data/",
                        "/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_095/data/",

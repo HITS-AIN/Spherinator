@@ -1,7 +1,7 @@
 seed_everything: 42
 
 model:
-  class_path: models.RotationalVariationalAutoencoderPower
+  class_path: spherinator.models.RotationalVariationalAutoencoderPower
   init_args:
     encoder:
       class_path: torchvision.models.ResNet
@@ -10,7 +10,7 @@ model:
         layers: [3, 4, 6, 3] # ResNet-50
         num_classes: 256
     decoder:
-      class_path: models.ConvolutionalDecoder
+      class_path: spherinator.models.ConvolutionalDecoder
     h_dim: 256
     z_dim: 3
     image_size: 91
@@ -18,7 +18,7 @@ model:
     beta: 1.0e-3
 
 data:
-  class_path: data.ShapesDataModule
+  class_path: spherinator.data.ShapesDataModule
   init_args:
     data_directory: /hits/basement/its/doserbd/projects/data/machine-learning/pink/shapes/
     shuffle: True

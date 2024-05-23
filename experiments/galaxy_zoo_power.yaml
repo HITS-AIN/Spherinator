@@ -1,7 +1,7 @@
 seed_everything: 42
 
 model:
-  class_path: models.RotationalVariationalAutoencoderPower
+  class_path: spherinator.models.RotationalVariationalAutoencoderPower
   init_args:
     h_dim: 256
     z_dim: 3
@@ -10,7 +10,7 @@ model:
     beta: 1.0e-3
 
 data:
-  class_path: models.GalaxyZooDataModule
+  class_path: spherinator.models.GalaxyZooDataModule
   init_args:
     data_dir: /hits/basement/ain/Data/KaggleGalaxyZoo/images_training_rev1
     extension: jpg
