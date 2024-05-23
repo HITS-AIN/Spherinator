@@ -5,8 +5,8 @@ import os
 from pathlib import Path
 
 import numpy as np
+import skimage.io as io
 import torch
-from PIL import Image
 from torch.utils.data import Dataset
 
 
@@ -39,14 +39,7 @@ class ImagesDataset(Dataset):
         """
 
         self.transform = transform
-
-        filenames = get_all_filenames(data_directory, extensions)
-
-        self.images = np.empty((0, 3, 224, 224), np.float32)
-        for file in sorted(filenames):
-            # Swap axis 0 and 2 to bring the color channel to the front
-            image = np.asarray(Image.open(file)).swapaxes(0, 2)
-            self.images = np.append(self.images, [image], axis=0)
+        self.filenames = sorted(get_all_filenames(data_directory, extensions))
 
     def __len__(self) -> int:
         """Return the number of items in the dataset.
@@ -54,7 +47,7 @@ class ImagesDataset(Dataset):
         Returns:
             int: Number of items in dataset.
         """
-        return len(self.images)
+        return len(self.filenames)
 
     def __getitem__(self, index: int) -> torch.Tensor:
         """Retrieves the item/items with the given indices from the dataset.
@@ -66,7 +59,9 @@ class ImagesDataset(Dataset):
             data: Data of the item/items with the given indices.
 
         """
-        data = self.images[index]
+        # Swap axis 0 and 2 to bring the color channel to the front
+        data = io.imread(self.filenames[index])
+        data = data.swapaxes(0, 2)
         data = torch.Tensor(data)
         if self.transform:
             data = self.transform(data)
