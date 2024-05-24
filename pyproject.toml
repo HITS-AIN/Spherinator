@@ -27,7 +27,7 @@ spherinator = 'spherinator.main:main'
 astropy = "^6.0.0"
 healpy = "^1.16.6"
 ipykernel = "^6.27.1"
-jsonargparse = {extras = ["signatures"], version = "^4.27.1"}
+jsonargparse = {extras = ["signatures"], version = "^4.29.0"}
 lightning = "^2.1.2"
 matplotlib = "^3.8.2"
 numpy = "^1.26.2"
