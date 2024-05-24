@@ -4,36 +4,46 @@ import torch.nn.functional as F
 
 
 class ConvolutionalDecoder2(nn.Module):
-    def __init__(self, h_dim: int = 256):
+    def __init__(self, z_dim: int = 2):
         super().__init__()
 
-        self.fc = nn.Linear(h_dim, 256 * 8 * 8)
-        self.deconv0 = nn.ConvTranspose2d(
-            in_channels=256, out_channels=128, kernel_size=(3, 3), stride=1, padding=1
-        )
-        self.upsample0 = nn.Upsample(scale_factor=2)  # 16x16
-        self.deconv1 = nn.ConvTranspose2d(
-            in_channels=128, out_channels=64, kernel_size=(3, 3), stride=1, padding=1
-        )
-        self.upsample1 = nn.Upsample(scale_factor=2)  # 32x32
-        self.deconv2 = nn.ConvTranspose2d(
-            in_channels=64, out_channels=32, kernel_size=(3, 3), stride=1, padding=1
-        )
-        self.upsample2 = nn.Upsample(scale_factor=2)  # 64x64
-        self.deconv3 = nn.ConvTranspose2d(
-            in_channels=32, out_channels=3, kernel_size=(3, 3), stride=1, padding=1
-        )
-        self.upsample3 = nn.Upsample(scale_factor=2)  # 128x128
+        self.dec1 = nn.Sequential(
+            nn.Linear(z_dim, 1024 * 4 * 4),
+            nn.Unflatten(1, (1024, 4, 4)),
+            nn.BatchNorm2d(1024),
+            nn.ReLU(),
+        )  # 512 x 8 x 8
+        self.dec2 = nn.Sequential(
+            nn.ConvTranspose2d(1024, 512, 4, stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+        )  # 512 x 8 x 8
+        self.dec3 = nn.Sequential(
+            nn.ConvTranspose2d(512, 512, 4, stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+        )  # 512 x 16 x 16
+        self.dec4 = nn.Sequential(
+            nn.ConvTranspose2d(512, 256, 4, stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+        )  # 256 x 32 x 32
+        self.dec5 = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, 4, stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+        )  # 128 x 64 x 64
+        self.dec6 = nn.Sequential(
+            nn.ConvTranspose2d(128, 3, 4, stride=2, padding=1),
+            nn.BatchNorm2d(3),
+            nn.Sigmoid(),
+        )  # 3 x 128 x 128
 
     def forward(self, x: torch.tensor) -> torch.tensor:
-        x = F.relu(self.fc(x))
-        x = x.view(-1, 256, 8, 8)
-        x = F.relu(self.deconv0(x))
-        x = self.upsample0(x)
-        x = F.relu(self.deconv1(x))
-        x = self.upsample1(x)
-        x = F.relu(self.deconv2(x))
-        x = self.upsample2(x)
-        x = self.deconv3(x)
-        x = self.upsample3(x)
+        x = self.dec1(x)
+        x = self.dec2(x)
+        x = self.dec3(x)
+        x = self.dec4(x)
+        x = self.dec5(x)
+        x = self.dec6(x)
         return x

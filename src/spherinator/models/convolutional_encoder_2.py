@@ -4,37 +4,44 @@ import torch.nn.functional as F
 
 
 class ConvolutionalEncoder2(nn.Module):
-    def __init__(self, h_dim: int = 256):
+    def __init__(self, z_dim: int = 2):
         super().__init__()
 
-        self.conv0 = nn.Conv2d(
-            in_channels=3, out_channels=32, kernel_size=(3, 3), stride=1, padding=1
-        )  # 128x128
-        self.pool0 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 64x64
-        self.conv1 = nn.Conv2d(
-            in_channels=32, out_channels=64, kernel_size=(3, 3), stride=1, padding=1
-        )  # 64x64
-        self.pool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 32x32
-        self.conv2 = nn.Conv2d(
-            in_channels=64, out_channels=128, kernel_size=(3, 3), stride=1, padding=1
-        )  # 32x32
-        self.pool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 16x16
-        self.conv3 = nn.Conv2d(
-            in_channels=128, out_channels=256, kernel_size=(3, 3), stride=1, padding=1
-        )  # 16x16
-        self.pool3 = nn.MaxPool2d(kernel_size=(2, 2), stride=2, padding=0)  # 8x8
-
-        self.fc1 = nn.Linear(256 * 8 * 8, h_dim)
+        self.enc1 = nn.Sequential(
+            nn.Conv2d(3, 128, 4, stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+        )  # 128 x 64 x 64
+        self.enc2 = nn.Sequential(
+            nn.Conv2d(128, 256, 4, stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+        )  # 256 x 32 x 32
+        self.enc3 = nn.Sequential(
+            nn.Conv2d(256, 512, 4, stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+        )  # 512 x 16 x 16
+        self.enc4 = nn.Sequential(
+            nn.Conv2d(512, 512, 4, stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+        )  # 512 x 8 x 8
+        self.enc5 = nn.Sequential(
+            nn.Conv2d(512, 1024, 4, stride=2, padding=1),
+            nn.BatchNorm2d(1024),
+            nn.ReLU(),
+        )  # 1024 x 4 x 4
+        self.enc6 = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(1024 * 4 * 4, z_dim),
+        )
 
     def forward(self, x: torch.tensor) -> torch.tensor:
-        x = F.relu(self.conv0(x))
-        x = self.pool0(x)
-        x = F.relu(self.conv1(x))
-        x = self.pool1(x)
-        x = F.relu(self.conv2(x))
-        x = self.pool2(x)
-        x = F.relu(self.conv3(x))
-        x = self.pool3(x)
-        x = torch.flatten(x, start_dim=1)
-        x = F.relu(self.fc1(x))
+        x = self.enc1(x)
+        x = self.enc2(x)
+        x = self.enc3(x)
+        x = self.enc4(x)
+        x = self.enc5(x)
+        x = self.enc6(x)
         return x
