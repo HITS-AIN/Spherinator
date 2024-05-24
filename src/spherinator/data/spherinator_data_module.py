@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-import lightning.pytorch as pl
+from lightning.pytorch import LightningDataModule
 
 from spherinator.models.spherinator_module import SpherinatorModule
 
 
-class SpherinatorDataModule(ABC, pl.LightningDataModule):
+class SpherinatorDataModule(ABC, LightningDataModule):
     """
     Base class for all spherinator data modules.
     """
