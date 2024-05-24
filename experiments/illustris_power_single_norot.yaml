@@ -1,0 +1,42 @@
+seed_everything: 42
+
+model:
+  class_path: models.RotationalVariationalAutoencoderPowerNoRot
+  init_args:
+    h_dim: 256
+    z_dim: 3
+    image_size: 363
+    rotations: 36
+    beta: 1.0e-3
+
+data:
+  class_path: data.IllustrisSdssDataModule
+  init_args:
+    data_directories: ["/local_data/AIN/single_image_test/"]
+    extension: fits
+    minsize: 100
+    batch_size: 512
+    shuffle: True
+    num_workers: 16
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.001
+
+lr_scheduler:
+  class_path: lightning.pytorch.cli.ReduceLROnPlateau
+  init_args:
+    mode: min
+    factor: 0.1
+    patience: 5
+    cooldown: 5
+    min_lr: 1.e-5
+    monitor: train_loss
+    verbose: True
+
+trainer:
+  max_epochs: -1
+  accelerator: gpu
+  devices: 1
+  precision: 32

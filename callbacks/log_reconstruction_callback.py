@@ -64,13 +64,22 @@ class LogReconstructionCallback(Callback):
         # Plot the original samples and their reconstructions side by side
         fig = figure.Figure(figsize=(2 * self.num_samples, 6))
         ax = fig.subplots(2, self.num_samples)
-        for i in range(self.num_samples):
-            ax[0, i].imshow(np.clip(best_scaled[i].cpu().detach().numpy().T, 0, 1))
-            ax[0, i].set_title("Original")
-            ax[0, i].axis("off")
-            ax[1, i].imshow(np.clip(best_recon[i].cpu().detach().numpy().T, 0, 1))
-            ax[1, i].set_title("Reconstruction")
-            ax[1, i].axis("off")
+        if self.num_samples < 2:
+            for i in range(self.num_samples):
+                ax[0].imshow(np.clip(best_scaled[i].cpu().detach().numpy().T, 0, 1))
+                ax[0].set_title("Original")
+                ax[0].axis("off")
+                ax[1].imshow(np.clip(best_recon[i].cpu().detach().numpy().T, 0, 1))
+                ax[1].set_title("Reconstruction")
+                ax[1].axis("off")
+        else:
+            for i in range(self.num_samples):
+                ax[0, i].imshow(np.clip(best_scaled[i].cpu().detach().numpy().T, 0, 1))
+                ax[0, i].set_title("Original")
+                ax[0, i].axis("off")
+                ax[1, i].imshow(np.clip(best_recon[i].cpu().detach().numpy().T, 0, 1))
+                ax[1, i].set_title("Reconstruction")
+                ax[1, i].axis("off")
         fig.tight_layout()
 
         # Log the figure at W&B
@@ -78,8 +87,13 @@ class LogReconstructionCallback(Callback):
 
         # Clear the figure and free memory
         # Memory leak issue: https://github.com/matplotlib/matplotlib/issues/27138
-        for i in range(self.num_samples):
-            ax[0, i].clear()
-            ax[1, i].clear()
+        if self.num_samples < 2:
+            for i in range(self.num_samples):
+                ax[0].clear()
+                ax[1].clear()
+        else:
+            for i in range(self.num_samples):
+                ax[0, i].clear()
+                ax[1, i].clear()
         fig.clear()
         gc.collect()

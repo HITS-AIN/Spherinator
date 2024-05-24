@@ -19,13 +19,13 @@ It contains the following modules:
 from .rotational_autoencoder import RotationalAutoencoder
 from .rotational_variational_autoencoder import RotationalVariationalAutoencoder
 from .rotational_variational_autoencoder_power import RotationalVariationalAutoencoderPower
-from .rotational_variational_autoencoder_mmd import RotationalVariationalAutoencoderMMD
 from .rotational_variational_autoencoder_power_mmd import RotationalVariationalAutoencoderPowerMMD
+from .rotational_variational_autoencoder_power_norot import RotationalVariationalAutoencoderPowerNoRot
 
 __all__ = [
     'RotationalAutoencoder',
     'RotationalVariationalAutoencoder',
     'RotationalVariationalAutoencoderPower',
-    'RotationalVariationalAutoencoderMMD'
-    'RotationalVariationalAutoencoderPowerMMD'
+    'RotationalVariationalAutoencoderPowerMMD',
+    'RotationalVariationalAutoencoderPowerNoRot',
 ]

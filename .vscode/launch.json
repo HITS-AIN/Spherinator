@@ -63,7 +63,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/spherinator.py",
-            "args": "fit -c experiments/illustris_power-mmd_loss.yaml -c experiments/wandb.yaml -c experiments/callback_log_reconstructions.yaml",
+            "args": "fit -c experiments/illustris_power_single_norot.yaml -c experiments/wandb.yaml -c experiments/callback_log_reconstructions.yaml --trainer.devices [0]",
             "console": "integratedTerminal",
             "justMyCode": true
         }

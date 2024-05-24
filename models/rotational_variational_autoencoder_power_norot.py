@@ -10,7 +10,7 @@ from torch.optim import Adam
 from .spherinator_module import SpherinatorModule
 
 
-class RotationalVariationalAutoencoderPowerMMD(SpherinatorModule):
+class RotationalVariationalAutoencoderPowerNoRot(SpherinatorModule):
     def __init__(
         self,
         h_dim: int = 256,
@@ -19,7 +19,7 @@ class RotationalVariationalAutoencoderPowerMMD(SpherinatorModule):
         rotations: int = 36,
         beta: float = 1.0,
     ):
-        """RotationalVariationalAutoencoderPowerMMD initializer
+        """RotationalVariationalAutoencoderPower initializer
 
         Args:
             h_dim (int, optional): dimension of the hidden layers. Defaults to 256.
@@ -143,20 +143,21 @@ class RotationalVariationalAutoencoderPowerMMD(SpherinatorModule):
 
     def training_step(self, batch, batch_idx):
         best_scaled_image, _, _, _ = self.find_best_rotation(batch)
-        (z_location, z_scale), (q_z, p_z), _, recon = self.forward(best_scaled_image)
 
-        loss_recon = self.reconstruction_loss(best_scaled_image, recon)
-        # MMD loss between samples of q and p distributions
-        qz_sample = q_z.rsample()
-        pz_sample = p_z.rsample((batch.shape[0],))
-        loss_MMD = self.compute_mmd(qz_sample, pz_sample) # inputs are samples from q_z and p_z
-        loss = (loss_recon + 1.*loss_MMD).mean()
+        crop = F.center_crop(batch, [self.crop_size, self.crop_size])
+        scaled = F.resize(crop, [self.input_size, self.input_size], antialias=True)
+
+        (z_location, z_scale), (q_z, p_z), _, recon = self.forward(scaled)
+
+        loss_recon = self.reconstruction_loss(batch, recon)
+        loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
+        loss = (loss_recon + loss_KL).mean()
         loss_recon = loss_recon.mean()
-        loss_MMD = loss_MMD.mean()
+        loss_KL = loss_KL.mean()
 
         self.log("train_loss", loss, prog_bar=True)
         self.log("loss_recon", loss_recon, prog_bar=True)
-        self.log("loss_MMD", loss_MMD)
+        self.log("loss_KL", loss_KL)
         self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
         self.log("mean(z_location)", torch.mean(z_location))
         self.log("mean(z_scale)", torch.mean(z_scale))
@@ -180,22 +181,3 @@ class RotationalVariationalAutoencoderPowerMMD(SpherinatorModule):
                 images.reshape(-1, self.total_input_size),
             ).mean(dim=1)
         )
-
-    ### define MMD loss:
-    def compute_kernel(self, x, y):
-        x_size = x.size(0)
-        y_size = y.size(0)
-        dim = x.size(1)
-        x = x.unsqueeze(1) # (x_size, 1, dim)
-        y = y.unsqueeze(0) # (1, y_size, dim)
-        tiled_x = x.expand(x_size, y_size, dim)
-        tiled_y = y.expand(x_size, y_size, dim)
-        kernel_input = (tiled_x - tiled_y).pow(2).mean(2)/float(dim)   # kernel width (hyperparameter)
-        return torch.exp(-kernel_input) # (x_size, y_size)
-
-    def compute_mmd(self, x, y):
-        x_kernel = self.compute_kernel(x, x)
-        y_kernel = self.compute_kernel(y, y)
-        xy_kernel = self.compute_kernel(x, y)
-        mmd = x_kernel.mean() + y_kernel.mean() - 2*xy_kernel.mean()
-        return mmd
