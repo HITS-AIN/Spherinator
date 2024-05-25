@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Python: illustris",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "main.py",
             "args": "fit -c experiments/illustris.yaml",
@@ -15,7 +15,7 @@
         },
         {
             "name": "Python: gz",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "main.py",
             "args": "fit -c experiments/gz.yaml",
@@ -24,7 +24,7 @@
         },
         {
             "name": "Python: illustris-svae",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "main.py",
             "args": "fit -c experiments/illustris-svae.yaml",
@@ -33,7 +33,7 @@
         },
         {
             "name": "Python: gz-svae",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "main.py",
             "args": "fit -c experiments/gz-svae.yaml",
@@ -42,7 +42,7 @@
         },
         {
             "name": "Python: power spherical",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "args": "fit -c ${workspaceFolder}/experiments/shapes-power.yaml",
@@ -51,7 +51,7 @@
         },
         {
             "name": "Python: HiPSter",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/hipster.py",
             "args": "hips --config ${workspaceFolder}/experiments/illustris.yaml --checkpoint ${workspaceFolder}/Illustris128_128_E2026_S202700.ckpt --max_order 4 --hierarchy 8 --crop_size 256 --output_size 64 --output_folder /local_data/AIN/Data/HiPSter --title IllustrisV4 --distortion",
@@ -59,8 +59,18 @@
             "justMyCode": true
         },
         {
+            "name": "Spherinator hephaistos",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/spherinator/main.py",
+            "args": "fit -c illustris_power.yaml",
+            "cwd": "/local_data/doserbd/train/two-iamges",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
