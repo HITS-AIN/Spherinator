@@ -20,7 +20,7 @@ class LogReconstructionCallback(Callback):
         self.num_samples = num_samples
         self.indices = indices
 
-    def on_train_epoch_end(self, trainer, pl_module):
+    def on_train_epoch_end(self, trainer, model):
         # Return if no wandb logger is used
         if trainer.logger is None or trainer.logger.__class__.__name__ not in [
             "WandbLogger",
@@ -30,7 +30,7 @@ class LogReconstructionCallback(Callback):
 
         # Generate some random samples from the validation set
         data = next(iter(trainer.train_dataloader))
-        samples = data[: self.num_samples].to(pl_module.device)
+        samples = data[: self.num_samples].to(model.device)
 
         # Generate reconstructions of the samples using the model
         with torch.no_grad():
@@ -38,29 +38,27 @@ class LogReconstructionCallback(Callback):
             best_scaled = torch.zeros(
                 samples.shape[0],
                 samples.shape[1],
-                pl_module.get_input_size(),
-                pl_module.get_input_size(),
+                model.get_input_size(),
+                model.get_input_size(),
                 device=samples.device,
             )
             best_recon = best_scaled.clone()
 
-            for r in range(pl_module.rotations):
+            for r in range(model.rotations):
                 rotate = functional.rotate(
-                    samples, 360.0 / pl_module.rotations * r, expand=False
+                    samples, 360.0 / model.rotations * r, expand=False
                 )
                 crop = functional.center_crop(
-                    rotate, [pl_module.crop_size, pl_module.crop_size]
+                    rotate, [model.crop_size, model.crop_size]
                 )
                 scaled = functional.resize(
-                    crop, [pl_module.input_size, pl_module.input_size], antialias=True
+                    crop, [model.input_size, model.input_size], antialias=True
                 )
 
-                if pl_module.__class__.__name__ == "RotationalAutoencoder":
-                    recon, _ = pl_module(scaled)
-                else:
-                    (_, _), (_, _), _, recon = pl_module(scaled)
+                z = model.project(scaled)
+                recon = model.reconstruct(z)
 
-                loss_recon = pl_module.reconstruction_loss(scaled, recon)
+                loss_recon = model.reconstruction_loss(scaled, recon)
                 best_recon_idx = torch.where(loss_recon < best_recon_loss)
                 best_recon_loss[best_recon_idx] = loss_recon[best_recon_idx]
                 best_scaled[best_recon_idx] = scaled[best_recon_idx]
@@ -68,14 +66,16 @@ class LogReconstructionCallback(Callback):
 
         # Plot the original samples and their reconstructions side by side
         fig = figure.Figure(figsize=(2 * self.num_samples, 6))
-        ax = fig.subplots(2, self.num_samples)
+        ax = fig.subplots(2, self.num_samples).flatten()
         for i in range(self.num_samples):
-            ax[0, i].imshow(np.clip(best_scaled[i].cpu().detach().numpy().T, 0, 1))
-            ax[0, i].set_title("Original")
-            ax[0, i].axis("off")
-            ax[1, i].imshow(np.clip(best_recon[i].cpu().detach().numpy().T, 0, 1))
-            ax[1, i].set_title("Reconstruction")
-            ax[1, i].axis("off")
+            ax[i].imshow(np.clip(best_scaled[i].cpu().detach().numpy().T, 0, 1))
+            ax[i].set_title("Original")
+            ax[i].axis("off")
+            ax[i + self.num_samples].imshow(
+                np.clip(best_recon[i].cpu().detach().numpy().T, 0, 1)
+            )
+            ax[i + self.num_samples].set_title("Reconstruction")
+            ax[i + self.num_samples].axis("off")
         fig.tight_layout()
 
         # Log the figure at W&B
@@ -83,8 +83,7 @@ class LogReconstructionCallback(Callback):
 
         # Clear the figure and free memory
         # Memory leak issue: https://github.com/matplotlib/matplotlib/issues/27138
-        for i in range(self.num_samples):
-            ax[0, i].clear()
-            ax[0, i].clear()
+        for i in range(2 * self.num_samples):
+            ax[i].clear()
         fig.clear()
         gc.collect()

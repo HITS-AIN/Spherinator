@@ -69,7 +69,7 @@ def test_on_train_epoch_end(z_dim, shape_path):
     callback = LogReconstructionCallback(num_samples=num_samples)
 
     # Call the callback
-    callback.on_train_epoch_end(trainer=trainer, pl_module=model)
+    callback.on_train_epoch_end(trainer=trainer, model=model)
 
     logger.finalize("success")
 
