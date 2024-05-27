@@ -2,4 +2,4 @@ trainer:
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback
       init_args:
-        num_samples: 6
+        samples: 6

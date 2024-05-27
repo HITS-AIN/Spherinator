@@ -43,14 +43,44 @@ class MyLogger(Logger):
         self.logged_items.append((key, images))
 
 
-@pytest.mark.parametrize("z_dim", [2, 3, 4])
-def test_on_train_epoch_end(z_dim, shape_path):
-    # Set up the model and dataloader
-    model = RotationalVariationalAutoencoderPower(z_dim=z_dim)
+class MyNullContext:
+    def __enter__(self, *args, **kwargs):
+        pass
 
-    datamodule = ShapesDataModule(shape_path, batch_size=12, shuffle=False)
+    def __exit__(self, *args, **kwargs):
+        pass
+
+
+does_not_raise = MyNullContext()
+
+
+@pytest.mark.parametrize(
+    "samples, exception",
+    [
+        (2, does_not_raise),
+        (
+            5,
+            pytest.raises(
+                ValueError,
+                match=r"The sample indices must be smaller than the dataset size",
+            ),
+        ),
+        ([0, 1], does_not_raise),
+        (
+            [0, 42],
+            pytest.raises(
+                ValueError,
+                match=r"The sample indices must be smaller than the dataset size",
+            ),
+        ),
+    ],
+)
+def test_on_train_epoch_end(samples, exception, shape_path):
+    # Set up the model and dataloader
+    model = RotationalVariationalAutoencoderPower()
+
+    datamodule = ShapesDataModule(shape_path, batch_size=2)
     datamodule.setup("fit")
-    # data_loader = data_module.train_dataloader()
 
     logger = MyLogger()
 
@@ -65,11 +95,14 @@ def test_on_train_epoch_end(z_dim, shape_path):
     trainer.fit(model, datamodule=datamodule)
 
     # Set up the callback
-    num_samples = 2
-    callback = LogReconstructionCallback(num_samples=num_samples)
+    callback = LogReconstructionCallback(samples=samples)
 
     # Call the callback
-    callback.on_train_epoch_end(trainer=trainer, pl_module=model)
+    with exception:
+        callback.on_train_epoch_end(trainer=trainer, model=model)
+
+    if exception != does_not_raise:
+        return
 
     logger.finalize("success")
 
