@@ -14,10 +14,8 @@
 
 ## Installation
 
-[Poetry](https://python-poetry.org/) is used for installation.
-
 ```bash
-poetry install
+pip install spherinator
 ```
 
 ## Documentation
