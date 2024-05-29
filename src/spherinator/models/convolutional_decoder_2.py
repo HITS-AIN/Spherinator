@@ -1,14 +1,13 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class ConvolutionalDecoder2(nn.Module):
-    def __init__(self, z_dim: int = 2):
+    def __init__(self, latent_dim: int):
         super().__init__()
 
         self.dec1 = nn.Sequential(
-            nn.Linear(z_dim, 1024 * 4 * 4),
+            nn.Linear(latent_dim, 1024 * 4 * 4),
             nn.Unflatten(1, (1024, 4, 4)),
             nn.BatchNorm2d(1024),
             nn.ReLU(),

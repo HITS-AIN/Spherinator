@@ -9,12 +9,12 @@ import spherinator.models
     [
         (
             torchvision.models.resnet18(num_classes=256),
-            spherinator.models.ConvolutionalDecoder(),
+            spherinator.models.ConvolutionalDecoder(latent_dim=256),
             128,
         ),
         (
             torchvision.models.vit_b_16(num_classes=256),
-            spherinator.models.ConvolutionalDecoder224(),
+            spherinator.models.ConvolutionalDecoder224(latent_dim=256),
             224,
         ),
     ],

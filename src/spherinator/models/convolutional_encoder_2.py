@@ -1,10 +1,9 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class ConvolutionalEncoder2(nn.Module):
-    def __init__(self, z_dim: int = 2):
+    def __init__(self, latent_dim: int):
         super().__init__()
 
         self.enc1 = nn.Sequential(
@@ -34,7 +33,7 @@ class ConvolutionalEncoder2(nn.Module):
         )  # 1024 x 4 x 4
         self.enc6 = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(1024 * 4 * 4, z_dim),
+            nn.Linear(1024 * 4 * 4, latent_dim),
         )
 
     def forward(self, x: torch.tensor) -> torch.tensor:

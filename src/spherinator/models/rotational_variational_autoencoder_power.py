@@ -16,10 +16,10 @@ from .spherinator_module import SpherinatorModule
 class RotationalVariationalAutoencoderPower(SpherinatorModule):
     def __init__(
         self,
-        encoder: nn.Module = ConvolutionalEncoder(),
-        decoder: nn.Module = ConvolutionalDecoder(),
+        encoder: nn.Module | None = None,
+        decoder: nn.Module | None = None,
         h_dim: int = 256,
-        z_dim: int = 2,
+        z_dim: int = 3,
         image_size: int = 91,
         input_size: int = 128,
         rotations: int = 36,
@@ -36,6 +36,11 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         """
         super().__init__()
         self.save_hyperparameters(ignore=["encoder", "decoder"])
+
+        if encoder is None:
+            encoder = ConvolutionalEncoder(latent_dim=h_dim)
+        if decoder is None:
+            decoder = ConvolutionalDecoder(latent_dim=h_dim)
 
         self.encoder = encoder
         self.decoder = decoder
