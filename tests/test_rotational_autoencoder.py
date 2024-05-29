@@ -1,5 +1,7 @@
 import torch
+from lightning.pytorch.trainer import Trainer
 
+from spherinator.data import ImagesDataModule
 from spherinator.models import RotationalAutoencoder
 
 
@@ -8,6 +10,25 @@ def test_forward():
     input = model.example_input_array
     recon = model(input)
     assert recon.shape == input.shape
+
+
+def test_training(shape_path):
+    model = RotationalAutoencoder(norm_brightness=True)
+
+    datamodule = ImagesDataModule(
+        "tests/data/images",
+        image_size=224,
+        num_workers=1,
+        batch_size=2,
+    )
+
+    trainer = Trainer(
+        max_epochs=1,
+        overfit_batches=2,
+        enable_checkpointing=False,
+        accelerator="cpu",
+    )
+    trainer.fit(model, datamodule=datamodule)
 
 
 def test_reconstruction_loss():

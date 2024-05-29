@@ -21,6 +21,7 @@ class RotationalAutoencoder(SpherinatorModule):
         image_size: int = 91,
         input_size: int = 128,
         rotations: int = 36,
+        norm_brightness: bool = False,
     ):
         """Initializer
 
@@ -43,6 +44,7 @@ class RotationalAutoencoder(SpherinatorModule):
         self.image_size = image_size
         self.input_size = input_size
         self.rotations = rotations
+        self.norm_brightness = norm_brightness
 
         self.crop_size = int(self.image_size * math.sqrt(2) / 2)
         self.total_input_size = self.input_size * self.input_size * 3
@@ -87,6 +89,10 @@ class RotationalAutoencoder(SpherinatorModule):
                 )
 
             loss = torch.min(loss, self.reconstruction_loss(scaled, recon))
+
+            # divide by the brightness of the image
+            if self.norm_brightness:
+                loss = loss / torch.sum(scaled, (1, 2, 3)) * self.total_input_size
 
         loss = loss.mean()
 
