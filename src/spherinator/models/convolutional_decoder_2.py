@@ -35,7 +35,6 @@ class ConvolutionalDecoder2(nn.Module):
         self.dec6 = nn.Sequential(
             nn.ConvTranspose2d(128, 3, 4, stride=2, padding=1),
             nn.BatchNorm2d(3),
-            nn.Sigmoid(),
         )  # 3 x 128 x 128
 
     def forward(self, x: torch.tensor) -> torch.tensor:
