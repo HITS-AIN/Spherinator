@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Spherinator & HiPSter"
+url: "https://github.com/HITS-AIN/Spherinator"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Polsterer"
+    given-names: "Kai Lars"
+    orcid: "https://orcid.org/0000-0002-3435-1912"
+  - family-names: "Doser"
+    given-names: "Bernd"
+    orcid: "https://orcid.org/0000-0002-3443-5913"
+  - family-names: "Fehlner"
+    given-names: "Andreas"
+    orcid: "https://orcid.org/0000-0003-0448-7138"
+  - family-names: "Trujillo-Gomez"
+    given-names: "Sebastian"
+    orcid: "https://orcid.org/0000-0003-2482-0049"
+  eprint: "2406.03810"
+  title: "Spherinator and HiPSter: Representation Learning for Unbiased Knowledge Discovery from Simulations"
+  year: 2024
+  journal: "arXiv"
+  volume: "2406.03810"
+  doi: "10.48550/arXiv.2406.03810"
+  url: "https://arxiv.org/abs/2406.03810"
