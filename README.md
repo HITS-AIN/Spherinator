@@ -33,3 +33,18 @@ Views and opinions expressed are however those of the author(s) only and do not 
 ## License
 
 This project is licensed under the [Apache-2.0 License](http://www.apache.org/licenses/LICENSE-2.0).
+
+
+## Citation
+
+If you use Spherinator & HiPSter in your research, we provide a [citation](./CITATION.cff) to use:
+
+```bibtex
+@article{Polsterer_Spherinator_and_HiPSter_2024,
+author = {Polsterer, Kai Lars and Doser, Bernd and Fehlner, Andreas and Trujillo-Gomez, Sebastian},
+title = {{Spherinator and HiPSter: Representation Learning for Unbiased Knowledge Discovery from Simulations}},
+url = {https://arxiv.org/abs/2406.03810},
+doi = {10.48550/arXiv.2406.03810},
+year = {2024}
+}
+```
