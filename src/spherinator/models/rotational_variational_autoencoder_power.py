@@ -1,4 +1,5 @@
 import math
+from typing import Optional
 
 import torch
 import torch.linalg
@@ -16,8 +17,8 @@ from .spherinator_module import SpherinatorModule
 class RotationalVariationalAutoencoderPower(SpherinatorModule):
     def __init__(
         self,
-        encoder: nn.Module | None = None,
-        decoder: nn.Module | None = None,
+        encoder: Optional[nn.Module] = None,
+        decoder: Optional[nn.Module] = None,
         h_dim: int = 256,
         z_dim: int = 3,
         image_size: int = 91,
