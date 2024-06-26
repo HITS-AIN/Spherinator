@@ -1,44 +1,63 @@
 import pytest
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from power_spherical import PowerSpherical
 
 
-@pytest.mark.xfail(
-    reason="RuntimeError: Encountered autograd state manager op",
+class Model1(torch.nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.linear = torch.nn.Linear(2, 2)
+
+    def forward(self, x):
+        out = self.linear(x)
+        return out
+
+
+class Model2(nn.Module):
+
+    def __init__(self):
+        super(Model2, self).__init__()
+        self.conv1 = nn.Conv2d(1, 6, 5)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+
+    def forward(self, x):
+        x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
+        x = F.max_pool2d(F.relu(self.conv2(x)), 2)
+        x = torch.flatten(x, 1)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+
+class DistributionModel(torch.nn.Module):
+    def __init__(self, dist):
+        self.dist = dist
+        super().__init__()
+
+    def forward(self, x):
+        return self.dist.rsample(x.shape)
+
+
+@pytest.mark.parametrize(
+    ("module", "input"),
+    [
+        (Model1(), torch.randn(2, 2, 2)),
+        (Model2(), torch.randn(1, 1, 32, 32)),
+        pytest.param(
+            DistributionModel(
+                PowerSpherical(torch.Tensor([0.0, 1.0]), torch.Tensor([1.0]))
+            ),
+            torch.randn(2, 3),
+            marks=pytest.mark.xfail,
+        ),
+    ],
 )
-def test_dynamo_export_normal(tmp_path):
-    class Model(torch.nn.Module):
-        def __init__(self):
-            self.normal = torch.distributions.normal.Normal(0, 1)
-            super().__init__()
-
-        def forward(self, x):
-            return self.normal.sample(x.shape)
-
-    x = torch.randn(2, 3)
-    exported_program = torch.export.export(Model(), args=(x,))
-    onnx_program = torch.onnx.dynamo_export(
-        exported_program,
-        x,
-    )
-    onnx_program.save(str(tmp_path / "normal.onnx"))
-
-
-@pytest.mark.xfail(reason="not supported feature of ONNX")
-def test_dynamo_export_spherical():
-    class Model(torch.nn.Module):
-        def __init__(self):
-            self.spherical = PowerSpherical(
-                torch.Tensor([0.0, 1.0]), torch.Tensor([1.0])
-            )
-            super().__init__()
-
-        def forward(self, x):
-            return self.spherical.sample(x.shape)
-
-    x = torch.randn(2, 3)
-    exported_program = torch.export.export(Model(), args=(x,))
-    _ = torch.onnx.dynamo_export(
-        exported_program,
-        x,
-    )
+def test_onnx_dynamo_export(module, input):
+    module(input)
+    torch.onnx.dynamo_export(module, input)
