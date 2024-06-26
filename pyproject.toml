@@ -32,6 +32,7 @@ lightning = "^2.1.2"
 matplotlib = "^3.8.2"
 numpy = "^1.26.2"
 onnx = "^1.15.0"
+onnxscript = "0.1.0.dev20240626"
 pandas = "^2.1.3"
 power-spherical = "^0.8.1"
 psutil = "^5.9.7"
@@ -90,11 +91,15 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest]
 timeout = 300
 testpaths = 'tests'
+xfail_strict = true
 
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore:The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument",
+    "ignore:torch.onnx.dynamo_export only implements opset version 18 for now.",
+    "ignore:GPU available but not used.",
+    "ignore:You requested to overfit but enabled train dataloader shuffling.",
 ]
 
 [tool.pylint.TYPECHECK]
