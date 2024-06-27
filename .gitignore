@@ -2,10 +2,11 @@ __pycache__
 .venv*/
 *.ckpt
 *.ncu-rep
+*.sarif
 config.yaml
 dist/
+docs/_build/
+docs/html/
 HiPSter/
 lightning_logs/
 wandb/
-docs/_build/
-docs/html/

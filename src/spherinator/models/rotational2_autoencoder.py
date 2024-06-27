@@ -4,6 +4,7 @@ from typing import Optional
 import torch
 import torch.linalg
 import torch.nn as nn
+import torchvision.transforms.v2.functional as functional
 from torch.optim import Adam
 
 from .convolutional_decoder import ConvolutionalDecoder
@@ -11,7 +12,7 @@ from .convolutional_encoder import ConvolutionalEncoder
 from .spherinator_module import SpherinatorModule
 
 
-class RotationalAutoencoder(SpherinatorModule):
+class Rotational2Autoencoder(SpherinatorModule):
     def __init__(
         self,
         encoder: Optional[nn.Module] = None,
@@ -68,15 +69,30 @@ class RotationalAutoencoder(SpherinatorModule):
 
     def training_step(self, batch, batch_idx):
 
-        best_scaled_image, _, _, _ = self.find_best_rotation(batch)
-        recon = self.forward(best_scaled_image)
-        loss = self.reconstruction_loss(best_scaled_image, recon)
-
-        # divide by the brightness of the image
-        if self.norm_brightness:
-            loss = (
-                loss / torch.sum(best_scaled_image, (1, 2, 3)) * self.total_input_size
+        with torch.no_grad():
+            crop = functional.center_crop(batch, [self.crop_size, self.crop_size])
+            scaled = functional.resize(
+                crop, [self.input_size, self.input_size], antialias=True
             )
+
+        recon = self.forward(scaled)
+        loss = self.reconstruction_loss(scaled, recon)
+
+        for i in range(1, self.rotations):
+            with torch.no_grad():
+                rotate = functional.rotate(
+                    batch, 360.0 / self.rotations * i, expand=False
+                )
+                crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
+                scaled = functional.resize(
+                    crop, [self.input_size, self.input_size], antialias=True
+                )
+
+            loss = torch.min(loss, self.reconstruction_loss(scaled, recon))
+
+            # divide by the brightness of the image
+            if self.norm_brightness:
+                loss = loss / torch.sum(scaled, (1, 2, 3)) * self.total_input_size
 
         loss = loss.mean()
 
