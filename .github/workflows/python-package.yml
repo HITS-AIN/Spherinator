@@ -12,7 +12,10 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest^
+    outputs:
+      hash: ${{ steps.hash.outputs.hash }}
+
     strategy:
       fail-fast: false
       matrix:
