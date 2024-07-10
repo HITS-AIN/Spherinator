@@ -94,22 +94,27 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
         return (z_location, z_scale), (q_z, p_z), z, recon
 
     def training_step(self, batch, batch_idx):
-        best_scaled_image, _, _, _ = self.find_best_rotation(batch)
-        (z_location, z_scale), (q_z, p_z), _, recon = self.forward(best_scaled_image)
+        with torch.autocast("cuda", enabled=False):
+            best_scaled_image, _, _, _ = self.find_best_rotation(batch)
 
-        loss_recon = self.reconstruction_loss(best_scaled_image, recon)
-        loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
-        loss = (loss_recon + loss_KL).mean()
-        loss_recon = loss_recon.mean()
-        loss_KL = loss_KL.mean()
+        with torch.autocast("cuda", enabled=True):
+            (z_location, z_scale), (q_z, p_z), _, recon = self.forward(
+                best_scaled_image
+            )
 
-        self.log("train_loss", loss, prog_bar=True)
-        self.log("loss_recon", loss_recon, prog_bar=True)
-        self.log("loss_KL", loss_KL)
-        self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
-        self.log("mean(z_location)", torch.mean(z_location))
-        self.log("mean(z_scale)", torch.mean(z_scale))
-        return loss
+            loss_recon = self.reconstruction_loss(best_scaled_image, recon)
+            loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
+            loss = (loss_recon + loss_KL).mean()
+            loss_recon = loss_recon.mean()
+            loss_KL = loss_KL.mean()
+
+            self.log("train_loss", loss, prog_bar=True)
+            self.log("loss_recon", loss_recon, prog_bar=True)
+            self.log("loss_KL", loss_KL)
+            self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
+            self.log("mean(z_location)", torch.mean(z_location))
+            self.log("mean(z_scale)", torch.mean(z_scale))
+            return loss
 
     def configure_optimizers(self):
         """Default Adam optimizer if missing from the configuration file."""
