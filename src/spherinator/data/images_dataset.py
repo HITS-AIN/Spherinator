@@ -4,7 +4,6 @@
 import os
 from pathlib import Path
 
-import numpy as np
 import skimage.io as io
 import torch
 from torch.utils.data import Dataset
