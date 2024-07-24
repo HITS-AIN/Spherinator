@@ -68,37 +68,40 @@ class Rotational2Autoencoder(SpherinatorModule):
         return recon
 
     def training_step(self, batch, batch_idx):
-
-        with torch.no_grad():
-            crop = functional.center_crop(batch, [self.crop_size, self.crop_size])
-            scaled = functional.resize(
-                crop, [self.input_size, self.input_size], antialias=True
-            )
-
-        recon = self.forward(scaled)
-        loss = self.reconstruction_loss(scaled, recon)
-
-        for i in range(1, self.rotations):
+        with torch.autocast("cuda", enabled=False):
             with torch.no_grad():
-                rotate = functional.rotate(
-                    batch, 360.0 / self.rotations * i, expand=False
-                )
-                crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
+                crop = functional.center_crop(batch, [self.crop_size, self.crop_size])
                 scaled = functional.resize(
                     crop, [self.input_size, self.input_size], antialias=True
                 )
 
-            loss = torch.min(loss, self.reconstruction_loss(scaled, recon))
+        with torch.autocast("cuda", enabled=True):
+            recon = self.forward(scaled)
+            loss = self.reconstruction_loss(scaled, recon)
 
-            # divide by the brightness of the image
-            if self.norm_brightness:
-                loss = loss / torch.sum(scaled, (1, 2, 3)) * self.total_input_size
+            for i in range(1, self.rotations):
+                with torch.no_grad():
+                    rotate = functional.rotate(
+                        batch, 360.0 / self.rotations * i, expand=False
+                    )
+                    crop = functional.center_crop(
+                        rotate, [self.crop_size, self.crop_size]
+                    )
+                    scaled = functional.resize(
+                        crop, [self.input_size, self.input_size], antialias=True
+                    )
 
-        loss = loss.mean()
+                loss = torch.min(loss, self.reconstruction_loss(scaled, recon))
 
-        self.log("train_loss", loss, prog_bar=True)
-        self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
-        return loss
+                # divide by the brightness of the image
+                if self.norm_brightness:
+                    loss = loss / torch.sum(scaled, (1, 2, 3)) * self.total_input_size
+
+            loss = loss.mean()
+
+            self.log("train_loss", loss, prog_bar=True)
+            self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
+            return loss
 
     def configure_optimizers(self):
         """Default Adam optimizer if missing from the configuration file."""

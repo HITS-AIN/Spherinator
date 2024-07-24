@@ -95,40 +95,45 @@ class Rotational2VariationalAutoencoderPower(SpherinatorModule):
         return (z_location, z_scale), (q_z, p_z), z, recon
 
     def training_step(self, batch, batch_idx):
-
-        with torch.no_grad():
-            crop = functional.center_crop(batch, [self.crop_size, self.crop_size])
-            scaled = functional.resize(
-                crop, [self.input_size, self.input_size], antialias=True
-            )
-
-        (z_location, z_scale), (q_z, p_z), _, recon = self.forward(scaled)
-        loss_recon = self.reconstruction_loss(scaled, recon)
-
-        for i in range(1, self.rotations):
+        with torch.autocast("cuda", enabled=False):
             with torch.no_grad():
-                rotate = functional.rotate(
-                    batch, 360.0 / self.rotations * i, expand=False
-                )
-                crop = functional.center_crop(rotate, [self.crop_size, self.crop_size])
+                crop = functional.center_crop(batch, [self.crop_size, self.crop_size])
                 scaled = functional.resize(
                     crop, [self.input_size, self.input_size], antialias=True
                 )
 
-            loss_recon = torch.min(loss_recon, self.reconstruction_loss(scaled, recon))
+        with torch.autocast("cuda", enabled=True):
+            (z_location, z_scale), (q_z, p_z), _, recon = self.forward(scaled)
+            loss_recon = self.reconstruction_loss(scaled, recon)
 
-        loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
-        loss = (loss_recon + loss_KL).mean()
-        loss_recon = loss_recon.mean()
-        loss_KL = loss_KL.mean()
+            for i in range(1, self.rotations):
+                with torch.no_grad():
+                    rotate = functional.rotate(
+                        batch, 360.0 / self.rotations * i, expand=False
+                    )
+                    crop = functional.center_crop(
+                        rotate, [self.crop_size, self.crop_size]
+                    )
+                    scaled = functional.resize(
+                        crop, [self.input_size, self.input_size], antialias=True
+                    )
 
-        self.log("train_loss", loss, prog_bar=True)
-        self.log("loss_recon", loss_recon, prog_bar=True)
-        self.log("loss_KL", loss_KL)
-        self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
-        self.log("mean(z_location)", torch.mean(z_location))
-        self.log("mean(z_scale)", torch.mean(z_scale))
-        return loss
+                loss_recon = torch.min(
+                    loss_recon, self.reconstruction_loss(scaled, recon)
+                )
+
+            loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
+            loss = (loss_recon + loss_KL).mean()
+            loss_recon = loss_recon.mean()
+            loss_KL = loss_KL.mean()
+
+            self.log("train_loss", loss, prog_bar=True)
+            self.log("loss_recon", loss_recon, prog_bar=True)
+            self.log("loss_KL", loss_KL)
+            self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
+            self.log("mean(z_location)", torch.mean(z_location))
+            self.log("mean(z_scale)", torch.mean(z_scale))
+            return loss
 
     def configure_optimizers(self):
         """Default Adam optimizer if missing from the configuration file."""
