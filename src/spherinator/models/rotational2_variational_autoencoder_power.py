@@ -5,6 +5,7 @@ import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision.transforms.v2.functional as functional
 from power_spherical import HypersphericalUniform, PowerSpherical
 from torch.optim import Adam
 
@@ -13,7 +14,7 @@ from .convolutional_encoder import ConvolutionalEncoder
 from .spherinator_module import SpherinatorModule
 
 
-class RotationalVariationalAutoencoderPower(SpherinatorModule):
+class Rotational2VariationalAutoencoderPower(SpherinatorModule):
     def __init__(
         self,
         encoder: Optional[nn.Module] = None,
@@ -95,14 +96,32 @@ class RotationalVariationalAutoencoderPower(SpherinatorModule):
 
     def training_step(self, batch, batch_idx):
         with torch.autocast("cuda", enabled=False):
-            best_scaled_image, _, _, _ = self.find_best_rotation(batch)
+            with torch.no_grad():
+                crop = functional.center_crop(batch, [self.crop_size, self.crop_size])
+                scaled = functional.resize(
+                    crop, [self.input_size, self.input_size], antialias=True
+                )
 
         with torch.autocast("cuda", enabled=True):
-            (z_location, z_scale), (q_z, p_z), _, recon = self.forward(
-                best_scaled_image
-            )
+            (z_location, z_scale), (q_z, p_z), _, recon = self.forward(scaled)
+            loss_recon = self.reconstruction_loss(scaled, recon)
 
-            loss_recon = self.reconstruction_loss(best_scaled_image, recon)
+            for i in range(1, self.rotations):
+                with torch.no_grad():
+                    rotate = functional.rotate(
+                        batch, 360.0 / self.rotations * i, expand=False
+                    )
+                    crop = functional.center_crop(
+                        rotate, [self.crop_size, self.crop_size]
+                    )
+                    scaled = functional.resize(
+                        crop, [self.input_size, self.input_size], antialias=True
+                    )
+
+                loss_recon = torch.min(
+                    loss_recon, self.reconstruction_loss(scaled, recon)
+                )
+
             loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
             loss = (loss_recon + loss_KL).mean()
             loss_recon = loss_recon.mean()

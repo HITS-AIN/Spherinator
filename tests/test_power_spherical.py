@@ -5,7 +5,7 @@ from power_spherical import HypersphericalUniform, PowerSpherical
 def test_power_spherical_2d():
     dist = PowerSpherical(torch.Tensor([0.0, 0.0]), torch.Tensor([1.0]))
 
-    assert dist.has_rsample == True
+    assert dist.has_rsample is True
     assert torch.allclose(dist.rsample(), torch.Tensor([-0.9971, 0.0766]), rtol=1e-3)
     assert torch.allclose(dist.rsample(), torch.Tensor([-0.5954, 0.8034]), rtol=1e-3)
 

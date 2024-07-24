@@ -9,7 +9,7 @@ from spherinator.models import (
 
 def test_convolutional_encoder():
     """Check if weights are reproducible"""
-    model = ConvolutionalEncoder()
+    model = ConvolutionalEncoder(latent_dim=3)
 
     assert model.conv0.weight.shape == torch.Size([16, 3, 3, 3])
     assert torch.isclose(
@@ -19,7 +19,9 @@ def test_convolutional_encoder():
 
 def test_model():
     """Check if weights are reproducible"""
-    model = RotationalVariationalAutoencoderPower(encoder=ConvolutionalEncoder())
+    model = RotationalVariationalAutoencoderPower(
+        encoder=ConvolutionalEncoder(latent_dim=3)
+    )
 
     assert model.encoder.conv0.weight.shape == torch.Size([16, 3, 3, 3])
     assert torch.isclose(
@@ -28,8 +30,8 @@ def test_model():
 
 
 def test_convolutional_decoder():
-    model = ConvolutionalDecoder256()
-    data = torch.randn([2, 256])
+    model = ConvolutionalDecoder256(latent_dim=3)
+    data = torch.randn([2, 3])
 
     output = model(data)
 

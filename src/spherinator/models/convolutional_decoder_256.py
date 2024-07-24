@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 class ConvolutionalDecoder256(pl.LightningModule):
-    def __init__(self, h_dim: int = 256):
+    def __init__(self, latent_dim: int):
         """Convolutional decoder for 256x256 images.
         Input: h_dim
         Output: 3x256x256
@@ -13,7 +13,7 @@ class ConvolutionalDecoder256(pl.LightningModule):
         """
         super().__init__()
 
-        self.fc = nn.Linear(h_dim, 256 * 4 * 4)
+        self.fc = nn.Linear(latent_dim, 256 * 4 * 4)
         self.deconv1 = nn.ConvTranspose2d(
             in_channels=256, out_channels=128, kernel_size=(4, 4), stride=2, padding=1
         )  # 8x8 = 6 - 2 + 3 + 1

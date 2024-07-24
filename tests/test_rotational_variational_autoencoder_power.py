@@ -17,8 +17,7 @@ def test_forward():
 
 
 def test_reconstruction_loss():
-    z_dim = 2
-    model = RotationalVariationalAutoencoderPower(z_dim=z_dim)
+    model = RotationalVariationalAutoencoderPower()
     image1 = torch.zeros((2, 3, 128, 128))
     image2 = torch.ones((2, 3, 128, 128))
     image3 = torch.zeros((2, 3, 128, 128))

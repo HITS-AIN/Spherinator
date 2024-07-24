@@ -14,7 +14,7 @@ from spherinator.data import (
 def test_empty():
     data = IllustrisSdssDataModule(["tests/data/"], num_workers=1)
 
-    assert data.train_dataloader() == None
+    assert data.train_dataloader() is None
 
     try:
         data.setup("fit")

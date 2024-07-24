@@ -65,7 +65,7 @@ class GalaxyZooDataModule(SpherinatorDataModule):
         Args:
             stage (str): Defines for which stage the data is needed.
         """
-        if not stage in ["fit", "processing", "images", "thumbnail_images"]:
+        if stage not in ["fit", "processing", "images", "thumbnail_images"]:
             raise ValueError(f"Stage {stage} not supported.")
 
         if stage == "fit" and self.data_train is None:
