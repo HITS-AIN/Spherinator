@@ -15,10 +15,6 @@ class DistributionModel(torch.nn.Module):
         return self.dist.rsample(x.shape)
 
 
-@pytest.mark.skipif(
-    sys.version_info > (3, 11),
-    reason="torch dynamo export not supported for python 3.12",
-)
 @pytest.mark.parametrize(
     ("module", "input"),
     [
