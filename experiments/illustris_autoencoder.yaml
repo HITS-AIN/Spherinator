@@ -4,7 +4,7 @@ model:
   class_path: spherinator.models.RotationalAutoencoder
   init_args:
     image_size: 363
-    bottleneck: 3
+    z_dim: 3
     rotations: 36
 
 data:
