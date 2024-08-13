@@ -28,6 +28,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
         shuffle: bool = True,
         batch_size: int = 32,
         num_workers: int = 16,
+        dieleman: bool = True,
     ):
         """Initialize IllustrisSdssDataModule.
 
@@ -38,6 +39,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
             shuffle (bool, optional): Wether or not to shuffle whe reading. Defaults to True.
             batch_size (int, optional): The batch size for training. Defaults to 32.
             num_workers (int, optional): How many worker to use for loading. Defaults to 16.
+            dieleman (bool, optional): Wether or not to use the Dieleman transformation. Defaults to True.
         """
         super().__init__()
 
@@ -47,6 +49,7 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
         self.shuffle = shuffle
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.dieleman = dieleman
 
         self.project_url = "https://www.tng-project.org"
 
@@ -67,18 +70,21 @@ class IllustrisSdssDataModule(SpherinatorDataModule):
                 self.transform_images,
             ]
         )
-        self.transform_train = transforms.Compose(
-            [
-                self.transform_processing,
+
+        transformations = []
+        transformations.append(self.transform_processing)
+        if self.dieleman:
+            transformations.append(
                 DielemanTransformation(
                     rotation_range=[0, 360],
                     translation_range=[0, 0],  # 4./363,4./363],
                     scaling_range=[1, 1],  # 0.9,1.1],
                     flip=0.5,
-                ),
-                transforms.CenterCrop((363, 363)),
-            ]
-        )
+                )
+            )
+        transformations.append(transforms.CenterCrop((363, 363)))
+        self.transform_train = transforms.Compose(transformations)
+
         self.transform_thumbnail_images = transforms.Compose(
             [
                 transforms.CenterCrop((363, 363)),
