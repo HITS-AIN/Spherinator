@@ -67,26 +67,22 @@ class RotationalAutoencoder(SpherinatorModule):
         return recon
 
     def training_step(self, batch, batch_idx):
-        with torch.autocast("cuda", enabled=False):
-            best_scaled_image, _, _, _ = self.find_best_rotation(batch)
 
-        with torch.autocast("cuda", enabled=True):
-            recon = self.forward(best_scaled_image)
-            loss = self.reconstruction_loss(best_scaled_image, recon)
+        best_scaled_image, _, _, _ = self.find_best_rotation(batch)
+        recon = self.forward(best_scaled_image)
+        loss = self.reconstruction_loss(best_scaled_image, recon)
 
-            # divide by the brightness of the image
-            if self.norm_brightness:
-                loss = (
-                    loss
-                    / torch.sum(best_scaled_image, (1, 2, 3))
-                    * self.total_input_size
-                )
+        # divide by the brightness of the image
+        if self.norm_brightness:
+            loss = (
+                loss / torch.sum(best_scaled_image, (1, 2, 3)) * self.total_input_size
+            )
 
-            loss = loss.mean()
+        loss = loss.mean()
 
-            self.log("train_loss", loss, prog_bar=True)
-            self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
-            return loss
+        self.log("train_loss", loss, prog_bar=True)
+        self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
+        return loss
 
     def configure_optimizers(self):
         """Default Adam optimizer if missing from the configuration file."""
