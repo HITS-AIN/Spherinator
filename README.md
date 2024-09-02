@@ -4,7 +4,7 @@
 
 # Spherinator & HiPSter
 
-`Spherinator` and `HiPSter` are tools to provide much needed explorative access and visualization for multimodal data from extremely large astrophysical datasets, ranging from exascale cosmological simulations to multi-billion object observational galaxy surveys. `Spherinator' uses dimensionality reduction to learn a low-dimensional representation of galaxy structure, and `HiPSter' creates a interactive hierarchical spherical vizualization of the entire dataset. They currently support multichannel maps or images as input. `Spherinator' uses [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/) to implement a convolutional neural network (CNN) based variational autoencoder (VAE) with a spherical latent space.
+`Spherinator` and `HiPSter` are tools to provide much needed explorative access and visualization for multimodal data from extremely large astrophysical datasets, ranging from exascale cosmological simulations to multi-billion object observational galaxy surveys. `Spherinator` uses dimensionality reduction to learn a low-dimensional representation of galaxy structure, and `HiPSter` creates a interactive hierarchical spherical vizualization of the entire dataset. They currently support multichannel maps or images as input. `Spherinator` uses [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/) to implement a convolutional neural network (CNN) based variational autoencoder (VAE) with a spherical latent space.
 `HiPSter` creates HiPS tilings and a catalog which can be visualized interactively on the surface of a sphere using [Aladin Lite](https://github.com/cds-astro/aladin-lite).
 
 <p align="center">
