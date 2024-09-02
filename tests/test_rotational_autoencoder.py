@@ -27,6 +27,7 @@ def test_training(shape_path):
         overfit_batches=2,
         enable_checkpointing=False,
         accelerator="cpu",
+        log_every_n_steps=1,
     )
     trainer.fit(model, datamodule=datamodule)
 
