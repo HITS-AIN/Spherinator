@@ -23,6 +23,9 @@ class MNISTDataModule(pl.LightningDataModule):
                 transforms.Resize((87, 87)),
                 transforms.RandomAffine(degrees=[0, 360]),
                 transforms.Resize((29, 29)),
+                transforms.Lambda(
+                    lambda x: (x - x.min()) / (x.max() - x.min())
+                ),  # Normalize to [0, 1]
             ]
         )
 
