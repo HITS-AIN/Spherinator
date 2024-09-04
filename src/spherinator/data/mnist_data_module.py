@@ -16,18 +16,21 @@ class MNISTDataModule(pl.LightningDataModule):
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Pad((0, 0, 1, 1), fill=0),
-                transforms.Resize((87, 87)),
-                transforms.RandomAffine(degrees=[0, 360]),
-                transforms.Resize((29, 29)),
-                transforms.Lambda(
-                    lambda x: (x - x.min()) / (x.max() - x.min())
-                ),  # Normalize to [0, 1]
-            ]
-        )
+
+        transformations = [
+            transforms.ToTensor(),
+            transforms.Pad((0, 0, 1, 1), fill=0),
+            transforms.Resize((87, 87)),
+        ]
+        if random_rotation:
+            transformations += [transforms.RandomAffine(degrees=[0, 360])]
+        transformations += [
+            transforms.Resize((29, 29)),
+            transforms.Lambda(
+                lambda x: (x - x.min()) / (x.max() - x.min())
+            ),  # Normalize to [0, 1]
+        ]
+        self.transform = transforms.Compose(transformations)
 
     def prepare_data(self):
         MNIST(self.data_dir, train=True, download=True)
