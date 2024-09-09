@@ -1,5 +1,6 @@
 """ Test images with four shapes in random rotations.
 """
+
 import os
 from typing import Union
 
