@@ -6,11 +6,9 @@ We welcome contributions to the Spherinator & HiPSter project. This document out
 
 The project follows the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). Please read the code of conduct before contributing to the project.
 
-## Clear design and best practices
+## Use best practices for a clean codebase
 
-The Python must adhere the [PEP8 Python coding style guide](https://peps.python.org/pep-0008/) for formatting and syntax. The [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html) provides additional guidelines for writing clean and readable code.
-
-The Spherinator is using the design principles of the [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/) library.
+The Python must adhere the [PEP8 Python coding style guide](https://peps.python.org/pep-0008/) for formatting and syntax. The [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html) provides additional guidelines for writing clean and readable code. The Spherinator is using the design principles of the [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/) library.
 
 ## Python dependencies
 
@@ -19,12 +17,11 @@ The project uses [Poetry](https://python-poetry.org/) for dependency management.
 ## Documentation
 
 Write docstrings for all public modules, functions, classes, and methods. Follow docstring conventions as outlined by [PEP 257](https://peps.python.org/pep-0257/).
-
 The user documentation is located in the `docs` directory and will be generated with [Sphinx](https://www.sphinx-doc.org/en/master/index.html) and hosted on [Read The Docs](https://spherinator.readthedocs.io/en/latest/index.html).
 
 ## Testing
 
-The code is tested using [pytest](https://docs.pytest.org). All tests are located in the `tests` directory.
+The code is tested using [pytest](https://docs.pytest.org). All tests are located in the `tests` directory. Please write tests for all new code and ensure that all tests pass before creating a pull request. The CI workflow will run the tests and fail if any test fails.
 
 ## Continuous Integration
 
@@ -33,12 +30,12 @@ GitHub Actions is used for continuous integration. The CI workflow is defined in
 ## Code Formatting
 
 The Python code must be formatted with [black](https://black.readthedocs.io/en/stable/).
-This can be done manually by running `black .` in the project directory or by installing the vscode extension `ms-python.black-formatter` and enabling the format on save option.
+This can be done manually by running `black .` in the project directory or by installing the vscode extension `ms-python.black-formatter`. The format on save option is enabled for `vscode` in the `.vscode/settings.json` file.
 The CI workflow will check the code formatting and fail if the code is not formatted correctly.
 
 ## Static code analysis
 
-The code is analyzed using [flake8](https://flake8.pycqa.org/en/latest/).
+The code is analyzed using [flake8](https://flake8.pycqa.org/en/latest/). The CI workflow will check the code for any issues reported by flake8 and fail if any issues are found.
 
 ## Pull requests
 
