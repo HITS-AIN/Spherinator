@@ -50,7 +50,7 @@ The project uses the [GitHub flow](https://guides.github.com/introduction/flow/)
 5. Create a pull request from your branch to the `main` repository and describe your changes.
 6. The pull request will be reviewed by the maintainers. The review process may involve multiple iterations of changes and reviews.
 7. Please keep the branch up to date with the `main` repository by rebasing it on the main branch if necessary.
-8. Once the pull request is approved, it will be merged into the 'main' repository, and the feature branch will be deleted.
+8. Once the pull request is approved, it will be merged into the `main` repository, and the feature branch will be deleted.
 
 ## Issues
 
