@@ -1,13 +1,13 @@
 import os
 
+import numpy as np
 import pandas as pd
 import pyarrow as pa
 from astropy.io import fits
-from sympy import series
 
 data_directories = [
     # "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/Illustris/sdss/snapnum_135/data/",
-    "/hits/fast/its/doserbd/data/machine-learning/two-images/TNG100/sdss/snapnum_099/data/",
+    "/hits/fast/its/doserbd/data/machine-learning/one-image/TNG100/sdss/snapnum_099/data/",
 ]
 extension = "fits"
 output_dir = "illustris_sdss"
@@ -20,10 +20,13 @@ for data_directory in data_directories:
             filename = os.path.join(data_directory, filename)
             splits = filename[: -(len(extension) + 1)].split("/")
 
+            data = fits.getdata(filename, 0)
+            data = np.array(data).astype(np.float32)
+
             series.append(
                 pd.Series(
                     {
-                        "data": pa.Tensor.from_numpy(fits.getdata(filename, 0)),
+                        "data": pa.Tensor.from_numpy(data),
                         "simulation": splits[-5],
                         "snapshot": splits[-3].split("_")[1],
                         "subhalo_id": splits[-1].split("_")[1],
