@@ -10,3 +10,4 @@ docs/html/
 HiPSter/
 lightning_logs/
 wandb/
+*.parquet
