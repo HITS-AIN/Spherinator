@@ -10,16 +10,16 @@ from PIL import Image
 from spherinator.data import IllustrisSdssDataModule
 
 data_directories = [
-    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data",
-    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/TNG100/sdss/snapnum_095/data",
-    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/TNG50/sdss/snapnum_099/data",
-    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data",
-    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/Illustris/sdss/snapnum_135/data",
-    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data",
+    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/fits/TNG100/sdss/snapnum_099/data",
+    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/fits/TNG100/sdss/snapnum_095/data",
+    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/fits/TNG50/sdss/snapnum_099/data",
+    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/fits/TNG50/sdss/snapnum_095/data",
+    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/fits/Illustris/sdss/snapnum_135/data",
+    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/fits/Illustris/sdss/snapnum_131/data",
     # "/hits/fast/its/doserbd/data/machine-learning/two-images/TNG100/sdss/snapnum_099/data/",
 ]
 output_dir = (
-    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images_parquet"
+    "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images/parquet"
 )
 os.makedirs(output_dir, exist_ok=True)
 
