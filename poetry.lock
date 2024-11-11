@@ -1471,13 +1471,13 @@ files = [
 
 [[package]]
 name = "jsonargparse"
-version = "4.32.1"
+version = "4.34.0"
 description = "Implement minimal boilerplate CLIs derived from type hints and parse from command line, config files and environment variables."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "jsonargparse-4.32.1-py3-none-any.whl", hash = "sha256:fdf4c043ceb8efe3e4ae626d33359084615e6272274552930b25398fba902d73"},
-    {file = "jsonargparse-4.32.1.tar.gz", hash = "sha256:17e66ec1ab6529907dd38cbf26d740e2fb5a8e52782739c76d5659247b43cda5"},
+    {file = "jsonargparse-4.34.0-py3-none-any.whl", hash = "sha256:a3eb8a9a289332066b1b33463efa49d5d2a8d729b6cb60e9e30231d0c19dfb13"},
+    {file = "jsonargparse-4.34.0.tar.gz", hash = "sha256:88b3ff0beaff40909dc69244f0527b054f8be0132086c72aa7e1d99414024b43"},
 ]
 
 [package.dependencies]
@@ -1488,12 +1488,12 @@ typing-extensions = {version = ">=3.10.0.0", optional = true, markers = "python_
 
 [package.extras]
 all = ["jsonargparse[fsspec]", "jsonargparse[jsonnet]", "jsonargparse[jsonschema]", "jsonargparse[omegaconf]", "jsonargparse[reconplogger]", "jsonargparse[ruyaml]", "jsonargparse[signatures]", "jsonargparse[typing-extensions]", "jsonargparse[urls]"]
-argcomplete = ["argcomplete (>=2.0.0)", "argcomplete (>=3.3.0)"]
+argcomplete = ["argcomplete (>=3.5.1)"]
 coverage = ["jsonargparse[test-no-urls]", "pytest-cov (>=4.0.0)"]
 dev = ["build (>=0.10.0)", "jsonargparse[coverage]", "jsonargparse[doc]", "jsonargparse[test]", "pre-commit (>=2.19.0)", "tox (>=3.25.0)"]
-doc = ["Sphinx (>=1.7.9)", "autodocsumm (>=0.1.10)", "sphinx-autodoc-typehints (>=1.19.5)", "sphinx-rtd-theme (>=1.2.2)"]
+doc = ["Sphinx (>=1.7.9,<8.0.0)", "autodocsumm (>=0.1.10)", "sphinx-autodoc-typehints (>=1.19.5)", "sphinx-rtd-theme (>=1.2.2)"]
 fsspec = ["fsspec (>=0.8.4)"]
-jsonnet = ["jsonnet (>=0.13.0)", "jsonnet-binary (>=0.17.0)"]
+jsonnet = ["jsonnet (>=0.13.0)", "jsonnet-binary (>=0.17.0)", "jsonnet-sdist (==2024.6.23)"]
 jsonschema = ["jsonschema (>=3.2.0)"]
 maintainer = ["bump2version (>=0.5.11)", "twine (>=4.0.2)"]
 omegaconf = ["omegaconf (>=2.1.1)"]
@@ -2077,9 +2077,9 @@ files = [
 [package.dependencies]
 numpy = [
     {version = ">1.20", markers = "python_version < \"3.10\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
-    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
     {version = ">=1.21.2", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
+    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 
 [package.extras]
@@ -2589,8 +2589,8 @@ files = [
 [package.dependencies]
 numpy = [
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
