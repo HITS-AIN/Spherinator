@@ -49,6 +49,7 @@ torchvision = "^0"
 # torchvision = {url = "https://download.pytorch.org/whl/nightly/cu121/torchvision-0.18.0.dev20240101%2Bcu121-cp39-cp39-linux_x86_64.whl"}
 
 # pytorch-triton = {url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"}
+gaiaxpy = "^2.1.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"
