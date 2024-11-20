@@ -29,7 +29,7 @@ def shape_path(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def test_parquet_file(tmp_path_factory):
+def parquet_file(tmp_path_factory):
     """Mock parquet data file."""
     series = []
     for _ in range(10):
@@ -50,13 +50,13 @@ def test_parquet_file(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def test_parquet_numpy_file(tmp_path_factory):
+def parquet_numpy_file(tmp_path_factory):
     """Mock parquet data file only containing numpy array."""
     series = []
-    for _ in range(10):
+    for i in range(10):
         item = {
-            "id": 1234,
-            "spectra": np.random.random((600)),
+            "id": i,
+            "data": np.random.random((1)),
         }
         series.append(pd.Series(item))
 
