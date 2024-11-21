@@ -5,3 +5,4 @@ train_dataloader = ld.StreamingDataLoader(train_dataset)
 
 for sample in train_dataloader:
     img, cls = sample["image"], sample["class"]
+    print(cls)
