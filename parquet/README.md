@@ -32,3 +32,17 @@
     - row-based
 - JSON
 - XML
+
+
+## parquet-tools
+
+Command line tool to inspect Parquet files.
+
+```bash
+pip install parquet-tools
+```
+
+```bash
+parquet-tools inspect XpContinuousMeanSpectrum_000000-003111.parquet
+parquet-tools show --head 10 XpContinuousMeanSpectrum_000000-003111.parquet
+```
