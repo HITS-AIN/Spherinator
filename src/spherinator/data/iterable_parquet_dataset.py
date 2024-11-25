@@ -13,7 +13,6 @@ class IterableParquetDataset(IterableDataset):
         self,
         path: str,
         transform=None,
-        batch_size: int = 1,
     ):
         """Initializes the data set.
 
@@ -21,11 +20,10 @@ class IterableParquetDataset(IterableDataset):
             path (str): The data directory.
             transform (torchvision.transforms, optional): A single or a set of
                 transformations to modify the data. Defaults to None.
-            batch_size (int, optional): The batch size. Defaults to 1.
         """
-
+        super().__init__()
         dataset = ds.dataset(path)
-        scanner = dataset.scanner(batch_size=batch_size)
+        scanner = dataset.scanner(batch_size=1)
         self.batches = scanner.to_batches()
         self.transform = transform
 

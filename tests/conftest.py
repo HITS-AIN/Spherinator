@@ -56,7 +56,7 @@ def parquet_numpy_file(tmp_path_factory):
     for i in range(10):
         item = {
             "id": i,
-            "data": np.random.random((1)),
+            "data": np.array([2 * i], np.int32),
         }
         series.append(pd.Series(item))
 
