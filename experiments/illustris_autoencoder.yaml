@@ -10,12 +10,13 @@ model:
 data:
   class_path: spherinator.data.IllustrisSdssDataModule
   init_args:
-    data_directories: ["/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/TNG100/sdss/snapnum_095/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/TNG50/sdss/snapnum_099/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_135/data/",
-                       "/local_data/AIN/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data/"]
+    data_directories:
+      - /local/SKIRT_synthetic_images/TNG100/sdss/snapnum_099/data
+      - /local/SKIRT_synthetic_images/TNG100/sdss/snapnum_095/data
+      - /local/SKIRT_synthetic_images/TNG50/sdss/snapnum_099/data
+      - /local/SKIRT_synthetic_images/TNG50/sdss/snapnum_095/data
+      - /local/SKIRT_synthetic_images/Illustris/sdss/snapnum_135/data
+      - /local/SKIRT_synthetic_images/Illustris/sdss/snapnum_131/data
     extension: fits
     minsize: 100
     batch_size: 512

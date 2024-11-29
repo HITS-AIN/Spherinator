@@ -1,3 +1,4 @@
+import pytest
 import torch
 from lightning.pytorch.trainer import Trainer
 
@@ -8,6 +9,14 @@ from spherinator.models import RotationalAutoencoder
 def test_forward():
     model = RotationalAutoencoder()
     input = model.example_input_array
+    recon = model(input)
+    assert recon.shape == input.shape
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
+def test_forward_cuda():
+    model = RotationalAutoencoder().to("cuda")
+    input = model.example_input_array.to("cuda")
     recon = model(input)
     assert recon.shape == input.shape
 

@@ -5,47 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: illustris",
+            "name": "Python: Spherinator",
             "type": "debugpy",
             "request": "launch",
-            "program": "main.py",
-            "args": "fit -c experiments/illustris.yaml",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Python: gz",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "args": "fit -c experiments/gz.yaml",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Python: illustris-svae",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "args": "fit -c experiments/illustris-svae.yaml",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Python: gz-svae",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "args": "fit -c experiments/gz-svae.yaml",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Python: power spherical",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/main.py",
-            "args": "fit -c ${workspaceFolder}/experiments/shapes-power.yaml",
+            "program": "src/spherinator/main.py",
+            "args": "fit -c experiments/illustris_power.yaml",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -53,18 +17,8 @@
             "name": "Python: HiPSter",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/hipster.py",
-            "args": "hips --config ${workspaceFolder}/experiments/illustris.yaml --checkpoint ${workspaceFolder}/Illustris128_128_E2026_S202700.ckpt --max_order 4 --hierarchy 8 --crop_size 256 --output_size 64 --output_folder /local_data/AIN/Data/HiPSter --title IllustrisV4 --distortion",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Spherinator hephaistos",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/spherinator/main.py",
-            "args": "fit -c illustris_power.yaml",
-            "cwd": "/local_data/doserbd/train/two-iamges",
+            "program": "src/hipster/main.py",
+            "args": "-t hips -c /experiments/illustris_power.yaml",
             "console": "integratedTerminal",
             "justMyCode": true
         },
