@@ -6,11 +6,13 @@ model:
     encoder:
       class_path: spherinator.models.ConvolutionalEncoder1D
       init_args:
-        latent_dim: 256
+        input_dim: 344
+        output_dim: 256
     decoder:
       class_path: spherinator.models.ConvolutionalDecoder1D
       init_args:
-        latent_dim: 256
+        input_dim: 256
+        output_dim: 344
     h_dim: 256
     z_dim: 3
     beta: 1.0e-3
