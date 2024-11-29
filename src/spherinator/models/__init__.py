@@ -13,10 +13,12 @@ It contains the following modules:
 """
 
 from .convolutional_decoder import ConvolutionalDecoder
+from .convolutional_decoder_1d import ConvolutionalDecoder1D
 from .convolutional_decoder_2 import ConvolutionalDecoder2
 from .convolutional_decoder_224 import ConvolutionalDecoder224
 from .convolutional_decoder_256 import ConvolutionalDecoder256
 from .convolutional_encoder import ConvolutionalEncoder
+from .convolutional_encoder_1d import ConvolutionalEncoder1D
 from .convolutional_encoder_2 import ConvolutionalEncoder2
 from .rotational2_autoencoder import Rotational2Autoencoder
 from .rotational2_variational_autoencoder_power import (
@@ -34,6 +36,8 @@ __all__ = [
     "ConvolutionalDecoder224",
     "ConvolutionalDecoder256",
     "ConvolutionalEncoder",
+    "ConvolutionalEncoder1D",
+    "ConvolutionalDecoder1D",
     "ConvolutionalEncoder2",
     "Rotational2Autoencoder",
     "Rotational2VariationalAutoencoderPower",
