@@ -1,5 +1,3 @@
-import torch
-import torchvision.transforms.v2 as transforms
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader
 
