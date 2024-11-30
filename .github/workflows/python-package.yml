@@ -13,10 +13,16 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    outputs:
+      hash: ${{ steps.hash.outputs.hash }}
+
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
 
     steps:
       - uses: actions/checkout@v2
@@ -24,7 +30,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -70,3 +76,116 @@ jobs:
 
       - name: Test with pytest
         run: poetry run pytest
+
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    needs:
+      - build
+    if: (github.ref == 'refs/heads/main') && (github.event_name == 'schedule')
+    runs-on: ubuntu-latest
+
+    environment:
+      name: testpypi # TODO 20240706: has to be created/configured
+      url: https://test.pypi.org/p/spherinator
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    needs:
+    - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/spherinator
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+
+  provenance:
+    name: Generate SLSA provenance data
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write  # https://github.com/slsa-framework/slsa-github-generator/issues/2044 :(
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: '${{ needs.build.outputs.hash }}'
+      upload-assets: true
+
+  github-release:
+    name: >-
+      Sign with Sigstore and upload them to GitHub Release
+    needs:
+    - build
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # IMPORTANT: mandatory for making GitHub Releases
+      id-token: write  # IMPORTANT: mandatory for sigstore
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Sign the dists with Sigstore
+      uses: sigstore/gh-action-sigstore-python@v2.1.1
+      with:
+        inputs: >-
+          ./dist/*.tar.gz
+          ./dist/*.whl
+
+    - name: Rename files # to match new file extension https://github.com/sigstore/sigstore-python/blob/main/CHANGELOG.md#changed
+      run: |
+        sudo apt install mmv
+        mmv "./dist/*.sigstore" ./dist/#1.sigstore.json
+
+    # - name: Create GitHub Release
+    #   release is created by the UI
+    - name: Upload artifact signatures to GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      # Upload to GitHub Release using the `gh` CLI.
+      # `dist/` contains the built packages, and the
+      # sigstore-produced signatures and certificates.
+      run: >-
+        gh release upload
+        '${{ github.ref_name }}' dist/**
+        --repo '${{ github.repository }}'
