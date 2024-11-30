@@ -29,6 +29,7 @@ from .rotational_variational_autoencoder_power import (
     RotationalVariationalAutoencoderPower,
 )
 from .spherinator_module import SpherinatorModule
+from .variational_autoencoder import VariationalAutoencoder
 
 __all__ = [
     "ConvolutionalDecoder",
@@ -44,4 +45,5 @@ __all__ = [
     "RotationalAutoencoder",
     "RotationalVariationalAutoencoderPower",
     "SpherinatorModule",
+    "VariationalAutoencoder",
 ]

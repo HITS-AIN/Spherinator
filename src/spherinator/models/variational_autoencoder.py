@@ -21,18 +21,15 @@ class VariationalAutoencoder(pl.LightningModule):
         decoder: Optional[nn.Module] = None,
         h_dim: int = 256,
         z_dim: int = 3,
-        image_size: int = 91,
-        input_size: int = 128,
-        rotations: int = 36,
         beta: float = 1.0,
     ):
-        """RotationalVariationalAutoencoderPower initializer
+        """VariationalAutoencoder initializer
 
         Args:
+            encoder (Optional[nn.Module], optional): encoder model. Defaults to None.
+            decoder (Optional[nn.Module], optional): decoder model. Defaults to None.
             h_dim (int, optional): dimension of the hidden layers. Defaults to 256.
-            z_dim (int, optional): dimension of the latent representation. Defaults to 2.
-            image_size (int, optional): size of the input images. Defaults to 91.
-            rotations (int, optional): number of rotations. Defaults to 36.
+            z_dim (int, optional): dimension of the latent representation. Defaults to 3.
             beta (float, optional): factor for beta-VAE. Defaults to 1.0.
         """
         super().__init__()
@@ -47,15 +44,9 @@ class VariationalAutoencoder(pl.LightningModule):
         self.decoder = decoder
         self.h_dim = h_dim
         self.z_dim = z_dim
-        self.image_size = image_size
-        self.input_size = input_size
-        self.rotations = rotations
         self.beta = beta
 
-        self.crop_size = int(self.image_size * math.sqrt(2) / 2)
-        self.total_input_size = self.input_size * self.input_size * 3
-
-        self.example_input_array = torch.randn(1, 3, self.input_size, self.input_size)
+        self.example_input_array = self.encoder.example_input_array
 
         self.fc_location = nn.Linear(h_dim, z_dim)
         self.fc_scale = nn.Linear(h_dim, 1)
@@ -64,12 +55,8 @@ class VariationalAutoencoder(pl.LightningModule):
         with torch.no_grad():
             self.fc_scale.bias.fill_(1.0e3)
 
-    def get_input_size(self):
-        return self.input_size
-
     def encode(self, x):
         x = self.encoder(x)
-
         z_location = self.fc_location(x)
         z_location = torch.nn.functional.normalize(z_location, p=2.0, dim=1)
         # SVAE code: the `+ 1` prevent collapsing behaviors
@@ -133,18 +120,3 @@ class VariationalAutoencoder(pl.LightningModule):
     def configure_optimizers(self):
         """Default Adam optimizer if missing from the configuration file."""
         return Adam(self.parameters(), lr=1e-3)
-
-    def project(self, images):
-        z_location, _ = self.encode(images)
-        return z_location
-
-    def reconstruct(self, coordinates):
-        return self.decode(coordinates)
-
-    def reconstruction_loss(self, images, reconstructions):
-        return torch.sqrt(
-            nn.MSELoss(reduction="none")(
-                reconstructions.reshape(-1, self.total_input_size),
-                images.reshape(-1, self.total_input_size),
-            ).mean(dim=1)
-        )
