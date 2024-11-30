@@ -1,6 +1,3 @@
-import torch
-from idna import decode
-
 from spherinator.models import (
     ConvolutionalDecoder1D,
     ConvolutionalEncoder1D,
