@@ -4,7 +4,6 @@ import os
 import pyarrow.parquet as pq
 from lightning.data import optimize
 from PIL import Image
-from sympy import root
 
 root_dir = "/hits/fast/its/doserbd/data/machine-learning/SKIRT_synthetic_images"
 input_dir = root_dir + "/parquet"

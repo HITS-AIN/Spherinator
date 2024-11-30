@@ -1,10 +1,8 @@
 import io
 import os
-from curses import meta
 
 import numpy as np
 import pandas as pd
-from astropy.io import fits
 from PIL import Image
 
 from spherinator.data import IllustrisSdssDataModule
