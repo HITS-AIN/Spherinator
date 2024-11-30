@@ -15,4 +15,5 @@ The documentation is under construction and not yet complete. For more informati
 installation.md
 training.md
 hipster.md
+contributing.md
 ```
