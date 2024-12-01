@@ -6,6 +6,21 @@ from torch.utils.data import DataLoader
 from spherinator.data import ParquetDataModule, ParquetDataset
 
 
+def test_pyarray_table(parquet_numpy_file):
+    dataset = ds.dataset(parquet_numpy_file)
+    table = dataset.to_table()
+    assert len(table) == 10
+    assert table.shape == (10, 2)
+
+    table = dataset.to_table(columns=["data"])
+    assert len(table) == 10
+    assert table.shape == (10, 1)
+
+    data = table.to_pandas()["data"]
+
+    assert data[0] == 0.0
+
+
 def test_pyarray_dataset_scanner(parquet_file):
     dataset = ds.dataset(parquet_file)
     scanner = dataset.scanner(batch_size=2)
@@ -30,7 +45,7 @@ def test_parquet_dataset(parquet_numpy_file):
     dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
 
     batch = next(iter(dataloader))
-    assert batch.shape == (2, 1, 1)
+    assert batch.shape == (2, 1)
 
 
 def test_parquet_data_module(parquet_numpy_file):
@@ -50,7 +65,7 @@ def test_parquet_data_module(parquet_numpy_file):
 
     batch = next(iter(dataloader))
 
-    assert batch.shape == (2, 1, 1)
+    assert batch.shape == (2, 1)
     assert batch.dtype == torch.float32
 
     assert np.isclose(batch.min(), 0.0)

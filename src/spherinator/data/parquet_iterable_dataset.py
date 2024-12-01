@@ -1,14 +1,12 @@
 """ Iterable dataset reading parquet files.
 """
 
-import pandas
 import pyarrow.dataset as ds
 import torch
-from pyparsing import col
-from torch.utils.data import Dataset
+from torch.utils.data import IterableDataset
 
 
-class ParquetDataset(Dataset):
+class ParquetDataset(IterableDataset):
     """Iterable dataset reading parquet files."""
 
     def __init__(
@@ -27,15 +25,13 @@ class ParquetDataset(Dataset):
         super().__init__()
         self.data_column = data_column
         dataset = ds.dataset(data_directory)
-        table = dataset.to_table(columns=[data_column])
-        self.data = table.to_pandas()[data_column]
+        scanner = dataset.scanner(batch_size=1)
+        self.batches = scanner.to_batches()
         self.transform = transform
 
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, index: int) -> torch.Tensor:
-        batch = torch.Tensor(self.data[index])
-        if self.transform is not None:
-            batch = self.transform(batch)
-        return batch
+    def __iter__(self):
+        for batch in self.batches:
+            batch = torch.Tensor(batch.to_pydict()[self.data_column])
+            if self.transform is not None:
+                batch = self.transform(batch)
+            yield batch
