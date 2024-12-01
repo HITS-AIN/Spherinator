@@ -1,10 +1,8 @@
 """ Iterable dataset reading parquet files.
 """
 
-import pandas
 import pyarrow.dataset as ds
 import torch
-from pyparsing import col
 from torch.utils.data import Dataset
 
 
