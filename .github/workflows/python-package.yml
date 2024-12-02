@@ -55,7 +55,7 @@ jobs:
         uses: actions/cache@v3.3.2
         with:
           path: .venv
-          key: pydeps-${{ hashFiles('**/poetry.lock') }}
+          key: pydeps-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
         # The `if` statement ensures this only runs on a cache miss.
