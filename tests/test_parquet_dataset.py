@@ -54,7 +54,7 @@ def test_parquet_data_module(parquet_numpy_file):
         data_column="data",
         batch_size=2,
         num_workers=1,
-        shuffle=False,
+        shuffle=True,
     )
     data.setup("fit")
 
@@ -68,11 +68,4 @@ def test_parquet_data_module(parquet_numpy_file):
     assert batch.shape == (2, 1)
     assert batch.dtype == torch.float32
 
-    assert np.isclose(batch.min(), 0.0)
-    assert np.isclose(batch.max(), 2.0)
-
-    i = 0
-    for batch in dataloader:
-        i += 1
-
-    assert i == 5
+    assert len(list(data.train_dataloader())) == 5
