@@ -69,3 +69,26 @@ def test_parquet_data_module(parquet_numpy_file):
     assert batch.dtype == torch.float32
 
     assert len(list(data.train_dataloader())) == 5
+
+
+def test_parquet_data_module_2d(parquet_2d_metadata):
+    data = ParquetDataModule(
+        parquet_2d_metadata,
+        data_column="data",
+        batch_size=5,
+        num_workers=1,
+        shuffle=True,
+    )
+    data.setup("fit")
+
+    dataloader = data.train_dataloader()
+
+    assert dataloader.batch_size == 5
+    assert dataloader.num_workers == 1
+
+    batch = next(iter(dataloader))
+
+    assert batch.shape == (5, 3, 2)
+    assert batch.dtype == torch.float32
+
+    assert len(list(data.train_dataloader())) == 2

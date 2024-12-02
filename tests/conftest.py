@@ -50,7 +50,7 @@ def parquet_file(tmp_path_factory):
 
 @pytest.fixture(scope="session")
 def parquet_numpy_file(tmp_path_factory):
-    """Mock parquet data file only containing numpy array."""
+    """Mock parquet data file containing 1-dim numpy array."""
     series = []
     for i in range(10):
         item = {
@@ -63,5 +63,41 @@ def parquet_numpy_file(tmp_path_factory):
 
     file = tmp_path_factory.mktemp("data") / "test.parquet"
     df.to_parquet(file)
+
+    return file
+
+
+@pytest.fixture(scope="session")
+def parquet_file_numpy_2d(tmp_path_factory):
+    """Mock parquet data file containing 2-dim numpy array."""
+    series = []
+    for i in range(10):
+        item = {
+            "id": i,
+            "data": np.random.rand(3, 2).flatten(),
+        }
+        series.append(pd.Series(item))
+
+        df = pd.DataFrame(series)
+
+    file = tmp_path_factory.mktemp("data") / "test.parquet"
+    df.to_parquet(file)
+
+    return file
+
+
+@pytest.fixture(scope="session")
+def parquet_2d_metadata(tmp_path_factory):
+    """Mock parquet data with flatten 2d array and metadata."""
+
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    table = pa.table(
+        {"id": range(10), "data": [np.random.rand(3, 2).flatten() for _ in range(10)]}
+    )
+
+    file = tmp_path_factory.mktemp("data") / "test.parquet"
+    pq.write_table(table, file)
 
     return file
