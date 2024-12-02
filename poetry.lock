@@ -1505,13 +1505,13 @@ files = [
 
 [[package]]
 name = "jsonargparse"
-version = "4.34.0"
+version = "4.34.1"
 description = "Implement minimal boilerplate CLIs derived from type hints and parse from command line, config files and environment variables."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jsonargparse-4.34.0-py3-none-any.whl", hash = "sha256:a3eb8a9a289332066b1b33463efa49d5d2a8d729b6cb60e9e30231d0c19dfb13"},
-    {file = "jsonargparse-4.34.0.tar.gz", hash = "sha256:88b3ff0beaff40909dc69244f0527b054f8be0132086c72aa7e1d99414024b43"},
+    {file = "jsonargparse-4.34.1-py3-none-any.whl", hash = "sha256:1d595080e080d4581ef821b8ec71364037052be4da0f9c7bdafe95962672cee6"},
+    {file = "jsonargparse-4.34.1.tar.gz", hash = "sha256:6e0d1ab67b12b1086fe7bbe5ba429fbe9865c36493c9bb6aeb1e243047fdb58c"},
 ]
 
 [package.dependencies]
@@ -2148,9 +2148,9 @@ files = [
 [package.dependencies]
 numpy = [
     {version = ">=1.21", markers = "python_version < \"3.10\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\" and python_version < \"3.13\""},
-    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
     {version = ">=1.21.2", markers = "python_version >= \"3.10\" and python_version < \"3.11\""},
+    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\" and python_version < \"3.13\""},
 ]
 
 [package.extras]
@@ -2689,8 +2689,8 @@ files = [
 [package.dependencies]
 numpy = [
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
