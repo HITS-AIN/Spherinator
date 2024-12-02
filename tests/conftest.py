@@ -3,6 +3,8 @@ from uuid import uuid4
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
 import torch
 
@@ -90,11 +92,9 @@ def parquet_file_numpy_2d(tmp_path_factory):
 def parquet_2d_metadata(tmp_path_factory):
     """Mock parquet data with flatten 2d array and metadata."""
 
-    import pyarrow as pa
-    import pyarrow.parquet as pq
-
     table = pa.table(
-        {"id": range(10), "data": [np.random.rand(3, 2).flatten() for _ in range(10)]}
+        {"id": range(10), "data": [np.random.rand(3, 2).flatten() for _ in range(10)]},
+        metadata={"shape": "(3,2)"},
     )
 
     file = tmp_path_factory.mktemp("data") / "test.parquet"

@@ -1,5 +1,6 @@
 import numpy as np
 import pyarrow.dataset as ds
+import pyarrow.parquet as pq
 import torch
 from torch.utils.data import DataLoader
 
@@ -92,3 +93,8 @@ def test_parquet_data_module_2d(parquet_2d_metadata):
     assert batch.dtype == torch.float32
 
     assert len(list(data.train_dataloader())) == 2
+
+
+def test_parquet_table_metadata(parquet_2d_metadata):
+    table = pq.read_table(parquet_2d_metadata)
+    assert table.schema.metadata[b"shape"] == b"(3,2)"
