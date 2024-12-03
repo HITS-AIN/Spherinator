@@ -10,6 +10,8 @@ from .illustris_sdss_dataset_with_metadata import IllustrisSdssDatasetWithMetada
 from .images_data_module import ImagesDataModule
 from .images_dataset import ImagesDataset
 from .mnist_data_module import MNISTDataModule
+from .parquet_data_module import ParquetDataModule
+from .parquet_dataset import ParquetDataset
 from .shapes_data_module import ShapesDataModule
 from .shapes_dataset import ShapesDataset
 from .spherinator_data_module import SpherinatorDataModule
@@ -23,6 +25,8 @@ __all__ = [
     "IllustrisSdssDatasetWithMetadata",
     "ImagesDataModule",
     "ImagesDataset",
+    "ParquetDataModule",
+    "ParquetDataset",
     "MNISTDataModule",
     "ShapesDataModule",
     "ShapesDataset",
