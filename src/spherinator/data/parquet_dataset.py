@@ -27,11 +27,11 @@ class ParquetDataset(Dataset):
         dataset = ds.dataset(data_directory)
         table = dataset.to_table(columns=[data_column])
         self.data = table.to_pandas()[data_column]
-        if (
-            b"shape" in table.schema.metadata
-            and table.schema.metadata[b"shape"] == b"(3,2)"
-        ):
-            self.data = self.data.apply(lambda x: x.reshape(3, 2))
+        if b"shape" in table.schema.metadata:
+            shape_string = table.schema.metadata[b"shape"].decode("utf-8")
+            shape = shape_string.replace("(", "").replace(")", "").split(",")
+            shape = tuple(map(int, shape))
+            self.data = self.data.apply(lambda x: x.reshape(shape))
         self.transform = transform
 
     def __len__(self):
