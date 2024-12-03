@@ -1,4 +1,4 @@
-seed_everything: None
+seed_everything: 42
 
 model:
   class_path: spherinator.models.VariationalAutoencoder
@@ -18,13 +18,13 @@ model:
     beta: 1.0e-3
 
 data:
-  class_path: spherinator.data.GaiaDataModule
+  class_path: spherinator.data.ParquetDataModule
   init_args:
-    data_directories:
-      - /local_data/doserbd/data/gaia
-    batch_size: 512
+    data_directory: /home/doserbd/data/gaia/xp_sampled_mean_spectrum/parquet
+    data_column: flux
+    batch_size: 64
     shuffle: True
-    num_workers: 16
+    num_workers: 4
 
 optimizer:
   class_path: torch.optim.Adam
@@ -48,11 +48,11 @@ trainer:
   devices: 1
   precision: 32
 
-  logger:
-    class_path: lightning.pytorch.loggers.WandbLogger
-    init_args:
-      project: gaia
-      log_model: True
-      entity: ain-space
-      tags:
-        - single_file
+  # logger:
+  #   class_path: lightning.pytorch.loggers.WandbLogger
+  #   init_args:
+  #     project: gaia
+  #     log_model: True
+  #     entity: ain-space
+  #     tags:
+  #       - subset1
