@@ -27,6 +27,10 @@ def convert_to_parquet(path):
             lambda x: np.fromstring(x[1:-1], dtype=np.float32, sep=",")
         )
 
+        # Add dummy entry to the end of the flux and flux_error columns to make it divisible by 4
+        data["flux"] = data["flux"].apply(lambda x: np.append(x, 0.0))
+        data["flux_error"] = data["flux_error"].apply(lambda x: np.append(x, 0.0))
+
         # Normalize the flux and flux_error columns
         sum = data["flux"].apply(lambda x: x.sum())
         data["flux"] /= sum
@@ -34,6 +38,12 @@ def convert_to_parquet(path):
 
         # Use pyarrow to write the data to a parquet file
         table = pa.Table.from_pandas(data)
+
+        # Add shape metadata to the schema
+        table = table.replace_schema_metadata(
+            metadata={"flux_shape": "(1,344)", "flux_error_shape": "(1,344)"}
+        )
+
         parquet.write_table(table, f"{Path(file).stem}.parquet")
 
 
