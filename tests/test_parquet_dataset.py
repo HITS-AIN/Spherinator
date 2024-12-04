@@ -49,7 +49,7 @@ def test_parquet_dataset(parquet_numpy_file):
     assert batch.shape == (2, 1)
 
 
-def test_parquet_data_module(parquet_numpy_file):
+def test_parquet_data_module_1d(parquet_numpy_file):
     data = ParquetDataModule(
         parquet_numpy_file,
         data_column="data",
@@ -66,7 +66,7 @@ def test_parquet_data_module(parquet_numpy_file):
 
     batch = next(iter(dataloader))
 
-    assert batch.shape == (2, 1)
+    assert batch.shape == (2, 3)
     assert batch.dtype == torch.float32
 
     assert len(list(data.train_dataloader())) == 5
