@@ -21,17 +21,22 @@
 
 ## Possible dataset formats
 
-- Parquet
-    - not designed for storing binary data
-    - optimized for columnar storage of structured data
+- Parquet (https://parquet.apache.org/docs/)
+    - columnar storage (structured data)
+    - fast by vectorized processing
 - HDF5
     - complex data structures
-- Arrow
-    - in-memory columnar data storage
 - CSV
-    - row-based
+    - row-based storage (structured data)
 - JSON
 - XML
+
+## Apache Arrow
+
+In-memory data processing framework
+
+Docu: https://arrow.apache.org/docs/index.html
+Tracker: https://issues.apache.org/jira/projects/ARROW
 
 
 ## parquet-tools

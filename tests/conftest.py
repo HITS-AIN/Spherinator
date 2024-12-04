@@ -57,26 +57,7 @@ def parquet_numpy_file(tmp_path_factory):
     for i in range(10):
         item = {
             "id": i,
-            "data": np.array([2 * i], np.int32),
-        }
-        series.append(pd.Series(item))
-
-        df = pd.DataFrame(series)
-
-    file = tmp_path_factory.mktemp("data") / "test.parquet"
-    df.to_parquet(file)
-
-    return file
-
-
-@pytest.fixture(scope="session")
-def parquet_file_numpy_2d(tmp_path_factory):
-    """Mock parquet data file containing 2-dim numpy array."""
-    series = []
-    for i in range(10):
-        item = {
-            "id": i,
-            "data": np.random.rand(3, 2).flatten(),
+            "data": np.random.rand(3),
         }
         series.append(pd.Series(item))
 
