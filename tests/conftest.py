@@ -57,7 +57,7 @@ def parquet_numpy_file(tmp_path_factory):
     for i in range(10):
         item = {
             "id": i,
-            "data": np.random.rand(3),
+            "data": np.random.randint(0, 10, size=3),
         }
         series.append(pd.Series(item))
 
@@ -70,12 +70,27 @@ def parquet_numpy_file(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
+def parquet_1d_metadata(tmp_path_factory):
+    """Mock parquet data with 1d array and metadata."""
+
+    table = pa.table(
+        {"id": range(10), "data": [np.random.rand(10) for _ in range(10)]},
+        metadata={"data_shape": "(1,10)"},
+    )
+
+    file = tmp_path_factory.mktemp("data") / "test.parquet"
+    pq.write_table(table, file)
+
+    return file
+
+
+@pytest.fixture(scope="session")
 def parquet_2d_metadata(tmp_path_factory):
     """Mock parquet data with flatten 2d array and metadata."""
 
     table = pa.table(
         {"id": range(10), "data": [np.random.rand(3, 2).flatten() for _ in range(10)]},
-        metadata={"shape": "(3,2)"},
+        metadata={"data_shape": "(1,3,2)"},
     )
 
     file = tmp_path_factory.mktemp("data") / "test.parquet"
