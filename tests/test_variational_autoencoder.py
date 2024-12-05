@@ -24,14 +24,14 @@ def test_forward():
     assert recon.shape == input.shape
 
 
-def test_training(parquet_numpy_file):
+def test_training(parquet_1d_metadata):
 
     encoder = ConvolutionalEncoder1D(input_dim=128, output_dim=256)
     decoder = ConvolutionalDecoder1D(input_dim=256, output_dim=128)
     model = VariationalAutoencoder(encoder=encoder, decoder=decoder)
 
     datamodule = ParquetDataModule(
-        parquet_numpy_file,
+        parquet_1d_metadata,
         data_column="data",
         batch_size=5,
         num_workers=1,

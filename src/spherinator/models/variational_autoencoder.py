@@ -5,7 +5,6 @@ import torch
 import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms.v2.functional as functional
 from power_spherical import HypersphericalUniform, PowerSpherical
 from torch.optim import Adam
 
