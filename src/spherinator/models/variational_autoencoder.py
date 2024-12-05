@@ -85,7 +85,10 @@ class VariationalAutoencoder(pl.LightningModule):
 
         loss_recon = nn.MSELoss()(batch, recon)
         loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
-        loss = loss_recon + loss_KL
+
+        loss = (loss_recon + loss_KL).mean()
+        loss_recon = loss_recon.mean()
+        loss_KL = loss_KL.mean()
 
         self.log("train_loss", loss, prog_bar=True)
         self.log("loss_recon", loss_recon, prog_bar=True)
