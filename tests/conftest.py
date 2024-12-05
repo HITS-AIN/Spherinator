@@ -74,8 +74,8 @@ def parquet_1d_metadata(tmp_path_factory):
     """Mock parquet data with 1d array and metadata."""
 
     table = pa.table(
-        {"id": range(10), "data": [np.random.rand(10) for _ in range(10)]},
-        metadata={"data_shape": "(1,10)"},
+        {"id": range(10), "data": [np.random.rand(12) for _ in range(10)]},
+        metadata={"data_shape": "(1,12)"},
     )
 
     file = tmp_path_factory.mktemp("data") / "test.parquet"
