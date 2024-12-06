@@ -1,3 +1,4 @@
+import torch
 from lightning.pytorch.trainer import Trainer
 
 from spherinator.data import ParquetDataModule
@@ -11,10 +12,12 @@ from spherinator.models import (
 def test_forward():
 
     z_dim = 3
-    encoder = ConvolutionalEncoder1D(input_dim=128, output_dim=256)
-    decoder = ConvolutionalDecoder1D(input_dim=256, output_dim=128)
-    model = VariationalAutoencoder(encoder=encoder, decoder=decoder, z_dim=z_dim)
-    input = model.example_input_array
+    encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=24)
+    decoder = ConvolutionalDecoder1D(input_dim=24, output_dim=12)
+    model = VariationalAutoencoder(
+        encoder=encoder, decoder=decoder, h_dim=24, z_dim=z_dim
+    )
+    input = torch.randn(2, 1, 12)
 
     (z_mean, z_var), (_, _), _, recon = model(input)
 

@@ -31,12 +31,14 @@ class VariationalAutoencoder(pl.LightningModule):
             beta (float, optional): factor for beta-VAE. Defaults to 1.0.
         """
         super().__init__()
-        self.save_hyperparameters(ignore=["encoder", "decoder"])
 
         if encoder is None:
             encoder = ConvolutionalEncoder(latent_dim=h_dim)
         if decoder is None:
             decoder = ConvolutionalDecoder(latent_dim=h_dim)
+
+        # self.save_hyperparameters(ignore=["encoder", "decoder"])
+        self.save_hyperparameters()
 
         self.encoder = encoder
         self.decoder = decoder
@@ -44,7 +46,8 @@ class VariationalAutoencoder(pl.LightningModule):
         self.z_dim = z_dim
         self.beta = beta
 
-        self.example_input_array = self.encoder.example_input_array
+        # self.example_input_array = self.encoder.example_input_array
+        self.example_input_array = torch.randn(2, 1, 12)
 
         self.fc_location = nn.Linear(h_dim, z_dim)
         self.fc_scale = nn.Linear(h_dim, 1)
