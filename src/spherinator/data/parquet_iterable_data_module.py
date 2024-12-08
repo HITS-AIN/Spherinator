@@ -1,17 +1,16 @@
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader
 
-from spherinator.data.parquet_dataset import ParquetDataset
+from spherinator.data.parquet_iterable_dataset import ParquetIterableDataset
 
 
-class ParquetDataModule(LightningDataModule):
-    """Defines access to the ParquetDataset."""
+class ParquetIterableDataModule(LightningDataModule):
+    """Defines access to the ParquetIterableDataset."""
 
     def __init__(
         self,
         data_directory: str,
         data_column: str = "data",
-        shuffle: bool = True,
         batch_size: int = 32,
         num_workers: int = 1,
     ):
@@ -20,15 +19,18 @@ class ParquetDataModule(LightningDataModule):
         Args:
             data_directory (str): The data directory
             data_column (str, optional): The column to read from the parquet file. Defaults to "data".
-            shuffle (bool, optional): Wether or not to shuffle whe reading. Defaults to True.
             batch_size (int, optional): The batch size for training. Defaults to 32.
             num_workers (int, optional): How many worker to use for loading. Defaults to 1.
         """
         super().__init__()
 
+        if num_workers > 1:
+            raise ValueError(
+                "num_workers > 1 not supported yet for ParquetIterableDataModule."
+            )
+
         self.data_directory = data_directory
         self.data_column = data_column
-        self.shuffle = shuffle
         self.batch_size = batch_size
         self.num_workers = num_workers
 
@@ -45,7 +47,7 @@ class ParquetDataModule(LightningDataModule):
         """
 
         if stage == "fit" and self.data_train is None:
-            self.data_train = ParquetDataset(
+            self.data_train = ParquetIterableDataset(
                 data_directory=self.data_directory,
                 data_column=self.data_column,
                 transform=self.transform_train,
@@ -53,7 +55,6 @@ class ParquetDataModule(LightningDataModule):
             self.dataloader_train = DataLoader(
                 self.data_train,
                 batch_size=self.batch_size,
-                shuffle=self.shuffle,
                 num_workers=self.num_workers,
             )
         else:
