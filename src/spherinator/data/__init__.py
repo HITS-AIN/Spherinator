@@ -12,6 +12,7 @@ from .images_dataset import ImagesDataset
 from .mnist_data_module import MNISTDataModule
 from .parquet_data_module import ParquetDataModule
 from .parquet_dataset import ParquetDataset
+from .parquet_iterable_dataset import ParquetIterableDataset
 from .shapes_data_module import ShapesDataModule
 from .shapes_dataset import ShapesDataset
 from .spherinator_data_module import SpherinatorDataModule
@@ -27,6 +28,7 @@ __all__ = [
     "ImagesDataset",
     "ParquetDataModule",
     "ParquetDataset",
+    "ParquetIterableDataset",
     "MNISTDataModule",
     "ShapesDataModule",
     "ShapesDataset",

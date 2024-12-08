@@ -47,6 +47,8 @@ def test_parquet_dataset(parquet_numpy_file):
     dataset = ParquetDataset(parquet_numpy_file)
     dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
 
+    assert len(iter(dataloader)) == 5
+
     batch = next(iter(dataloader))
     assert batch.shape == (2, 3)
 

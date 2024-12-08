@@ -6,32 +6,46 @@ import torch
 from torch.utils.data import IterableDataset
 
 
-class ParquetDataset(IterableDataset):
+class ParquetIterableDataset(IterableDataset):
     """Iterable dataset reading parquet files."""
 
     def __init__(
         self,
         data_directory: str,
         data_column: str = "data",
+        batch_size: int = 64,
         transform=None,
     ):
         """Initializes the data set.
 
         Args:
-            path (str): The data directory.
+            data_directory (str): The data directory.
+            data_column (str): The column containing the data. Defaults to "data".
+            batch_size (int): The batch size. Defaults to 64.
             transform (torchvision.transforms, optional): A single or a set of
                 transformations to modify the data. Defaults to None.
         """
         super().__init__()
         self.data_column = data_column
         dataset = ds.dataset(data_directory)
-        scanner = dataset.scanner(batch_size=1)
-        self.batches = scanner.to_batches()
+        self.scanner = dataset.scanner(batch_size=batch_size)
         self.transform = transform
 
+        self.shape = None
+        metadata_shape = bytes(data_column, "utf8") + b"_shape"
+        if metadata_shape in dataset.schema.metadata:
+            shape_string = dataset.schema.metadata[metadata_shape].decode("utf8")
+            shape = shape_string.replace("(", "").replace(")", "").split(",")
+            self.shape = tuple(map(int, shape))
+
     def __iter__(self):
-        for batch in self.batches:
-            batch = torch.Tensor(batch.to_pydict()[self.data_column])
+        for batch in self.scanner.to_batches():
+            batch = batch.to_pandas()[self.data_column]
+            if self.shape is not None:
+                batch = batch.apply(lambda x: x.reshape(self.shape))
+            batch = torch.Tensor(batch)
             if self.transform is not None:
                 batch = self.transform(batch)
-            yield batch
+
+            for item in batch:
+                yield item

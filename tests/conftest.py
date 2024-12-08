@@ -70,6 +70,21 @@ def parquet_numpy_file(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
+def parquet_test_metadata(tmp_path_factory):
+    """Mock parquet data with 1d array and metadata."""
+
+    table = pa.table(
+        {"id": range(10), "data": [np.array([i], dtype=float) for i in range(10)]},
+        metadata={"data_shape": "(1)"},
+    )
+
+    file = tmp_path_factory.mktemp("data") / "test.parquet"
+    pq.write_table(table, file)
+
+    return file
+
+
+@pytest.fixture(scope="session")
 def parquet_1d_metadata(tmp_path_factory):
     """Mock parquet data with 1d array and metadata."""
 
