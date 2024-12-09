@@ -12,12 +12,12 @@ from tqdm import tqdm
 
 def convert_to_parquet(path):
     for file in tqdm(os.listdir(path)):
-        if not file.endswith(".csv"):
+        if not file.endswith(".csv.gz"):
             continue
 
         # data = pyarrow.csv.read_csv(path + file)
-        # data = pd.read_csv(os.path.join(path, file), comment="#", compression="gzip")
-        data = pd.read_csv(os.path.join(path, file), comment="#")
+        data = pd.read_csv(os.path.join(path, file), comment="#", compression="gzip")
+        # data = pd.read_csv(os.path.join(path, file), comment="#")
 
         # Convert string entries to numpy arrays
         data["flux"] = data["flux"].apply(
