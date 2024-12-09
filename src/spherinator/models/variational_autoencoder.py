@@ -46,12 +46,15 @@ class VariationalAutoencoder(pl.LightningModule):
         self.z_dim = z_dim
         self.beta = beta
 
-        # self.example_input_array = self.encoder.example_input_array
-        self.example_input_array = torch.randn(2, 1, 12)
+        self.example_input_array = self.encoder.example_input_array
+        # self.example_input_array = torch.randn(2, 1, 12)
 
         self.fc_location = nn.Linear(h_dim, z_dim)
         self.fc_scale = nn.Linear(h_dim, 1)
         self.fc2 = nn.Linear(z_dim, h_dim)
+
+        # self.reconstruction_loss = nn.MSELoss()
+        self.reconstruction_loss = nn.CrossEntropyLoss()
 
         with torch.no_grad():
             self.fc_scale.bias.fill_(1.0e3)
@@ -86,7 +89,7 @@ class VariationalAutoencoder(pl.LightningModule):
 
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
 
-        loss_recon = nn.MSELoss()(batch, recon)
+        loss_recon = self.reconstruction_loss(batch, recon)
         loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
 
         loss = (loss_recon + loss_KL).mean()
