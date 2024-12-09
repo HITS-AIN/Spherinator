@@ -1,5 +1,6 @@
 import pyarrow.dataset as ds
 import pyarrow.parquet as pq
+import pytest
 import torch
 from torch.utils.data import DataLoader
 
@@ -42,15 +43,19 @@ def test_pyarray_to_pydict(parquet_numpy_file):
     assert batch[1] == [3, 7, 9]
 
 
-def test_parquet_dataset(parquet_numpy_file):
+@pytest.mark.parametrize(
+    ("batch_size", "num_workers"),
+    [(1, 1), (1, 2), (2, 1), (2, 2)],
+)
+def test_parquet_dataset(parquet_numpy_file, batch_size, num_workers):
     """Test the ParquetDataset class."""
     dataset = ParquetDataset(parquet_numpy_file)
-    dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
+    dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
 
-    assert len(iter(dataloader)) == 5
+    assert len(iter(dataloader)) == len(dataset) / batch_size
 
     batch = next(iter(dataloader))
-    assert batch.shape == (2, 3)
+    assert batch.shape == (batch_size, 3)
 
 
 def test_parquet_data_module_1d(parquet_1d_metadata):
