@@ -20,7 +20,8 @@ class ParquetIterableDataset(IterableDataset):
 
         Args:
             data_directory (str): The data directory.
-            data_column (str): The column containing the data. Defaults to "data".
+            data_column (str, optional): The column name in the parquet file
+                that contains the data. Defaults to "data".
             batch_size (int): The batch size. Defaults to 64.
             transform (torchvision.transforms, optional): A single or a set of
                 transformations to modify the data. Defaults to None.
