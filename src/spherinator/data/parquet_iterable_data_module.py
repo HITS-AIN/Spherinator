@@ -12,6 +12,7 @@ class ParquetIterableDataModule(LightningDataModule):
         data_directory: str,
         data_column: str = "data",
         batch_size: int = 32,
+        scanner_batch_size: int = 512,
         num_workers: int = 1,
     ):
         """Initializes the data loader
@@ -20,20 +21,16 @@ class ParquetIterableDataModule(LightningDataModule):
             data_directory (str): The data directory
             data_column (str, optional): The column to read from the parquet file. Defaults to "data".
             batch_size (int, optional): The batch size for training. Defaults to 32.
+            scanner_batch_size (int, optional): The batch size for the parquet scanner. Defaults to 512.
             num_workers (int, optional): How many worker to use for loading. Defaults to 1.
         """
         super().__init__()
 
-        if num_workers > 1:
-            raise ValueError(
-                "num_workers > 1 not supported yet for ParquetIterableDataModule."
-            )
-
         self.data_directory = data_directory
         self.data_column = data_column
         self.batch_size = batch_size
+        self.scanner_batch_size = scanner_batch_size
         self.num_workers = num_workers
-
         self.data_train = None
         self.dataloader_train = None
         self.transform_train = None
@@ -50,6 +47,7 @@ class ParquetIterableDataModule(LightningDataModule):
             self.data_train = ParquetIterableDataset(
                 data_directory=self.data_directory,
                 data_column=self.data_column,
+                batch_size=self.scanner_batch_size,
                 transform=self.transform_train,
             )
             self.dataloader_train = DataLoader(

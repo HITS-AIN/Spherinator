@@ -40,13 +40,29 @@ class ParquetIterableDataset(IterableDataset):
             self.shape = tuple(map(int, shape))
 
     def __iter__(self):
-        for batch in self.scanner.to_batches():
-            batch = batch.to_pandas()[self.data_column]
-            if self.shape is not None:
-                batch = batch.apply(lambda x: x.reshape(self.shape))
-            batch = torch.Tensor(batch)
-            if self.transform is not None:
-                batch = self.transform(batch)
 
-            for item in batch:
-                yield item
+        worker_info = torch.utils.data.get_worker_info()
+
+        iterator = self.scanner.to_batches()
+
+        # Special treatment for the multi-worker case
+        # Idea adapted from itertools.islice
+        # https://docs.python.org/3/library/itertools.html#itertools.islice
+        next_i = 0
+        step = 1
+        if worker_info is not None:
+            next_i = worker_info.id
+            step = worker_info.num_workers
+
+        for i, batch in enumerate(iterator):
+            if i == next_i:
+                next_i += step
+                batch = batch.to_pandas()[self.data_column]
+                if self.shape is not None:
+                    batch = batch.apply(lambda x: x.reshape(self.shape))
+                batch = torch.Tensor(batch)
+                if self.transform is not None:
+                    batch = self.transform(batch)
+
+                for item in batch:
+                    yield item
