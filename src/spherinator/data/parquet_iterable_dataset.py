@@ -58,9 +58,9 @@ class ParquetIterableDataset(IterableDataset):
             if i == next_i:
                 next_i += step
                 batch = batch.to_pandas()[self.data_column]
-                if self.shape is not None:
-                    batch = batch.apply(lambda x: x.reshape(self.shape))
                 batch = torch.Tensor(batch)
+                if self.shape is not None:
+                    batch = batch.reshape((batch.shape[0], *self.shape))
                 if self.transform is not None:
                     batch = self.transform(batch)
 

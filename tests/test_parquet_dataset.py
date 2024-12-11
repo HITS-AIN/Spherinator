@@ -43,6 +43,22 @@ def test_pyarray_to_pydict(parquet_numpy_file):
     assert batch[1] == [3, 7, 9]
 
 
+def test_pyarray_to_numpy(parquet_numpy_file):
+    """Test converting a pyarrow table to a numpy array."""
+    import numpy as np
+
+    dataset = ds.dataset(parquet_numpy_file)
+    batch_size = 2
+    scanner = dataset.scanner(batch_size=batch_size)
+    batches = scanner.to_batches()
+    batch = next(batches)
+    batch = batch.column("data").to_numpy(zero_copy_only=False)
+
+    assert len(batch) == batch_size
+    assert (batch[0] == [5, 0, 3]).all()
+    assert (batch[1] == [3, 7, 9]).all()
+
+
 @pytest.mark.parametrize(
     ("batch_size", "num_workers"),
     [(1, 1), (1, 2), (2, 1), (2, 2)],
