@@ -29,7 +29,7 @@ class ParquetIterableDataset(IterableDataset):
         super().__init__()
         self.data_column = data_column
         dataset = ds.dataset(data_directory)
-        self.scanner = dataset.scanner(batch_size=batch_size)
+        self.scanner = dataset.scanner(columns=[data_column], batch_size=batch_size)
         self.transform = transform
 
         self.shape = None
@@ -57,7 +57,7 @@ class ParquetIterableDataset(IterableDataset):
         for i, batch in enumerate(iterator):
             if i == next_i:
                 next_i += step
-                batch = batch.to_pandas()[self.data_column]
+                batch = batch.to_pydict()[self.data_column]
                 batch = torch.Tensor(batch)
                 if self.shape is not None:
                     batch = batch.reshape((batch.shape[0], *self.shape))
