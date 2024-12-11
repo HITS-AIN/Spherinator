@@ -45,8 +45,6 @@ def test_pyarray_to_pydict(parquet_numpy_file):
 
 def test_pyarray_to_numpy(parquet_numpy_file):
     """Test converting a pyarrow table to a numpy array."""
-    import numpy as np
-
     dataset = ds.dataset(parquet_numpy_file)
     batch_size = 2
     scanner = dataset.scanner(batch_size=batch_size)
