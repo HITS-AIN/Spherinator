@@ -3,32 +3,25 @@ from lightning.pytorch.trainer import Trainer
 
 from spherinator.data import ParquetDataModule
 from spherinator.models import (
+    Autoencoder,
     ConvolutionalDecoder1D,
     ConvolutionalEncoder1D,
-    Autoencoder,
 )
 
 
 def test_forward():
-
-    z_dim = 3
+    """Test forward method of Autoencoder"""
     encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=24)
     decoder = ConvolutionalDecoder1D(input_dim=24, output_dim=12)
-    model = Autoencoder(
-        encoder=encoder, decoder=decoder, h_dim=24, z_dim=z_dim
-    )
+    model = Autoencoder(encoder=encoder, decoder=decoder, h_dim=24, z_dim=3)
     input = torch.randn(2, 1, 12)
 
-    (z_mean, z_var), (_, _), _, recon = model(input)
-
-    batch_size = input.shape[0]
-    assert z_mean.shape == (batch_size, z_dim)
-    assert z_var.shape == (batch_size, 1)
+    recon = model(input)
     assert recon.shape == input.shape
 
 
 def test_training(parquet_1d_metadata):
-
+    """Test training of Autoencoder"""
     encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=24)
     decoder = ConvolutionalDecoder1D(input_dim=24, output_dim=12)
     model = Autoencoder(encoder=encoder, decoder=decoder, h_dim=24, z_dim=3)

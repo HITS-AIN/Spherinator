@@ -1,9 +1,9 @@
 from typing import Optional
 
 import lightning.pytorch as pl
-import torch
-import torch.linalg
 import torch.nn as nn
+import torch.nn.functional as F
+from torch.optim import Adam
 
 from .convolutional_decoder import ConvolutionalDecoder
 from .convolutional_encoder import ConvolutionalEncoder
@@ -49,9 +49,6 @@ class Autoencoder(pl.LightningModule):
         self.reconstruction_loss = nn.MSELoss()
         # self.reconstruction_loss = nn.CrossEntropyLoss()
 
-        with torch.no_grad():
-            self.fc_scale.bias.fill_(1.0e3)
-
     def encode(self, x):
         x = self.encoder(x)
         z = self.fc(x)
@@ -74,3 +71,7 @@ class Autoencoder(pl.LightningModule):
         self.log("train_loss", loss, prog_bar=True)
         self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
         return loss
+
+    def configure_optimizers(self):
+        """Default Adam optimizer if missing from the configuration file."""
+        return Adam(self.parameters(), lr=1e-3)
