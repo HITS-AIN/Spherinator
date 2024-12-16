@@ -4,11 +4,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 from power_spherical import PowerSpherical
 
+from spherinator.models import (
+    Autoencoder,
+    ConvolutionalDecoder1D,
+    ConvolutionalEncoder1D,
+)
 
-class Model1(torch.nn.Module):
+
+class Model1(nn.Module):
     def __init__(self) -> None:
         super().__init__()
-        self.linear = torch.nn.Linear(2, 2)
+        self.linear = nn.Linear(2, 2)
 
     def forward(self, x):
         out = self.linear(x)
@@ -55,6 +61,16 @@ class DistributionModel(torch.nn.Module):
             ),
             torch.randn(2, 3),
             marks=pytest.mark.xfail,
+        ),
+        (
+            Autoencoder(
+                ConvolutionalEncoder1D(12, 24), ConvolutionalDecoder1D(24, 12), 24, 3
+            ),
+            torch.randn(2, 1, 12),
+        ),
+        (
+            ConvolutionalEncoder1D(12, 24),
+            torch.randn(2, 1, 12),
         ),
     ],
 )
