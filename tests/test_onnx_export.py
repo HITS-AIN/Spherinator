@@ -63,17 +63,18 @@ class DistributionModel(torch.nn.Module):
             marks=pytest.mark.xfail,
         ),
         (
+            ConvolutionalEncoder1D(12, 24),
+            torch.randn(2, 1, 12),
+        ),
+        (
             Autoencoder(
                 ConvolutionalEncoder1D(12, 24), ConvolutionalDecoder1D(24, 12), 24, 3
             ),
             torch.randn(2, 1, 12),
         ),
-        (
-            ConvolutionalEncoder1D(12, 24),
-            torch.randn(2, 1, 12),
-        ),
     ],
 )
 def test_onnx_dynamo_export(module, input):
+    module.eval()
     module(input)
     torch.onnx.dynamo_export(module, input)
