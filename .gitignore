@@ -12,3 +12,4 @@ lightning_logs/
 wandb/
 *.parquet
 fast_data/
+*.onnx
