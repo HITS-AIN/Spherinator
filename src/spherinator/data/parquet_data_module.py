@@ -1,3 +1,5 @@
+import torch
+import torchvision.transforms.v2 as transforms
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader
 
@@ -34,7 +36,14 @@ class ParquetDataModule(LightningDataModule):
 
         self.data_train = None
         self.dataloader_train = None
-        self.transform_train = None
+
+        self.transform_train = transforms.Compose(
+            [
+                transforms.Lambda(  # Normalize
+                    lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
+                )
+            ]
+        )
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
