@@ -13,6 +13,7 @@ It contains the following modules:
 """
 
 from .autoencoder import Autoencoder
+from .autoencoder_pure import AutoencoderPure
 from .convolutional_decoder import ConvolutionalDecoder
 from .convolutional_decoder_1d import ConvolutionalDecoder1D
 from .convolutional_decoder_2 import ConvolutionalDecoder2
@@ -34,6 +35,7 @@ from .variational_autoencoder import VariationalAutoencoder
 
 __all__ = [
     "Autoencoder",
+    "AutoencoderPure",
     "ConvolutionalDecoder",
     "ConvolutionalDecoder2",
     "ConvolutionalDecoder224",
