@@ -53,8 +53,8 @@ class VariationalAutoencoder(pl.LightningModule):
         self.fc_scale = nn.Linear(h_dim, 1)
         self.fc2 = nn.Linear(z_dim, h_dim)
 
-        # self.reconstruction_loss = nn.MSELoss()
-        self.reconstruction_loss = nn.CrossEntropyLoss()
+        self.reconstruction_loss = nn.MSELoss()
+        # self.reconstruction_loss = nn.CrossEntropyLoss()
 
         with torch.no_grad():
             self.fc_scale.bias.fill_(1.0e3)
