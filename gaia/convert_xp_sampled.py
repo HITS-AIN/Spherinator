@@ -12,8 +12,9 @@ from tqdm import tqdm
 
 def convert_to_parquet(path):
     for file in tqdm(os.listdir(path)):
-        if not file.endswith(".csv.gz"):
-            print(f"Skipping {file} as it is not a csv.gz file.")
+        suffix = ".csv.gz"
+        if not file.endswith(suffix):
+            print(f"Skipping {file} as it is not a {suffix} file.")
             continue
 
         # data = pyarrow.csv.read_csv(path + file)
@@ -45,7 +46,9 @@ def convert_to_parquet(path):
             metadata={"flux_shape": "(1,344)", "flux_error_shape": "(1,344)"}
         )
 
-        parquet.write_table(table, f"{Path(file).stem}.parquet", compression="snappy")
+        parquet.write_table(
+            table, f"{str(file).removesuffix(suffix)}.parquet", compression="snappy"
+        )
 
 
 def main() -> int:
