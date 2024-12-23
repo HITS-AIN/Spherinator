@@ -14,7 +14,6 @@ class AutoencoderPure(pl.LightningModule):
         Args:
             encoder (nn.Module): encoder model
             decoder (nn.Module): decoder model
-            z_dim (int, optional): dimension of the latent representation. Defaults to 3.
         """
         super().__init__()
 

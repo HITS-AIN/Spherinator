@@ -10,6 +10,9 @@ class ConvolutionalDecoder1D(nn.Module):
         """
         super().__init__()
 
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
         self.dec1 = nn.Sequential(
             nn.Linear(input_dim, int(64 * output_dim / 4)),
             nn.Unflatten(1, (64, int(output_dim / 4))),

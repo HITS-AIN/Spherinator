@@ -12,6 +12,9 @@ class ConvolutionalEncoder1D(nn.Module):
 
         assert input_dim % 4 == 0, "input_dim must be divisible by 4"
 
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
         self.example_input_array = torch.randn(2, 1, input_dim)
 
         self.enc1 = nn.Sequential(
