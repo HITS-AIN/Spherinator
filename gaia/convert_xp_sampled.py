@@ -13,6 +13,7 @@ from tqdm import tqdm
 def convert_to_parquet(path):
     for file in tqdm(os.listdir(path)):
         if not file.endswith(".csv.gz"):
+            print(f"Skipping {file} as it is not a csv.gz file.")
             continue
 
         # data = pyarrow.csv.read_csv(path + file)
@@ -28,8 +29,8 @@ def convert_to_parquet(path):
         )
 
         # Add dummy entry to the end of the flux and flux_error columns to make it divisible by 4
-        data["flux"] = data["flux"].apply(lambda x: np.append(x, 0.0))
-        data["flux_error"] = data["flux_error"].apply(lambda x: np.append(x, 0.0))
+        data["flux"] = data["flux"].apply(lambda x: np.append(x, x[-1]))
+        data["flux_error"] = data["flux_error"].apply(lambda x: np.append(x, x[-1]))
 
         # Normalize the flux and flux_error columns
         sum = data["flux"].apply(lambda x: x.sum())
@@ -44,7 +45,7 @@ def convert_to_parquet(path):
             metadata={"flux_shape": "(1,344)", "flux_error_shape": "(1,344)"}
         )
 
-        parquet.write_table(table, f"{Path(file).stem}.parquet")
+        parquet.write_table(table, f"{Path(file).stem}.parquet", compression="snappy")
 
 
 def main() -> int:
