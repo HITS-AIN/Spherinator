@@ -7,6 +7,8 @@ from torch.optim import Adam
 
 
 class VariationalEncoder(nn.Module):
+    """Variational encoder for extra layer splitting the location and scale of the latent space."""
+
     def __init__(self, encoder: nn.Module, z_dim: int) -> None:
         super().__init__()
         self.encoder = encoder

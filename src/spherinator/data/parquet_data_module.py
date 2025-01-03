@@ -13,6 +13,7 @@ class ParquetDataModule(LightningDataModule):
         self,
         data_directory: str,
         data_column: str = "data",
+        normalize: bool = True,
         shuffle: bool = True,
         batch_size: int = 32,
         num_workers: int = 1,
@@ -22,6 +23,7 @@ class ParquetDataModule(LightningDataModule):
         Args:
             data_directory (str): The data directory
             data_column (str, optional): The column to read from the parquet file. Defaults to "data".
+            normalize (bool, optional): Wether or not to normalize the data. Defaults to True.
             shuffle (bool, optional): Wether or not to shuffle whe reading. Defaults to True.
             batch_size (int, optional): The batch size for training. Defaults to 32.
             num_workers (int, optional): How many worker to use for loading. Defaults to 1.
@@ -30,6 +32,7 @@ class ParquetDataModule(LightningDataModule):
 
         self.data_directory = data_directory
         self.data_column = data_column
+        self.normalize = normalize
         self.shuffle = shuffle
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -37,13 +40,14 @@ class ParquetDataModule(LightningDataModule):
         self.data_train = None
         self.dataloader_train = None
 
-        self.transform_train = transforms.Compose(
-            [
+        transform_train = []
+        if normalize:
+            transform_train.append(
                 transforms.Lambda(  # Normalize
                     lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
                 )
-            ]
-        )
+            )
+        self.transform_train = transforms.Compose(transform_train)
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
