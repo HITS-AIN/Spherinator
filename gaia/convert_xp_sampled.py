@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+"""Converts a CSV file to a Parquet file."""
+
 import argparse
 import os
 import sys
@@ -52,11 +56,11 @@ def convert_to_parquet(path):
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Create parquet dataset with GAIA xp sampled data."
+        description="Create parquet dataset with GAIA XP sampled data."
     )
     parser.add_argument(
         "path",
-        help="Path to the directory containing the GAIA xp sampled data (csv files).",
+        help="Path to the directory containing the GAIA XP sampled data (csv files).",
     )
 
     args = parser.parse_args()
