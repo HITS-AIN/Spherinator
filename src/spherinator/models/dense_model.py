@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 
 
-class DenseEncoder(nn.Module):
+class DenseModel(nn.Module):
     def __init__(self, layer_dims: list[int]):
-        """ConvolutionalEncoder1D initializer"""
+        """DenseModel initializer"""
         super().__init__()
 
         self.input_dim = layer_dims[0]
@@ -17,8 +17,8 @@ class DenseEncoder(nn.Module):
             modules.append(nn.Linear(layer_dims[i], layer_dims[i + 1]))
             modules.append(nn.ReLU())
 
-        self.encoder = nn.Sequential(*modules)
+        self.model = nn.Sequential(*modules)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
-        x = self.encoder(x)
+        x = self.model(x)
         return x

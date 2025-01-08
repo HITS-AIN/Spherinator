@@ -22,6 +22,7 @@ from .convolutional_decoder_256 import ConvolutionalDecoder256
 from .convolutional_encoder import ConvolutionalEncoder
 from .convolutional_encoder_1d import ConvolutionalEncoder1D
 from .convolutional_encoder_2 import ConvolutionalEncoder2
+from .dense_model import DenseModel
 from .rotational2_autoencoder import Rotational2Autoencoder
 from .rotational2_variational_autoencoder_power import (
     Rotational2VariationalAutoencoderPower,
@@ -38,13 +39,14 @@ __all__ = [
     "Autoencoder",
     "AutoencoderPure",
     "ConvolutionalDecoder",
+    "ConvolutionalDecoder1D",
     "ConvolutionalDecoder2",
     "ConvolutionalDecoder224",
     "ConvolutionalDecoder256",
     "ConvolutionalEncoder",
     "ConvolutionalEncoder1D",
-    "ConvolutionalDecoder1D",
     "ConvolutionalEncoder2",
+    "DenseModel",
     "Rotational2Autoencoder",
     "Rotational2VariationalAutoencoderPower",
     "RotationalAutoencoder",
