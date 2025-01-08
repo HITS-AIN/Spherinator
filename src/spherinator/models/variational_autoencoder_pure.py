@@ -48,8 +48,6 @@ class VariationalAutoencoderPure(pl.LightningModule):
         self.encoder = encoder
         self.decoder = decoder
         self.beta = beta
-
-        self.h_dim = encoder.output_dim
         self.z_dim = decoder.input_dim
 
         self.variational_encoder = VariationalEncoder(encoder, self.z_dim)
