@@ -2,14 +2,14 @@ __pycache__
 .venv*/
 *.ckpt
 *.ncu-rep
+*.onnx
+*.parquet
 *.sarif
 config.yaml
 dist/
 docs/_build/
 docs/html/
+fast_data/
 HiPSter/
 lightning_logs/
 wandb/
-*.parquet
-fast_data/
-*.onnx
