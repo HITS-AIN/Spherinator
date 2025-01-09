@@ -41,14 +41,15 @@ class ParquetDataModule(LightningDataModule):
         self.data_train = None
         self.dataloader_train = None
 
-        transform_train = []
+        self.transform_train = None
         if normalize:
-            transform_train.append(
-                transforms.Lambda(  # Normalize
-                    lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
-                )
+            self.transform_train = transforms.Compose(
+                [
+                    transforms.Lambda(
+                        lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
+                    )
+                ]
             )
-        self.transform_train = transforms.Compose(transform_train)
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
