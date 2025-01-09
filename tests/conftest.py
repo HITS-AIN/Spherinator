@@ -74,7 +74,10 @@ def parquet_test_metadata(tmp_path_factory):
     """Mock parquet data with 1d array and metadata."""
 
     table = pa.table(
-        {"id": range(10), "data": [np.array([i], dtype=float) for i in range(10)]},
+        {
+            "id": range(10),
+            "data": [np.array([i], dtype=np.float32) for i in range(10)],
+        },
         metadata={"data_shape": "(1)"},
     )
 
@@ -89,7 +92,10 @@ def parquet_1d_metadata(tmp_path_factory):
     """Mock parquet data with 1d array and metadata."""
 
     table = pa.table(
-        {"id": range(10), "data": [np.random.rand(12) for _ in range(10)]},
+        {
+            "id": range(10),
+            "data": [np.random.rand(12).astype(np.float32) for _ in range(10)],
+        },
         metadata={"data_shape": "(1,12)"},
     )
 
@@ -104,8 +110,31 @@ def parquet_2d_metadata(tmp_path_factory):
     """Mock parquet data with flatten 2d array and metadata."""
 
     table = pa.table(
-        {"id": range(10), "data": [np.random.rand(3, 2).flatten() for _ in range(10)]},
+        {
+            "id": range(10),
+            "data": [
+                np.random.rand(3, 2).astype(np.float32).flatten() for _ in range(10)
+            ],
+        },
         metadata={"data_shape": "(1,3,2)"},
+    )
+
+    file = tmp_path_factory.mktemp("data") / "test.parquet"
+    pq.write_table(table, file)
+
+    return file
+
+
+@pytest.fixture(scope="session")
+def parquet_test_join(tmp_path_factory):
+    """Mock parquet file with two arrays."""
+
+    table = pa.table(
+        {
+            "id": [0],
+            "data1": [np.array([1.0, 2.0], dtype=np.float32)],
+            "data2": [np.array([3.0, 4.0], dtype=np.float32)],
+        }
     )
 
     file = tmp_path_factory.mktemp("data") / "test.parquet"

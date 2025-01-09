@@ -63,7 +63,7 @@ def test_pyarray_to_numpy(parquet_numpy_file):
 )
 def test_parquet_dataset(parquet_numpy_file, batch_size, num_workers):
     """Test the ParquetDataset class."""
-    dataset = ParquetDataset(parquet_numpy_file)
+    dataset = ParquetDataset(parquet_numpy_file, data_column="data")
     dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
 
     assert len(iter(dataloader)) == len(dataset) / batch_size
@@ -124,3 +124,14 @@ def test_parquet_table_metadata(parquet_2d_metadata):
     """Test reading metadata from a parquet table."""
     table = pq.read_table(parquet_2d_metadata)
     assert table.schema.metadata[b"data_shape"] == b"(1,3,2)"
+
+
+def test_parquet_join(parquet_test_join):
+    """Test the ParquetDataset class joining two data columns."""
+    dataset = ParquetDataset(parquet_test_join, data_column="data1")
+    dataloader = DataLoader(dataset)
+
+    assert len(iter(dataloader)) == len(dataset)
+
+    batch = next(iter(dataloader))
+    assert (batch == torch.tensor([1.0, 2.0])).all()

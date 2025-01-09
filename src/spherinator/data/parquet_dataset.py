@@ -12,23 +12,32 @@ class ParquetDataset(Dataset):
     def __init__(
         self,
         data_directory: str,
-        data_column: str = "data",
+        data_column: str | list[str],
         transform=None,
     ):
         """Initializes the data set.
 
         Args:
-            path (str): The data directory.
+            data_directory (str): The data directory.
+            data_column (str): The column name containing the data.
+                Using a list of strings the data columns will be merged.
             transform (torchvision.transforms, optional): A single or a set of
                 transformations to modify the data. Defaults to None.
         """
         super().__init__()
-        self.data_column = data_column
+
+        if not isinstance(data_column, list):
+            data_column = [data_column]
+
+        if len(data_column) > 1:
+            RuntimeError("Merging multiple columns is not yet supported.")
+
         dataset = ds.dataset(data_directory)
-        table = dataset.to_table(columns=[data_column])
-        self.data = table.to_pandas()[data_column]
-        metadata_shape = bytes(data_column, "utf8") + b"_shape"
-        if metadata_shape in table.schema.metadata:
+        table = dataset.to_table(columns=data_column)
+
+        self.data = table.to_pandas()[data_column[0]]
+        metadata_shape = bytes(data_column[0], "utf8") + b"_shape"
+        if table.schema.metadata and metadata_shape in table.schema.metadata:
             shape_string = table.schema.metadata[metadata_shape].decode("utf8")
             shape = shape_string.replace("(", "").replace(")", "").split(",")
             shape = tuple(map(int, shape))
@@ -39,7 +48,7 @@ class ParquetDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index: int) -> torch.Tensor:
-        batch = torch.Tensor(self.data[index])
+        batch = torch.tensor(self.data[index])
         if self.transform is not None:
             batch = self.transform(batch)
         return batch
