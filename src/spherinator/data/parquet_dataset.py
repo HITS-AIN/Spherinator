@@ -20,8 +20,8 @@ class ParquetDataset(Dataset):
 
         Args:
             data_directory (str): The data directory.
-            data_column (str): The column name containing the data.
-                Using a list of strings the data columns will be merged.
+            data_column (str | list[str]): The column name(s) containing the data.
+                The data columns will be merged using a list of strings.
             transform (torchvision.transforms, optional): A single or a set of
                 transformations to modify the data. Defaults to None.
         """

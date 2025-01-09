@@ -12,8 +12,7 @@ class ParquetDataModule(LightningDataModule):
     def __init__(
         self,
         data_directory: str,
-        data_column: str = "data",
-        normalize: bool = True,
+        data_column: str | list[str],
         shuffle: bool = True,
         batch_size: int = 32,
         num_workers: int = 1,
@@ -22,8 +21,8 @@ class ParquetDataModule(LightningDataModule):
 
         Args:
             data_directory (str): The data directory
-            data_column (str, optional): The column to read from the parquet file. Defaults to "data".
-            normalize (bool, optional): Wether or not to normalize the data. Defaults to True.
+            data_column (str | list[str]): The column name(s) containing the data.
+                The data columns will be merged using a list of strings.
             shuffle (bool, optional): Wether or not to shuffle whe reading. Defaults to True.
             batch_size (int, optional): The batch size for training. Defaults to 32.
             num_workers (int, optional): How many worker to use for loading. Defaults to 1.
