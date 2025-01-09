@@ -13,9 +13,13 @@ class DenseModel(nn.Module):
         self.example_input_array = torch.randn(2, self.input_dim)
 
         modules = []
-        for i in range(len(layer_dims) - 1):
+        num_layers = len(layer_dims)
+        for i in range(num_layers - 2):
             modules.append(nn.Linear(layer_dims[i], layer_dims[i + 1]))
             modules.append(nn.ReLU())
+        modules.append(
+            nn.Linear(layer_dims[num_layers - 2], layer_dims[num_layers - 1])
+        )
 
         self.model = nn.Sequential(*modules)
 
