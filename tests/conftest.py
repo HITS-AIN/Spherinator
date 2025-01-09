@@ -126,7 +126,7 @@ def parquet_2d_metadata(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def parquet_test_join(tmp_path_factory):
+def parquet_test_merge(tmp_path_factory):
     """Mock parquet file with two arrays."""
 
     table = pa.table(

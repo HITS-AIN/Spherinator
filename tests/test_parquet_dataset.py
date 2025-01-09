@@ -126,12 +126,23 @@ def test_parquet_table_metadata(parquet_2d_metadata):
     assert table.schema.metadata[b"data_shape"] == b"(1,3,2)"
 
 
-def test_parquet_join(parquet_test_join):
-    """Test the ParquetDataset class joining two data columns."""
-    dataset = ParquetDataset(parquet_test_join, data_column="data1")
+def test_parquet(parquet_test_merge):
+    """Test the ParquetDataset with a single data columns."""
+    dataset = ParquetDataset(parquet_test_merge, data_column="data1")
     dataloader = DataLoader(dataset)
 
     assert len(iter(dataloader)) == len(dataset)
 
     batch = next(iter(dataloader))
     assert (batch == torch.tensor([1.0, 2.0])).all()
+
+
+def test_parquet_merge(parquet_test_merge):
+    """Test the ParquetDataset with two merged data columns."""
+    dataset = ParquetDataset(parquet_test_merge, data_column=["data1", "data2"])
+    dataloader = DataLoader(dataset)
+
+    assert len(iter(dataloader)) == len(dataset)
+
+    batch = next(iter(dataloader))
+    assert (batch == torch.tensor([1.0, 2.0, 3.0, 4.0])).all()
