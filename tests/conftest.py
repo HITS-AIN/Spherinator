@@ -141,3 +141,22 @@ def parquet_test_merge(tmp_path_factory):
     pq.write_table(table, file)
 
     return file
+
+
+@pytest.fixture(scope="session")
+def parquet_test_norm(tmp_path_factory):
+    """Mock parquet file for testing normalization."""
+
+    table = pa.table(
+        {
+            "data": [
+                np.array([-1.2, 3.9, -0.5], dtype=np.float32),
+                np.array([1.7, -8.2, -0.4], dtype=np.float32),
+            ],
+        }
+    )
+
+    file = tmp_path_factory.mktemp("data") / "test.parquet"
+    pq.write_table(table, file)
+
+    return file

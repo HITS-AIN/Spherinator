@@ -146,3 +146,26 @@ def test_parquet_merge(parquet_test_merge):
 
     batch = next(iter(dataloader))
     assert (batch == torch.tensor([1.0, 2.0, 3.0, 4.0])).all()
+
+
+def test_absmax_norm(parquet_test_norm):
+    """Test the ParquetDataModule normalization absmax."""
+    data = ParquetDataModule(
+        parquet_test_norm,
+        data_column="data",
+        normalize="absmax",
+        batch_size=2,
+        num_workers=1,
+        shuffle=False,
+    )
+    data.setup("fit")
+    dataloader = data.train_dataloader()
+    batch = next(iter(dataloader))
+
+    assert batch.shape == (2, 3)
+    print(batch)
+    assert torch.isclose(
+        batch,
+        torch.tensor([[-0.3077, 1.0000, -0.1282], [0.2073, -1.0000, -0.0488]]),
+        atol=1e-3,
+    ).all()

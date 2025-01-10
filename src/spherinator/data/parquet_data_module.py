@@ -13,7 +13,7 @@ class ParquetDataModule(LightningDataModule):
         self,
         data_directory: str,
         data_column: str | list[str],
-        normalize: bool = True,
+        normalize: str = "none",
         shuffle: bool = True,
         batch_size: int = 32,
         num_workers: int = 1,
@@ -24,7 +24,7 @@ class ParquetDataModule(LightningDataModule):
             data_directory (str): The data directory
             data_column (str | list[str]): The column name(s) containing the data.
                 The data columns will be merged using a list of strings.
-            normalize (bool, optional): Wether or not to normalize the data. Defaults to True.
+            normalize (str, optional): The normalization (minmax, absmax, none) to apply. Defaults to "none".
             shuffle (bool, optional): Wether or not to shuffle whe reading. Defaults to True.
             batch_size (int, optional): The batch size for training. Defaults to 32.
             num_workers (int, optional): How many worker to use for loading. Defaults to 1.
@@ -41,13 +41,13 @@ class ParquetDataModule(LightningDataModule):
         self.dataloader_train = None
 
         self.transform_train = None
-        if normalize:
-            self.transform_train = transforms.Compose(
-                [
-                    transforms.Lambda(
-                        lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
-                    )
-                ]
+        if normalize == "minmax":
+            self.transform_train = transforms.Lambda(
+                lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
+            )
+        elif normalize == "absmax":
+            self.transform_train = transforms.Lambda(
+                lambda x: x / torch.max(torch.abs(x))
             )
 
     def setup(self, stage: str):
