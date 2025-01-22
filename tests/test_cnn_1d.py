@@ -13,25 +13,19 @@ def test_Conv1d(input, output):
     assert out.shape == torch.Size([2, 32, output])
 
 
-def test_convolutional_encoder_1d():
-    encoder = ConvolutionalEncoder1D(input_dim=128, output_dim=3)
-    data = torch.randn([2, 1, 128])
+@pytest.mark.parametrize("input_dim", [128, 343, 344])
+def test_convolutional_encoder_1d(input_dim):
+    encoder = ConvolutionalEncoder1D(input_dim=input_dim, output_dim=3)
+    data = torch.randn([2, 1, input_dim])
     out = encoder(data)
 
     assert out.shape == torch.Size([2, 3])
 
 
-def test_convolutional_decoder_1d():
-    encoder = ConvolutionalDecoder1D(input_dim=3, output_dim=128)
+@pytest.mark.parametrize("output_dim", [128, 343, 344])
+def test_convolutional_decoder_1d(output_dim):
+    encoder = ConvolutionalDecoder1D(input_dim=3, output_dim=output_dim)
     data = torch.randn([2, 3])
     out = encoder(data)
 
-    assert out.shape == torch.Size([2, 1, 128])
-
-
-def test_convolutional_encoder_1d_344():
-    encoder = ConvolutionalEncoder1D(input_dim=344, output_dim=3)
-    data = torch.randn([2, 1, 344])
-    out = encoder(data)
-
-    assert out.shape == torch.Size([2, 3])
+    assert out.shape == torch.Size([2, 1, output_dim])
