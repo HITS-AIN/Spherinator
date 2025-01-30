@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 
 
 class ParquetDataset(Dataset):
-    """Iterable dataset reading parquet files."""
+    """Dataset reading parquet files."""
 
     def __init__(
         self,
