@@ -1,9 +1,11 @@
 import numpy as np
+import pytest
 import torch
 
 from spherinator.data import MNISTDataModule
 
 
+@pytest.mark.skip(reason="download needs too long")
 def test_fit(tmp_path):
     data = MNISTDataModule(tmp_path, random_rotation=True, num_workers=1, batch_size=2)
     data.prepare_data()
