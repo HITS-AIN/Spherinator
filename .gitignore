@@ -2,6 +2,7 @@ __pycache__
 .venv*/
 *.ckpt
 *.ncu-rep
+*.onnx
 *.sarif
 config.yaml
 dist/
