@@ -69,4 +69,4 @@ jobs:
         run: poetry run flake8 . --count --show-source
 
       - name: Test with pytest
-        run: poetry run pytest
+        run: poetry run python${{ matrix.python-version }} -m pytest
