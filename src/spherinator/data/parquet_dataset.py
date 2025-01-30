@@ -1,6 +1,8 @@
 """ Iterable dataset reading parquet files.
 """
 
+from typing import Union
+
 import numpy as np
 import pyarrow.dataset as ds
 import torch
@@ -13,7 +15,7 @@ class ParquetDataset(Dataset):
     def __init__(
         self,
         data_directory: str,
-        data_column: str | list[str],
+        data_column: Union[str, list[str]],
         transform=None,
     ):
         """Initializes the data set.
