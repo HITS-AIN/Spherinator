@@ -48,6 +48,7 @@ jobs:
           virtualenvs-in-project: true
 
       - run: poetry --version
+      - run: poetry run python --version
 
         # Cache your dependencies (i.e. all the stuff in your `pyproject.toml`). Note the cache
         # key: if you're using multiple Python versions, or multiple OSes, you'd need to include
