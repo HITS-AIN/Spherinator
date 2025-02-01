@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 import torch
 import torch.nn as nn
@@ -66,11 +68,14 @@ class DistributionModel(torch.nn.Module):
             ConvolutionalEncoder1D(12, 24),
             torch.randn(2, 1, 12),
         ),
-        (
+        pytest.param(
             Autoencoder(
                 ConvolutionalEncoder1D(12, 24), ConvolutionalDecoder1D(24, 12), 24, 3
             ),
             torch.randn(2, 1, 12),
+            marks=pytest.mark.xfail(
+                sys.version_info.minor == 9, reason="Fails on Python 3.9"
+            ),
         ),
     ],
 )

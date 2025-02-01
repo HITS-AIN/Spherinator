@@ -1,3 +1,5 @@
+from typing import Union
+
 import torch
 import torchvision.transforms.v2 as transforms
 from lightning.pytorch import LightningDataModule
@@ -12,7 +14,7 @@ class ParquetDataModule(LightningDataModule):
     def __init__(
         self,
         data_directory: str,
-        data_column: str | list[str],
+        data_column: Union[str, list[str]],
         normalize: str = "none",
         shuffle: bool = True,
         batch_size: int = 32,
