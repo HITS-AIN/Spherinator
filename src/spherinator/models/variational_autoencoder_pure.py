@@ -9,15 +9,25 @@ from torch.optim import Adam
 class VariationalEncoder(nn.Module):
     """Variational encoder for extra layer splitting the location and scale of the latent space."""
 
-    def __init__(self, encoder: nn.Module, z_dim: int) -> None:
+    def __init__(
+        self,
+        encoder: nn.Module,
+        z_dim: int,
+    ) -> None:
+        """VariationalEncoder initializer
+
+        Args:
+            encoder (nn.Module): encoder model
+            z_dim (int): latent space dimension
+        """
         super().__init__()
         self.encoder = encoder
-        self.h_dim = encoder.output_dim
         self.z_dim = z_dim
-        self.fc_location = nn.Linear(self.h_dim, self.z_dim)
-        self.fc_scale = nn.Linear(self.h_dim, 1)
 
-    def forward(self, x):
+        self.fc_location = nn.LazyLinear(self.z_dim)
+        self.fc_scale = nn.LazyLinear(1)
+
+    def forward(self, x) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.encoder(x)
         z_location = self.fc_location(x)
         z_location = torch.nn.functional.normalize(z_location, p=2.0, dim=1)
@@ -31,13 +41,15 @@ class VariationalAutoencoderPure(pl.LightningModule):
         self,
         encoder: nn.Module,
         decoder: nn.Module,
+        z_dim: int = 3,
         beta: float = 1.0,
-    ):
+    ) -> None:
         """Autoencoder initializer
 
         Args:
             encoder (nn.Module): encoder model
             decoder (nn.Module): decoder model
+            z_dim (int, optional): latent space dimension. Defaults to 3.
             beta (float, optional): factor for beta-VAE. Defaults to 1.0.
         """
         super().__init__()
@@ -48,7 +60,7 @@ class VariationalAutoencoderPure(pl.LightningModule):
         self.encoder = encoder
         self.decoder = decoder
         self.beta = beta
-        self.z_dim = decoder.input_dim
+        self.z_dim = z_dim
 
         self.variational_encoder = VariationalEncoder(encoder, self.z_dim)
 
@@ -76,7 +88,7 @@ class VariationalAutoencoderPure(pl.LightningModule):
         recon = self.decode(z)
         return (z_location, z_scale), (q_z, p_z), z, recon
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
 
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
 
