@@ -5,21 +5,23 @@ import torch.nn as nn
 
 
 class ConvolutionalDecoder1D(nn.Module):
-    def __init__(self, input_dim: int, output_dim: int):
+    def __init__(
+        self,
+        output_dim: int,
+    ):
         """ConvolutionalDecoder1D initializer
-        Input shape: (batch_size, input_dim)
-        Output shape: (batch_size, 1, output_dim)
+        Args:
+            output_dim (int): The number of output features
         """
         super().__init__()
 
-        self.input_dim = input_dim
         self.output_dim = output_dim
 
         dec2_input_dim = math.ceil(output_dim / 2)
         dec1_input_dim = math.ceil(dec2_input_dim / 2)
 
         self.dec1 = nn.Sequential(
-            nn.Linear(input_dim, 64 * dec1_input_dim),
+            nn.LazyLinear(64 * dec1_input_dim),
             nn.Unflatten(1, (64, dec1_input_dim)),
             nn.BatchNorm1d(64),
             nn.ReLU(),
