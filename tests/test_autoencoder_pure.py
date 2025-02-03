@@ -11,8 +11,8 @@ from spherinator.models import (
 
 def test_forward():
     """Test forward method of AutoencoderPure"""
-    encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=3)
-    decoder = ConvolutionalDecoder1D(input_dim=3, output_dim=12)
+    encoder = ConvolutionalEncoder1D(output_dim=3)
+    decoder = ConvolutionalDecoder1D(output_dim=12)
     model = AutoencoderPure(encoder=encoder, decoder=decoder)
     input = torch.randn(2, 1, 12)
 
@@ -22,8 +22,8 @@ def test_forward():
 
 def test_training(parquet_1d_metadata):
     """Test training of AutoencoderPure"""
-    encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=3)
-    decoder = ConvolutionalDecoder1D(input_dim=3, output_dim=12)
+    encoder = ConvolutionalEncoder1D(output_dim=3)
+    decoder = ConvolutionalDecoder1D(output_dim=12)
     model = AutoencoderPure(encoder=encoder, decoder=decoder)
 
     datamodule = ParquetDataModule(
@@ -36,7 +36,7 @@ def test_training(parquet_1d_metadata):
 
     trainer = Trainer(
         max_epochs=1,
-        overfit_batches=2,
+        enable_model_summary=False,
         enable_checkpointing=False,
         accelerator="cpu",
         log_every_n_steps=1,

@@ -41,7 +41,7 @@ def test_training(parquet_1d_metadata):
 
     trainer = Trainer(
         max_epochs=1,
-        overfit_batches=2,
+        enable_model_summary=False,
         enable_checkpointing=False,
         accelerator="cpu",
         log_every_n_steps=1,
