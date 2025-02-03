@@ -1,32 +1,14 @@
 import math
-from dataclasses import dataclass
 
 import torch
 import torch.nn as nn
 
 
-@dataclass
-class CNNLayer:
-    """CNNLayer dataclass"""
-
-    in_channels: int = 1
-    out_channels: int = 4
-    kernel_size: int = 4
-    stride: int = 2
-    padding: int = 1
-
-
 class ConvolutionalEncoder1D(nn.Module):
-    def __init__(
-        self,
-        input_dim: int,
-        output_dim: int,
-        cnn_layers: list[CNNLayer] = [CNNLayer()],
-    ):
+    def __init__(self, input_dim: int, output_dim: int):
         """ConvolutionalEncoder1D initializer
-        input_dim: (int) input dimension
-        output_dim: (int) output dimension
-        cnn_layers: list of CNNLayer dataclasses
+        Input shape: (batch_size, 1, input_dim)
+        Output shape: (batch_size, output_dim)
         """
         super().__init__()
 
@@ -35,23 +17,12 @@ class ConvolutionalEncoder1D(nn.Module):
 
         self.example_input_array = torch.randn(2, 1, input_dim)
 
-        self.encoder = []
-        for layer in cnn_layers:
-            self.encoder.append(
-                nn.Sequential(
-                    nn.Conv1d(
-                        in_channels=layer.in_channels,
-                        out_channels=layer.out_channels,
-                        kernel_size=layer.kernel_size,
-                        stride=layer.stride,
-                        padding=layer.padding,
-                    ),
-                    nn.BatchNorm1d(layer.out_channels),
-                    nn.ReLU(),
-                )
-            )
-            enc1_output_dim = math.floor(input_dim / 2)
-
+        self.enc1 = nn.Sequential(
+            nn.Conv1d(1, 32, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+        )
+        enc1_output_dim = math.floor(input_dim / 2)
         self.enc2 = nn.Sequential(
             nn.Conv1d(32, 64, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm1d(64),
@@ -64,8 +35,6 @@ class ConvolutionalEncoder1D(nn.Module):
         )
 
     def forward(self, x: torch.tensor) -> torch.tensor:
-        for layer in self.encoder:
-            x = layer(x)
         x = self.enc1(x)
         x = self.enc2(x)
         x = self.enc3(x)
