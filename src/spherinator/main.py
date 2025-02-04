@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Uses the command line client to start the training."""
+"""Uses the command line client to start the training."""
 
 import numpy as np
 import torch

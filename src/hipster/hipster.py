@@ -1,5 +1,4 @@
-""" Provides all functionalities to transform a model in a HiPS representation for browsing.
-"""
+"""Provides all functionalities to transform a model in a HiPS representation for browsing."""
 
 import copy
 import math
