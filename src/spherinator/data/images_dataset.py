@@ -1,5 +1,4 @@
-""" Create dataset with all image files in a directory.
-"""
+"""Create dataset with all image files in a directory."""
 
 import os
 from pathlib import Path
