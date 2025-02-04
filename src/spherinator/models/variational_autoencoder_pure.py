@@ -93,9 +93,9 @@ class VariationalAutoencoderPure(pl.LightningModule):
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
 
         loss_recon = self.reconstruction_loss(batch, recon)
-        loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
+        loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z)
 
-        loss = (loss_recon + loss_KL).mean()
+        loss = (loss_recon + self.beta * loss_KL).mean()
         loss_recon = loss_recon.mean()
         loss_KL = loss_KL.mean()
 
