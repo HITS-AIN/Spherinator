@@ -1,4 +1,3 @@
-from hmac import new
 from typing import Callable, Optional
 
 import torch
