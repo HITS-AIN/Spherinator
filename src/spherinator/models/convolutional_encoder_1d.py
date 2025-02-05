@@ -7,6 +7,7 @@ import torch.nn as nn
 class ConvolutionalEncoder1D(nn.Module):
     def __init__(
         self,
+        input_dim: int,
         output_dim: int,
         in_channels: int = 1,
         inc_channels: int = 3,
@@ -20,6 +21,7 @@ class ConvolutionalEncoder1D(nn.Module):
     ) -> None:
         """ConvolutionalEncoder1D initializer
         Args:
+            input_dim (int): The number of input features
             output_dim (int): The number of output features
             kernel_size (int, optional): The kernel size. Defaults to 5.
             number_of_layers (int, optional): The number of layers. Defaults to 3.
@@ -34,6 +36,7 @@ class ConvolutionalEncoder1D(nn.Module):
         """
         super().__init__()
 
+        self.input_dim = input_dim
         self.output_dim = output_dim
         self.kernel_size = kernel_size
         self.number_of_layers = number_of_layers
@@ -43,7 +46,7 @@ class ConvolutionalEncoder1D(nn.Module):
         self.norm = norm
         self.pooling = pooling
 
-        self.example_input_array = torch.randn(2, 1, 24)
+        self.example_input_array = torch.randn(1, 1, input_dim)
 
         layers = []
         nb_channels = in_channels
