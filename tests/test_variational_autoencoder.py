@@ -12,8 +12,8 @@ from spherinator.models import (
 def test_forward():
     """Test forward method of VariationalAutoencoder"""
     z_dim = 3
-    encoder = ConvolutionalEncoder1D(output_dim=24)
-    decoder = ConvolutionalDecoder1D(output_dim=12)
+    encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=24)
+    decoder = ConvolutionalDecoder1D(input_dim=24, output_dim=12)
     model = VariationalAutoencoder(
         encoder=encoder, decoder=decoder, h_dim=24, z_dim=z_dim
     )
@@ -29,8 +29,8 @@ def test_forward():
 
 def test_training(parquet_1d_metadata):
     """Test training of VariationalAutoencoder"""
-    encoder = ConvolutionalEncoder1D(output_dim=24)
-    decoder = ConvolutionalDecoder1D(output_dim=12)
+    encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=24)
+    decoder = ConvolutionalDecoder1D(input_dim=24, output_dim=12)
     model = VariationalAutoencoder(encoder=encoder, decoder=decoder, h_dim=24, z_dim=3)
 
     datamodule = ParquetDataModule(

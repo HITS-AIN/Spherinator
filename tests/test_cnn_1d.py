@@ -15,7 +15,7 @@ def test_Conv1d(input, output):
 
 @pytest.mark.parametrize("input_dim", [128, 343, 344])
 def test_convolutional_encoder_1d(input_dim):
-    encoder = ConvolutionalEncoder1D(output_dim=3)
+    encoder = ConvolutionalEncoder1D(input_dim=input_dim, output_dim=3)
     data = torch.randn([2, 1, input_dim])
     out = encoder(data)
 
@@ -25,7 +25,7 @@ def test_convolutional_encoder_1d(input_dim):
 # @pytest.mark.parametrize("output_dim", [128, 343, 344])
 @pytest.mark.parametrize("output_dim", [128, 344])
 def test_convolutional_decoder_1d(output_dim):
-    encoder = ConvolutionalDecoder1D(output_dim=output_dim)
+    encoder = ConvolutionalDecoder1D(input_dim=3, output_dim=output_dim)
     data = torch.randn([2, 3])
     out = encoder(data)
 
