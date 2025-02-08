@@ -16,6 +16,7 @@ class ParquetDataset(Dataset):
         data_directory: str,
         data_column: Union[str, list[str]],
         transform=None,
+        with_index: bool = False,
     ):
         """Initializes the data set.
 
@@ -25,6 +26,7 @@ class ParquetDataset(Dataset):
                 The data columns will be merged using a list of strings.
             transform (torchvision.transforms, optional): A single or a set of
                 transformations to modify the data. Defaults to None.
+            with_index (bool, optional): Whether to return the index with the data.
         """
         super().__init__()
 
@@ -34,6 +36,7 @@ class ParquetDataset(Dataset):
         dataset = ds.dataset(data_directory)
         table = dataset.to_table(columns=data_column)
         self.transform = transform
+        self.with_index = with_index
 
         if len(data_column) == 1:
             self.data = table[0].to_pandas()
@@ -55,8 +58,11 @@ class ParquetDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, index: int) -> torch.Tensor:
+    def __getitem__(self, index: int) -> Union[torch.Tensor, tuple[torch.Tensor, int]]:
         batch = torch.tensor(self.data[index])
         if self.transform is not None:
             batch = self.transform(batch)
-        return batch
+        if self.with_index:
+            return batch, index
+        else:
+            return batch

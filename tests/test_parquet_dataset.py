@@ -169,3 +169,13 @@ def test_absmax_norm(parquet_test_norm):
         torch.tensor([[-0.3077, 1.0000, -0.1282], [0.2073, -1.0000, -0.0488]]),
         atol=1e-3,
     ).all()
+
+
+def test_parquet_dataset_with_index(parquet_numpy_file):
+    """Test the ParquetDataset with returning the data index."""
+    dataset = ParquetDataset(parquet_numpy_file, data_column="data", with_index=True)
+    dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
+
+    _, index = next(iter(dataloader))
+
+    assert (index == torch.tensor([0, 1])).all()

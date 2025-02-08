@@ -19,6 +19,7 @@ class ParquetDataModule(LightningDataModule):
         shuffle: bool = True,
         batch_size: int = 32,
         num_workers: int = 1,
+        with_index: bool = False,
     ):
         """Initializes the data loader
 
@@ -30,6 +31,7 @@ class ParquetDataModule(LightningDataModule):
             shuffle (bool, optional): Wether or not to shuffle whe reading. Defaults to True.
             batch_size (int, optional): The batch size for training. Defaults to 32.
             num_workers (int, optional): How many worker to use for loading. Defaults to 1.
+            with_index (bool, optional): Whether to return the index with the data.
         """
         super().__init__()
 
@@ -39,6 +41,7 @@ class ParquetDataModule(LightningDataModule):
         self.shuffle = shuffle
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.with_index = with_index
 
         self.data_train = None
         self.dataloader_train = None
@@ -66,6 +69,7 @@ class ParquetDataModule(LightningDataModule):
                 data_directory=self.data_directory,
                 data_column=self.data_column,
                 transform=self.transform_train,
+                with_index=self.with_index,
             )
             self.dataloader_train = DataLoader(
                 self.data_train,

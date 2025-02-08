@@ -23,6 +23,7 @@ from .convolutional_encoder import ConvolutionalEncoder
 from .convolutional_encoder_1d import ConvolutionalEncoder1D
 from .convolutional_encoder_2 import ConvolutionalEncoder2
 from .dense_model import DenseModel
+from .embedding_reconstruction import EmbeddingReconstruction
 from .rotational2_autoencoder import Rotational2Autoencoder
 from .rotational2_variational_autoencoder_power import (
     Rotational2VariationalAutoencoderPower,
@@ -47,6 +48,7 @@ __all__ = [
     "ConvolutionalEncoder1D",
     "ConvolutionalEncoder2",
     "DenseModel",
+    "EmbeddingReconstruction",
     "Rotational2Autoencoder",
     "Rotational2VariationalAutoencoderPower",
     "RotationalAutoencoder",
