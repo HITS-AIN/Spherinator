@@ -20,7 +20,7 @@ class EmbeddingReconstruction(pl.LightningModule):
         self.save_hyperparameters()
         self.embedding = embedding
         self.decoder = decoder
-        self.example_input_array = torch.randn(1, 1, 12)
+        self.example_input_array = torch.tensor([0], dtype=torch.int)
         self.reconstruction_loss = nn.MSELoss()
 
     def decode(self, x):

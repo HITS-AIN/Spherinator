@@ -1,4 +1,4 @@
-"""Iterable dataset reading parquet files."""
+"""Dataset reading parquet files."""
 
 from typing import Union
 
@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 
 
 class ParquetDataset(Dataset):
-    """Iterable dataset reading parquet files."""
+    """Dataset reading parquet files."""
 
     def __init__(
         self,
@@ -58,11 +58,13 @@ class ParquetDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, index: int) -> Union[torch.Tensor, tuple[torch.Tensor, int]]:
+    def __getitem__(
+        self, index: int
+    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         batch = torch.tensor(self.data[index])
         if self.transform is not None:
             batch = self.transform(batch)
         if self.with_index:
-            return batch, index
+            return batch, torch.tensor(index)
         else:
             return batch
