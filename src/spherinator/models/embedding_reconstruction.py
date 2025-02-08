@@ -1,5 +1,3 @@
-from operator import index
-
 import lightning.pytorch as pl
 import torch
 import torch.nn as nn
@@ -33,9 +31,9 @@ class EmbeddingReconstruction(pl.LightningModule):
         return self.decode(x)
 
     def training_step(self, batch, _):
-        input, index = batch
+        inputs, index = batch
         recon = self.forward(index)
-        loss = self.reconstruction_loss(input, recon).mean()
+        loss = self.reconstruction_loss(inputs, recon).mean()
 
         self.log("train_loss", loss, prog_bar=True)
         self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
