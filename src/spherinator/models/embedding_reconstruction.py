@@ -23,12 +23,9 @@ class EmbeddingReconstruction(pl.LightningModule):
         self.example_input_array = torch.tensor([0], dtype=torch.int)
         self.reconstruction_loss = nn.MSELoss()
 
-    def decode(self, x):
-        return self.decoder(x)
-
     def forward(self, x):
         x = self.embedding(x)
-        return self.decode(x)
+        return self.decoder(x)
 
     def training_step(self, batch, _):
         inputs, index = batch
