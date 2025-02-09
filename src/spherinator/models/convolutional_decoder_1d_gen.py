@@ -1,8 +1,5 @@
-from calendar import c
-
 import torch
 import torch.nn as nn
-from pyparsing import C
 
 from .consecutive_conv_transpose_1d_layers import ConsecutiveConvTranspose1DLayer
 
