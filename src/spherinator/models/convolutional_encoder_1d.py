@@ -3,10 +3,15 @@ import torch.nn as nn
 
 
 class ConvolutionalEncoder1D(nn.Module):
-    def __init__(self, input_dim: int, output_dim: int):
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+    ):
         """ConvolutionalEncoder1D initializer
-        Input shape: (batch_size, 1, input_dim)
-        Output shape: (batch_size, output_dim)
+        Args:
+            input_dim (int): The number of input features
+            output_dim (int): The number of output features
         """
         super().__init__()
 
