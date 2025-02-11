@@ -42,3 +42,26 @@ def test_convolutional_decoder_1d_gen(output_dim):
     out = decoder(data)
 
     assert out.shape == torch.Size([2, *output_dim])
+
+
+def test_convolutional_decoder_1d_gen_deep():
+    out_channels_list = list(range(248, 12, -4)) + [1]
+
+    assert len(out_channels_list) == 60
+
+    cnn_layers = [
+        ConsecutiveConvTranspose1DLayer(
+            kernel_size=5,
+            out_channels_list=out_channels_list,
+        )
+    ]
+    decoder = ConvolutionalDecoder1DGen(
+        input_dim=3,
+        output_dim=(1, 344),
+        cnn_input_dim=(252, 104),
+        cnn_layers=cnn_layers,
+    )
+    data = torch.randn([1, 3])
+    out = decoder(data)
+
+    assert out.shape == torch.Size([1, 1, 344])
