@@ -35,7 +35,7 @@ jobs:
       # number in the cache key, and the "-0" suffix: this allows you to invalidate the cache
       # manually if/when you want to upgrade Poetry, or if something goes wrong.
       - name: Cache poetry
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         with:
           path: ~/.local
           key: poetry-2.0.1-0
@@ -55,7 +55,7 @@ jobs:
         # them in the cache key. I'm not, so it can be simple and just depend on the poetry.lock.
       - name: Cache dependencies
         id: cache-deps
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         with:
           path: .venv
           key: pydeps-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
