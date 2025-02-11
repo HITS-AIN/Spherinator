@@ -1,28 +1,36 @@
+from typing import Callable, Optional
+
 import torch
 import torch.nn as nn
 
 
 class DenseModel(nn.Module):
-    def __init__(self, layer_dims: list[int]):
-        """DenseModel initializer"""
+    def __init__(
+        self,
+        layer_dims: list[int],
+        output_shape: Optional[list[int]] = None,
+        activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
+    ):
+        """DenseModel initializer
+        Args:
+            layer_dims (list[int]): The list of layer dimensions
+            output_shape (Optional[list[int]], optional): The output shape. Defaults to None.
+        """
         super().__init__()
 
-        self.input_dim = layer_dims[0]
-        self.output_dim = layer_dims[-1]
+        self.example_input_array = torch.randn(1, layer_dims[0])
 
-        self.example_input_array = torch.randn(2, self.input_dim)
+        layers = []
+        for i in range(len(layer_dims) - 1):
+            layers.append(nn.Linear(layer_dims[i], layer_dims[i + 1]))
+            if i < len(layer_dims) - 2 and activation:
+                layers.append(activation())
 
-        modules = []
-        num_layers = len(layer_dims)
-        for i in range(num_layers - 2):
-            modules.append(nn.Linear(layer_dims[i], layer_dims[i + 1]))
-            modules.append(nn.ReLU())
-        modules.append(
-            nn.Linear(layer_dims[num_layers - 2], layer_dims[num_layers - 1])
-        )
+        if output_shape:
+            layers.append(nn.Unflatten(1, output_shape))
 
-        self.model = nn.Sequential(*modules)
+        self.model = nn.Sequential(*layers)
 
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model(x)
         return x
