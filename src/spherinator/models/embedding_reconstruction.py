@@ -33,6 +33,7 @@ class EmbeddingReconstruction(pl.LightningModule):
         loss = self.reconstruction_loss(inputs, recon).mean()
 
         self.log("train_loss", loss, prog_bar=True)
+        self.log("loss_recon", loss, prog_bar=True)
         self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
         return loss
 
