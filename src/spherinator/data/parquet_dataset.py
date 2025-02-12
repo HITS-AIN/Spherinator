@@ -61,7 +61,7 @@ class ParquetDataset(Dataset):
     def __getitem__(
         self, index: int
     ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
-        batch = torch.tensor(self.data[index])
+        batch = torch.tensor(self.data[index], dtype=torch.float32)
         if self.transform is not None:
             batch = self.transform(batch)
         if self.with_index:
