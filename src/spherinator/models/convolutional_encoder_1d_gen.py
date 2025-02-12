@@ -15,7 +15,7 @@ class ConvolutionalEncoder1DGen(nn.Module):
         Args:
             input_dim (tuple[int, int]): The number of input features
             output_dim (int): The number of output features
-            cnn_layers (list[ConsecutiveConvLayer]): The list of consecutive convolutional layers
+            cnn_layers (list[ConsecutiveConv1DLayer]): The list of consecutive convolutional layers
         """
         super().__init__()
 

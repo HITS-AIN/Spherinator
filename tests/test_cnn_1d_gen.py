@@ -1,5 +1,6 @@
 import pytest
 import torch
+from torch import nn
 
 from spherinator.models import (
     ConsecutiveConv1DLayer,
@@ -25,6 +26,22 @@ def test_convolutional_encoder_1d_gen(input_dim):
     out = encoder(data)
 
     assert out.shape == torch.Size([2, 3])
+
+
+def test_consecutive_conv_1d_layer():
+    conv = ConsecutiveConv1DLayer(
+        num_layers=1,
+        base_channel_number=3,
+        pooling=nn.MaxPool1d(2),
+    )
+    model = conv.get_model()
+
+    print(model)
+
+    data = torch.randn([1, 1, 32])
+    out = model(data)
+
+    assert out.shape == torch.Size([1, 3, 15])
 
 
 @pytest.mark.parametrize("output_dim", [(1, 128)])

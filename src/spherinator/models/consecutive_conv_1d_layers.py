@@ -14,8 +14,7 @@ class ConsecutiveConv1DLayer:
         channel_increment: int = 4,
         activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
         norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm1d,
-        pooling: Optional[Callable[..., nn.Module]] = None,
-        transpose: bool = False,
+        pooling: Optional[nn.Module] = None,
     ) -> None:
         """A class that defines a consecutive convolutional layer.
         Args:
@@ -31,7 +30,6 @@ class ConsecutiveConv1DLayer:
             Defaults to nn.BatchNorm1d.
             pooling (Optional[Callable[..., nn.Module]], optional): The pooling layer.
             Defaults to None.
-            transpose (bool, optional): If the convolutional layer is a transpose convolutional layer.
         """
         super().__init__()
 
@@ -44,17 +42,11 @@ class ConsecutiveConv1DLayer:
         self.activation = activation
         self.norm = norm
         self.pooling = pooling
-        self.transpose = transpose
-
-        if transpose:
-            self.conv = nn.LazyConvTranspose1d
-        else:
-            self.conv = nn.LazyConv1d
 
     def __get_single_layer(self, out_channels: int) -> nn.Module:
         layers = []
         layers.append(
-            self.conv(
+            nn.LazyConv1d(
                 out_channels=out_channels,
                 kernel_size=self.kernel_size,
                 stride=self.stride,
@@ -66,7 +58,7 @@ class ConsecutiveConv1DLayer:
         if self.activation:
             layers.append(self.activation())
         if self.pooling:
-            layers.append(self.pooling())
+            layers.append(self.pooling)
         return nn.Sequential(*layers)
 
     def get_model(self) -> nn.Module:
@@ -74,10 +66,6 @@ class ConsecutiveConv1DLayer:
             self.base_channel_number + i * self.channel_increment
             for i in range(0, self.num_layers)
         ]
-
-        if self.transpose:
-            # reverse the channel numbers
-            channel_numbers = channel_numbers[::-1]
 
         layers = []
         for nb_channels in channel_numbers:
