@@ -27,7 +27,7 @@ class ParquetIterableDataset(IterableDataset):
         """
         super().__init__()
         self.data_column = data_column
-        dataset = ds.dataset(data_directory)
+        dataset = ds.dataset(data_directory, format="parquet")
         self.scanner = dataset.scanner(columns=[data_column], batch_size=batch_size)
         self.transform = transform
 
