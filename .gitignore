@@ -4,6 +4,7 @@ __pycache__
 *.ncu-rep
 *.onnx
 *.parquet
+*.pt
 *.sarif
 config.yaml
 dist/
