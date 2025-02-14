@@ -7,7 +7,7 @@ from .consecutive_conv_1d_layers import ConsecutiveConv1DLayer
 class ConvolutionalEncoder1DGen(nn.Module):
     def __init__(
         self,
-        input_dim: tuple[int, int],
+        input_dim: list[int],
         output_dim: int,
         cnn_layers: list[ConsecutiveConv1DLayer],
     ) -> None:

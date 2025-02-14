@@ -37,7 +37,7 @@ class ConvolutionalEncoder1D(nn.Module):
             nn.Linear(int(64 * input_dim / 4), output_dim),
         )
 
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.enc1(x)
         x = self.enc2(x)
         x = self.enc3(x)

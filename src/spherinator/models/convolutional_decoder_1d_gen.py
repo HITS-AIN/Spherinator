@@ -8,8 +8,8 @@ class ConvolutionalDecoder1DGen(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        output_dim: tuple[int, int],
-        cnn_input_dim: tuple[int, int],
+        output_dim: list[int],
+        cnn_input_dim: list[int],
         cnn_layers: list[ConsecutiveConvTranspose1DLayer],
     ) -> None:
         """ConvolutionalDecoder1DGen initializer

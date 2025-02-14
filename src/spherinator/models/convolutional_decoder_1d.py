@@ -40,7 +40,7 @@ class ConvolutionalDecoder1D(nn.Module):
             nn.BatchNorm1d(1),
         )
 
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.dec1(x)
         x = self.dec2(x)
         x = self.dec3(x)
