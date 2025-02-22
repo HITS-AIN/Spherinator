@@ -160,3 +160,25 @@ def parquet_test_norm(tmp_path_factory):
     pq.write_table(table, file)
 
     return file
+
+
+@pytest.fixture(scope="session")
+def parquet_test_sampling(tmp_path_factory):
+    """Mock parquet file for testing error sampling."""
+
+    table = pa.table(
+        {
+            "flux": [
+                np.array([1.2, 3.9, 0.5, 2.7], dtype=np.float32),
+            ],
+            "flux_error": [
+                np.array([0.5, 0.2, 0.5, 0.2], dtype=np.float32),
+            ],
+        },
+        metadata={"flux_shape": "(1,1,4)", "flux_error_shape": "(1,1,4)"},
+    )
+
+    file = tmp_path_factory.mktemp("data") / "test.parquet"
+    pq.write_table(table, file)
+
+    return file

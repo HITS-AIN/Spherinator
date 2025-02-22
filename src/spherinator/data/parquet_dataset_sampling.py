@@ -44,7 +44,7 @@ class ParquetDatasetSampling(Dataset):
         self.with_index = with_index
         self.error_column = error_column
 
-        self.data = table[0].to_pandas()
+        self.data = table.to_pandas()
 
         # Reshape the data if the shape is stored in the metadata.
         metadata_shape = bytes(data_column[0], "utf8") + b"_shape"
