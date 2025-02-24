@@ -1,7 +1,10 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
 
 from .consecutive_conv_1d_layers import ConsecutiveConv1DLayer
+from .weights_enum import WeightsEnum
 
 
 class ConvolutionalEncoder1DGen(nn.Module):
@@ -10,6 +13,7 @@ class ConvolutionalEncoder1DGen(nn.Module):
         input_dim: list[int],
         output_dim: int,
         cnn_layers: list[ConsecutiveConv1DLayer],
+        weights: Optional[WeightsEnum] = None,
     ) -> None:
         """ConvolutionalEncoder1DGen initializer
         Args:
