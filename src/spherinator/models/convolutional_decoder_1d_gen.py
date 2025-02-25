@@ -15,6 +15,7 @@ class ConvolutionalDecoder1DGen(nn.Module):
         cnn_input_dim: list[int],
         cnn_layers: list[ConsecutiveConvTranspose1DLayer],
         weights: Optional[WeightsProvider] = None,
+        freeze: bool = False,
     ) -> None:
         """ConvolutionalDecoder1DGen initializer
         Args:
@@ -22,6 +23,7 @@ class ConvolutionalDecoder1DGen(nn.Module):
             output_dim (int): The number of output features
             cnn_layers (list[ConsecutiveConvTranspose1DLayer]): The list of consecutive convolutional layers
             weights (Optional[WeightsProvider], optional): The weights to load. Defaults to None.
+            freeze (bool, optional): Whether to freeze the model. Defaults to False.
         """
         super().__init__()
 
@@ -45,6 +47,9 @@ class ConvolutionalDecoder1DGen(nn.Module):
 
         if weights is not None:
             self.load_state_dict(weights.get_state_dict())
+        if freeze:
+            for param in self.parameters():
+                param.requires_grad = False
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.fc(x)
