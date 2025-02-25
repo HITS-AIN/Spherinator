@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 from .consecutive_conv_1d_layers import ConsecutiveConv1DLayer
-from .weights_enum import WeightsEnum
+from .weights_provider import WeightsProvider
 
 
 class ConvolutionalEncoder1DGen(nn.Module):
@@ -13,13 +13,14 @@ class ConvolutionalEncoder1DGen(nn.Module):
         input_dim: list[int],
         output_dim: int,
         cnn_layers: list[ConsecutiveConv1DLayer],
-        weights: Optional[WeightsEnum] = None,
+        weights: Optional[WeightsProvider] = None,
     ) -> None:
         """ConvolutionalEncoder1DGen initializer
         Args:
             input_dim (tuple[int, int]): The number of input features
             output_dim (int): The number of output features
             cnn_layers (list[ConsecutiveConv1DLayer]): The list of consecutive convolutional layers
+            weights (Optional[WeightsProvider], optional): The weights to load. Defaults to None.
         """
         super().__init__()
 
@@ -37,6 +38,9 @@ class ConvolutionalEncoder1DGen(nn.Module):
             nn.Flatten(),
             nn.LazyLinear(output_dim),
         )
+
+        if weights is not None:
+            self.load_state_dict(weights.get_state_dict())
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.cnn(x)

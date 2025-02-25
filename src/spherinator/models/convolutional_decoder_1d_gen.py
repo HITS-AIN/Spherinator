@@ -1,7 +1,10 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
 
 from .consecutive_conv_transpose_1d_layers import ConsecutiveConvTranspose1DLayer
+from .weights_provider import WeightsProvider
 
 
 class ConvolutionalDecoder1DGen(nn.Module):
@@ -11,12 +14,14 @@ class ConvolutionalDecoder1DGen(nn.Module):
         output_dim: list[int],
         cnn_input_dim: list[int],
         cnn_layers: list[ConsecutiveConvTranspose1DLayer],
+        weights: Optional[WeightsProvider] = None,
     ) -> None:
         """ConvolutionalDecoder1DGen initializer
         Args:
             input_dim (int): The number of input features
             output_dim (int): The number of output features
             cnn_layers (list[ConsecutiveConvTranspose1DLayer]): The list of consecutive convolutional layers
+            weights (Optional[WeightsProvider], optional): The weights to load. Defaults to None.
         """
         super().__init__()
 
@@ -37,6 +42,9 @@ class ConvolutionalDecoder1DGen(nn.Module):
         for layer in cnn_layers:
             layers.append(layer.get_model())
         self.cnn = nn.Sequential(*layers)
+
+        if weights is not None:
+            self.load_state_dict(weights.get_state_dict())
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.fc(x)
