@@ -5,6 +5,8 @@ import torch.nn.functional as F
 from power_spherical import HypersphericalUniform, PowerSpherical
 from torch.optim import Adam
 
+from .truncated_normal_distribution import truncated_normal_distribution
+
 
 class VariationalEncoder(nn.Module):
     """Variational encoder for extra layer splitting the location and scale of the latent space."""
@@ -43,6 +45,7 @@ class VariationalAutoencoderPure(pl.LightningModule):
         decoder: nn.Module,
         z_dim: int = 3,
         beta: float = 1.0,
+        loss: str = "MSE",
     ) -> None:
         """Autoencoder initializer
 
@@ -51,6 +54,7 @@ class VariationalAutoencoderPure(pl.LightningModule):
             decoder (nn.Module): decoder model
             z_dim (int, optional): latent space dimension. Defaults to 3.
             beta (float, optional): factor for beta-VAE. Defaults to 1.0.
+            loss (str, optional): loss function ["MSE", "NLL"]. Defaults to "MSE".
         """
         super().__init__()
 
@@ -59,16 +63,19 @@ class VariationalAutoencoderPure(pl.LightningModule):
 
         self.encoder = encoder
         self.decoder = decoder
-        self.beta = beta
         self.z_dim = z_dim
+        self.beta = beta
+        self.loss = loss
 
         self.variational_encoder = VariationalEncoder(encoder, self.z_dim)
 
         self.example_input_array = self.encoder.example_input_array
         # self.example_input_array = torch.randn(2, 1, 12)
 
-        self.reconstruction_loss = nn.MSELoss()
-        # self.reconstruction_loss = nn.CrossEntropyLoss()
+        if loss == "MSE":
+            self.reconstruction_loss = nn.MSELoss()
+        elif loss != "NLL":
+            raise ValueError(f"Loss function {loss} not supported")
 
     def encode(self, x):
         return self.variational_encoder(x)
@@ -90,9 +97,20 @@ class VariationalAutoencoderPure(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
 
+        if self.loss == "NLL":
+            batch, error = batch
+
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
 
-        loss_recon = self.reconstruction_loss(batch, recon)
+        if self.loss == "MSE":
+            loss_recon = self.reconstruction_loss(batch, recon)
+        elif self.loss == "NLL":
+            loss_recon = -torch.log(
+                truncated_normal_distribution(
+                    recon, mu=batch, sigma=error, a=0.0, b=1.0
+                ).mean(1)
+            )
+
         loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z)
 
         loss = (loss_recon + self.beta * loss_KL).mean()
