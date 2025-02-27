@@ -5,7 +5,8 @@ import torchvision.transforms.v2 as transforms
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader
 
-from spherinator.data import ParquetDataset, ParquetDatasetWithError
+from spherinator.data.parquet_dataset import ParquetDataset
+from spherinator.data.parquet_dataset_with_error import ParquetDatasetWithError
 
 
 class ParquetDataModule(LightningDataModule):
