@@ -4,7 +4,12 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
-from spherinator.data import ParquetDataModule, ParquetDataset, ParquetDatasetSampling
+from spherinator.data import (
+    ParquetDataModule,
+    ParquetDataset,
+    ParquetDatasetSampling,
+    ParquetDatasetWithError,
+)
 
 
 def test_pyarray_dataset_scanner(parquet_file):
@@ -195,5 +200,24 @@ def test_parquet_dataset_sampling(parquet_test_sampling):
     assert torch.isclose(
         batch,
         torch.tensor([[1.1509, 4.3388, 0.5688, 2.7741]]),
+        atol=1e-3,
+    ).all()
+
+
+def test_parquet_dataset_with_error(parquet_test_sampling):
+    """Test the ParquetDataset with error."""
+    dataset = ParquetDatasetWithError(
+        parquet_test_sampling, data_column="flux", error_column="flux_error"
+    )
+    dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
+
+    flux, flux_error = next(iter(dataloader))
+
+    assert flux.shape == (1, 4)
+    assert flux_error.shape == (1, 4)
+
+    assert torch.isclose(
+        flux,
+        torch.tensor([[0.2059, 1.0000, 0.0000, 0.6471]]),
         atol=1e-3,
     ).all()

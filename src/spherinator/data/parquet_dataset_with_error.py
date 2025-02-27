@@ -58,24 +58,23 @@ class ParquetDatasetWithError(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(
-        self, index: int
-    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
+    def __getitem__(self, index: int) -> Union[
+        tuple[torch.Tensor, torch.Tensor],
+        tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+    ]:
+        data = self.data[self.data_column][index]
+        error = self.data[self.error_column][index]
 
-        data_min = self.data[self.data_column].apply(min)
-        data_max = self.data[self.data_column].apply(max)
+        data_min = data.min()
+        data_max = data.max()
 
-        batch = self.data[self.data_column].apply(
-            lambda x: [(val - data_min[0]) / (data_max[0] - data_min[0]) for val in x]
-        )
-        error = self.data[self.error_column].apply(
-            lambda x: [val / (data_max[0] - data_min[0]) for val in x]
-        )
+        data = (data - data_min) / (data_max - data_min)
+        error = error / (data_max - data_min)
 
         if self.transform is not None:
-            batch = self.transform(batch)
+            data = self.transform(data)
 
         if self.with_index:
-            return batch, error, torch.tensor(index)
+            return data, error, torch.tensor(index)
         else:
-            return batch, error
+            return data, error
