@@ -5,8 +5,7 @@ import torchvision.transforms.v2 as transforms
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader
 
-from spherinator.data.parquet_dataset import ParquetDataset
-from spherinator.data.parquet_dataset_sampling import ParquetDatasetSampling
+from spherinator.data import ParquetDataset, ParquetDatasetWithError
 
 
 class ParquetDataModule(LightningDataModule):
@@ -73,7 +72,7 @@ class ParquetDataModule(LightningDataModule):
 
         if stage == "fit" and self.data_train is None:
             if self.error_column is not None:
-                self.data_train = ParquetDatasetSampling(
+                self.data_train = ParquetDatasetWithError(
                     data_directory=self.data_directory,
                     data_column=self.data_column[0],
                     error_column=self.error_column,

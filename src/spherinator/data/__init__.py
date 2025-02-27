@@ -13,6 +13,7 @@ from .mnist_data_module import MNISTDataModule
 from .parquet_data_module import ParquetDataModule
 from .parquet_dataset import ParquetDataset
 from .parquet_dataset_sampling import ParquetDatasetSampling
+from .parquet_dataset_with_error import ParquetDatasetWithError
 from .parquet_iterable_data_module import ParquetIterableDataModule
 from .parquet_iterable_dataset import ParquetIterableDataset
 from .shapes_data_module import ShapesDataModule
@@ -32,6 +33,7 @@ __all__ = [
     "ParquetDataModule",
     "ParquetDataset",
     "ParquetDatasetSampling",
+    "ParquetDatasetWithError",
     "ParquetIterableDataModule",
     "ParquetIterableDataset",
     "ShapesDataModule",
