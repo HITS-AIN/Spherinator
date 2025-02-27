@@ -66,7 +66,7 @@ class ParquetDatasetWithError(Dataset):
         data_max = self.data[self.data_column].apply(max)
 
         batch = self.data[self.data_column].apply(
-            lambda x: [(val - data_min[0]) / (data_min[0] - data_min[0]) for val in x]
+            lambda x: [(val - data_min[0]) / (data_max[0] - data_min[0]) for val in x]
         )
         error = self.data[self.error_column].apply(
             lambda x: [val / (data_max[0] - data_min[0]) for val in x]
