@@ -16,24 +16,27 @@ def truncated_normal_distribution(
         a (float): The lower bound of the truncation interval.
         b (float): The upper bound of the truncation interval.
     Returns:
-        torch.Tensor: The density function evaluated at x.
+        torch.Tensor: The probability density evaluated at x.
     """
-    normal = torch.distributions.normal.Normal(0, 1)
 
     assert a < b, "The lower bound must be less than the upper bound."
-    assert sigma > 0, "The standard deviation must be positive."
-
-    if x < a or x > b:
-        return torch.zeros_like(x) + 1e-5
+    assert (sigma > 0).any(), "The standard deviation must be positive."
+    assert x.shape == mu.shape == sigma.shape, "All inputs must have the same shape."
 
     alpha = (a - mu) / sigma
     beta = (b - mu) / sigma
     xi = (x - mu) / sigma
+
+    normal = torch.distributions.normal.Normal(0, 1)
     alpha_normal_cdf = normal.cdf(alpha)
     beta_normal_cdf = normal.cdf(beta)
 
-    return (
+    probability = (
         sigma.reciprocal()
         * 10 ** normal.log_prob(xi)
         * (beta_normal_cdf - alpha_normal_cdf).reciprocal()
     )
+
+    probability = torch.where(((x < a) | (x > b)), 1e-5, probability)
+
+    return probability
