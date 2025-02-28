@@ -20,6 +20,12 @@ def truncated_normal_distribution(
     """
     normal = torch.distributions.normal.Normal(0, 1)
 
+    assert a < b, "The lower bound must be less than the upper bound."
+    assert sigma > 0, "The standard deviation must be positive."
+
+    if x < a or x > b:
+        return torch.zeros_like(x) + 1e-5
+
     alpha = (a - mu) / sigma
     beta = (b - mu) / sigma
     xi = (x - mu) / sigma
