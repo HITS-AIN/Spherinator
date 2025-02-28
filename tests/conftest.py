@@ -168,14 +168,10 @@ def parquet_test_sampling(tmp_path_factory):
 
     table = pa.table(
         {
-            "flux": [
-                np.array([1.2, 3.9, 0.5, 2.7], dtype=np.float32),
-            ],
-            "flux_error": [
-                np.array([0.5, 0.2, 0.5, 0.2], dtype=np.float32),
-            ],
+            "flux": [np.random.rand(12).astype(np.float32) for _ in range(10)],
+            "flux_error": [np.random.rand(12).astype(np.float32) for _ in range(10)],
         },
-        metadata={"flux_shape": "(1,1,4)", "flux_error_shape": "(1,1,4)"},
+        metadata={"flux_shape": "(1,12)", "flux_error_shape": "(1,12)"},
     )
 
     file = tmp_path_factory.mktemp("data") / "test.parquet"

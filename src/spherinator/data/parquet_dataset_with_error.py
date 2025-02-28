@@ -48,12 +48,13 @@ class ParquetDatasetWithError(Dataset):
         self.data = table.to_pandas()
 
         # Reshape the data if the shape is stored in the metadata.
-        metadata_shape = bytes(data_column[0], "utf8") + b"_shape"
-        if table.schema.metadata and metadata_shape in table.schema.metadata:
-            shape_string = table.schema.metadata[metadata_shape].decode("utf8")
-            shape = shape_string.replace("(", "").replace(")", "").split(",")
-            shape = tuple(map(int, shape))
-            self.data = self.data.apply(lambda x: x.reshape(shape))
+        for column in [data_column, error_column]:
+            metadata_shape = bytes(column, "utf8") + b"_shape"
+            if table.schema.metadata and metadata_shape in table.schema.metadata:
+                shape_string = table.schema.metadata[metadata_shape].decode("utf8")
+                shape = shape_string.replace("(", "").replace(")", "").split(",")
+                shape = tuple(map(int, shape))
+                self.data[column] = self.data[column].apply(lambda x: x.reshape(shape))
 
     def __len__(self):
         return len(self.data)
@@ -62,8 +63,8 @@ class ParquetDatasetWithError(Dataset):
         tuple[torch.Tensor, torch.Tensor],
         tuple[torch.Tensor, torch.Tensor, torch.Tensor],
     ]:
-        data = self.data[self.data_column][index]
-        error = self.data[self.error_column][index]
+        data = torch.tensor(self.data[self.data_column][index], dtype=torch.float32)
+        error = torch.tensor(self.data[self.error_column][index], dtype=torch.float32)
 
         data_min = data.min()
         data_max = data.max()
@@ -76,5 +77,4 @@ class ParquetDatasetWithError(Dataset):
 
         if self.with_index:
             return data, error, torch.tensor(index)
-        else:
-            return data, error
+        return data, error

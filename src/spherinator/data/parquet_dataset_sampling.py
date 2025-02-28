@@ -36,23 +36,25 @@ class ParquetDatasetSampling(Dataset):
         """
         super().__init__()
 
+        self.data_column = data_column
+        self.error_column = error_column
+        self.transform = transform
+        self.with_index = with_index
+
         dataset = ds.dataset(
             data_directory, format="parquet", ignore_prefixes=["_", "."]
         )
         table = dataset.to_table(columns=[data_column, error_column])
-        self.transform = transform
-        self.with_index = with_index
-        self.error_column = error_column
-
         self.data = table.to_pandas()
 
         # Reshape the data if the shape is stored in the metadata.
-        metadata_shape = bytes(data_column[0], "utf8") + b"_shape"
-        if table.schema.metadata and metadata_shape in table.schema.metadata:
-            shape_string = table.schema.metadata[metadata_shape].decode("utf8")
-            shape = shape_string.replace("(", "").replace(")", "").split(",")
-            shape = tuple(map(int, shape))
-            self.data = self.data.apply(lambda x: x.reshape(shape))
+        for column in [data_column, error_column]:
+            metadata_shape = bytes(column, "utf8") + b"_shape"
+            if table.schema.metadata and metadata_shape in table.schema.metadata:
+                shape_string = table.schema.metadata[metadata_shape].decode("utf8")
+                shape = shape_string.replace("(", "").replace(")", "").split(",")
+                shape = tuple(map(int, shape))
+                self.data[column] = self.data[column].apply(lambda x: x.reshape(shape))
 
     def __len__(self):
         return len(self.data)
@@ -62,13 +64,13 @@ class ParquetDatasetSampling(Dataset):
     ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
 
         batch = torch.normal(
-            mean=torch.tensor(self.data["flux"][index], dtype=torch.float32),
-            std=torch.tensor(self.data["flux_error"][index], dtype=torch.float32),
+            mean=torch.tensor(self.data[self.data_column][index], dtype=torch.float32),
+            std=torch.tensor(self.data[self.error_column][index], dtype=torch.float32),
         )
 
         if self.transform is not None:
             batch = self.transform(batch)
+
         if self.with_index:
             return batch, torch.tensor(index)
-        else:
-            return batch
+        return batch

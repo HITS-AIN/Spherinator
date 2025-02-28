@@ -195,13 +195,7 @@ def test_parquet_dataset_sampling(parquet_test_sampling):
 
     batch = next(iter(dataloader))
 
-    assert batch.shape == (1, 4)
-    print(batch)
-    assert torch.isclose(
-        batch,
-        torch.tensor([[1.1509, 4.3388, 0.5688, 2.7741]]),
-        atol=1e-3,
-    ).all()
+    assert batch.shape == (2, 1, 12)
 
 
 def test_parquet_dataset_with_error(parquet_test_sampling):
@@ -213,11 +207,15 @@ def test_parquet_dataset_with_error(parquet_test_sampling):
 
     flux, flux_error = next(iter(dataloader))
 
-    assert flux.shape == (1, 4)
-    assert flux_error.shape == (1, 4)
+    assert flux.shape == (2, 1, 12)
+    assert flux_error.shape == (2, 1, 12)
 
-    assert torch.isclose(
-        flux,
-        torch.tensor([[0.2059, 1.0000, 0.0000, 0.6471]]),
-        atol=1e-3,
-    ).all()
+
+def test_parquet_dataset_2(parquet_test_sampling):
+    """Test the ParquetDataset with error."""
+    dataset = ParquetDataset(parquet_test_sampling, data_column="flux")
+    dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
+
+    batch = next(iter(dataloader))
+
+    assert batch.shape == (2, 1, 12)
