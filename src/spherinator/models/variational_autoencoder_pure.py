@@ -108,7 +108,7 @@ class VariationalAutoencoderPure(pl.LightningModule):
             loss_recon = -torch.log(
                 truncated_normal_distribution(
                     recon, mu=batch, sigma=error, a=0.0, b=1.0
-                ).mean(1)
+                ).mean(0)
             )
 
         loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z)
