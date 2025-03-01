@@ -18,7 +18,7 @@ class AutoencoderPure(pl.LightningModule):
         Args:
             encoder (nn.Module): encoder model
             decoder (nn.Module): decoder model
-            loss (str, optional): loss function ["MSE", "NLL"]. Defaults to "MSE".
+            loss (str, optional): loss function ["MSE", "KL"]. Defaults to "MSE".
         """
         super().__init__()
 
@@ -34,7 +34,7 @@ class AutoencoderPure(pl.LightningModule):
 
         if loss == "MSE":
             self.reconstruction_loss = nn.MSELoss()
-        elif loss != "NLL":
+        elif loss != "KL":
             raise ValueError(f"Loss function {loss} not supported")
 
     def encode(self, x):
@@ -49,19 +49,19 @@ class AutoencoderPure(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
 
-        if self.loss == "NLL":
+        if self.loss == "KL":
             batch, error = batch
 
         recon = self.forward(batch)
 
         if self.loss == "MSE":
             loss = self.reconstruction_loss(batch, recon).mean()
-        elif self.loss == "NLL":
-            loss = -torch.log(
-                truncated_normal_distribution(
-                    recon, mu=batch, sigma=error, a=0.0, b=1.0
-                ).mean()
-            )
+        elif self.loss == "KL":
+            q = torch.distributions.Normal(recon, error)
+            p = torch.distributions.Normal(batch, error)
+            loss = torch.distributions.kl.kl_divergence(q, p).mean()
+        else:
+            raise ValueError(f"Unsupported loss: {self.loss}")
 
         self.log("train_loss", loss, prog_bar=True)
         self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
