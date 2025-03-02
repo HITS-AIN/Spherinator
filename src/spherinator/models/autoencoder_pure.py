@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam
 
-from .truncated_normal_distribution import truncated_normal_distribution
+# from .truncated_normal_distribution import truncated_normal_distribution
 
 
 class AutoencoderPure(pl.LightningModule):
