@@ -1,0 +1,71 @@
+model:
+  class_path: spherinator.models.AutoencoderPure
+  init_args:
+    encoder:
+      class_path: spherinator.models.ConvolutionalEncoder1DGen
+      init_args:
+        input_dim: [1, 343]
+        output_dim: 20
+        cnn_layers:
+          - class_path: spherinator.models.ConsecutiveConv1DLayer
+            init_args:
+              kernel_size: 7
+              stride: 1
+              padding: 0
+              num_layers: 5
+              base_channel_number: 16
+              channel_increment: 4
+          - class_path: spherinator.models.ConsecutiveConv1DLayer
+            init_args:
+              kernel_size: 5
+              stride: 2
+              padding: 0
+              num_layers: 1
+              base_channel_number: 64
+          - class_path: spherinator.models.ConsecutiveConv1DLayer
+            init_args:
+              kernel_size: 5
+              stride: 2
+              padding: 0
+              num_layers: 1
+              base_channel_number: 96
+          - class_path: spherinator.models.ConsecutiveConv1DLayer
+            init_args:
+              kernel_size: 6
+              stride: 2
+              padding: 0
+              num_layers: 1
+              base_channel_number: 128
+    decoder:
+      class_path: spherinator.models.ConvolutionalDecoder1DGen
+      init_args:
+        input_dim: 20
+        output_dim: [1, 343]
+        cnn_input_dim: [128, 36]
+        cnn_layers:
+          - class_path: spherinator.models.ConsecutiveConvTranspose1DLayer
+            init_args:
+              kernel_size: 6
+              stride: 2
+              padding: 0
+              out_channels_list: [96]
+          - class_path: spherinator.models.ConsecutiveConvTranspose1DLayer
+            init_args:
+              kernel_size: 5
+              stride: 2
+              padding: 0
+              out_channels_list: [64]
+          - class_path: spherinator.models.ConsecutiveConvTranspose1DLayer
+            init_args:
+              kernel_size: 5
+              stride: 2
+              padding: 0
+              out_channels_list: [32]
+          - class_path: spherinator.models.ConsecutiveConvTranspose1DLayer
+            init_args:
+              kernel_size: 7
+              stride: 1
+              padding: 0
+              out_channels_list: [28, 24, 20, 16, 1]
+              activation: null
+    loss: KL
