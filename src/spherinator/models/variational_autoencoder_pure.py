@@ -1,3 +1,5 @@
+from typing import Optional
+
 import lightning.pytorch as pl
 import torch
 import torch.nn as nn
@@ -5,7 +7,7 @@ import torch.nn.functional as F
 from power_spherical import HypersphericalUniform, PowerSpherical
 from torch.optim import Adam
 
-from .truncated_normal_distribution import truncated_normal_distribution
+# from .truncated_normal_distribution import truncated_normal_distribution
 
 
 class VariationalEncoder(nn.Module):
@@ -14,20 +16,32 @@ class VariationalEncoder(nn.Module):
     def __init__(
         self,
         encoder: nn.Module,
+        encoder_out_dim: int,
         z_dim: int,
+        fixed_scale: Optional[float] = None,
     ) -> None:
         """VariationalEncoder initializer
 
         Args:
             encoder (nn.Module): encoder model
+            encoder_out_dim (int): output dimension of the encoder
             z_dim (int): latent space dimension
+            fixed_scale (Optional[float], optional): fixed scale value for the latent space. Defaults to None.
         """
         super().__init__()
         self.encoder = encoder
+        self.encoder_out_dim = encoder_out_dim
         self.z_dim = z_dim
 
-        self.fc_location = nn.LazyLinear(self.z_dim)
-        self.fc_scale = nn.LazyLinear(1)
+        self.fc_location = nn.Linear(self.encoder_out_dim, self.z_dim)
+        self.fc_scale = nn.Linear(self.encoder_out_dim, 1)
+
+        # Set scale output and freeze the parameter
+        if fixed_scale is not None:
+            self.fc_scale.weight.data.zero_()
+            self.fc_scale.weight.requires_grad = False
+            self.fc_scale.bias.data.fill_(fixed_scale)
+            self.fc_scale.bias.requires_grad = False
 
     def forward(self, x) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.encoder(x)
@@ -43,18 +57,22 @@ class VariationalAutoencoderPure(pl.LightningModule):
         self,
         encoder: nn.Module,
         decoder: nn.Module,
+        encoder_out_dim: int,
         z_dim: int = 3,
         beta: float = 1.0,
         loss: str = "MSE",
+        fixed_scale: Optional[float] = None,
     ) -> None:
         """Autoencoder initializer
 
         Args:
             encoder (nn.Module): encoder model
             decoder (nn.Module): decoder model
+            encoder_out_dim (int): output dimension of the encoder
             z_dim (int, optional): latent space dimension. Defaults to 3.
             beta (float, optional): factor for beta-VAE. Defaults to 1.0.
-            loss (str, optional): loss function ["MSE", "NLL"]. Defaults to "MSE".
+            loss (str, optional): loss function ["MSE", "KL"]. Defaults to "MSE".
+            fixed_scale (Optional[float], optional): fixed scale value for the latent space. Defaults to None.
         """
         super().__init__()
 
@@ -63,18 +81,21 @@ class VariationalAutoencoderPure(pl.LightningModule):
 
         self.encoder = encoder
         self.decoder = decoder
+        self.encoder_out_dim = encoder_out_dim
         self.z_dim = z_dim
         self.beta = beta
         self.loss = loss
 
-        self.variational_encoder = VariationalEncoder(encoder, self.z_dim)
+        self.variational_encoder = VariationalEncoder(
+            encoder, self.encoder_out_dim, self.z_dim, fixed_scale
+        )
 
         self.example_input_array = self.encoder.example_input_array
         # self.example_input_array = torch.randn(2, 1, 12)
 
         if loss == "MSE":
             self.reconstruction_loss = nn.MSELoss()
-        elif loss != "NLL":
+        elif loss != "KL":
             raise ValueError(f"Loss function {loss} not supported")
 
     def encode(self, x):
@@ -97,21 +118,19 @@ class VariationalAutoencoderPure(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
 
-        if self.loss == "NLL":
+        if self.loss == "KL":
             batch, error = batch
 
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
 
         if self.loss == "MSE":
             loss_recon = self.reconstruction_loss(batch, recon)
-        elif self.loss == "NLL":
-            loss_recon = -torch.log(
-                truncated_normal_distribution(
-                    recon, mu=batch, sigma=error, a=0.0, b=1.0
-                )
-                .flatten(1)
-                .mean(1)
-            )
+        elif self.loss == "KL":
+            q = torch.distributions.Normal(recon, error)
+            p = torch.distributions.Normal(batch, error)
+            loss_recon = torch.distributions.kl.kl_divergence(q, p).flatten(1).mean(1)
+        else:
+            raise ValueError(f"Unsupported loss: {self.loss}")
 
         loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z)
 
