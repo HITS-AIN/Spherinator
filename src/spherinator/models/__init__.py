@@ -40,6 +40,7 @@ from .spherinator_module import SpherinatorModule
 from .variational_autoencoder import VariationalAutoencoder
 from .variational_autoencoder_pure import VariationalAutoencoderPure
 from .weights_provider import WeightsProvider
+from .yaml2model import yaml2model
 
 __all__ = [
     "Autoencoder",
@@ -66,4 +67,5 @@ __all__ = [
     "VariationalAutoencoder",
     "VariationalAutoencoderPure",
     "WeightsProvider",
+    "yaml2model",
 ]

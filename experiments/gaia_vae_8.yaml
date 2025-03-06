@@ -1,11 +1,13 @@
+seed_everything: 42
+
 model:
-  class_path: spherinator.models.AutoencoderPure
+  class_path: spherinator.models.VariationalAutoencoderPure
   init_args:
     encoder:
       class_path: spherinator.models.ConvolutionalEncoder1DGen
       init_args:
         input_dim: [1, 343]
-        output_dim: 20
+        output_dim: 128
         cnn_layers:
           - class_path: spherinator.models.ConsecutiveConv1DLayer
             init_args:
@@ -68,4 +70,62 @@ model:
               padding: 0
               out_channels_list: [28, 24, 20, 16, 1]
               activation: null
-    loss: KL
+    z_dim: 20
+    beta: 1.0e-4
+    encoder_out_dim: 128
+    fixed_scale: Null
+
+data:
+  class_path: spherinator.data.ParquetDataModule
+  init_args:
+    data_directory: /local/gaia/xp_calibrated/parquet_subset
+    data_column: flux
+    normalize: minmax
+    batch_size: 2048
+    num_workers: 4
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.001
+
+#lr_scheduler:
+#  class_path: lightning.pytorch.cli.ReduceLROnPlateau
+#  init_args:
+#    mode: min
+#    factor: 0.1
+#    patience: 5
+#    cooldown: 5
+#    min_lr: 1.e-5
+#    monitor: train_loss
+#    verbose: True
+
+trainer:
+  max_epochs: 1000
+  accelerator: gpu
+  devices: auto
+  precision: 16-mixed
+  profiler: simple
+  enable_progress_bar: False
+  enable_model_summary: True
+
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        monitor: train_loss
+        filename: "{epoch}-{train_loss:.2f}"
+        save_top_k: 1
+        mode: min
+        every_n_epochs: 1
+
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: gaia
+      log_model: True
+      entity: ain-space
+      tags:
+        - vae pure
+        - xp calibrated subset
+        - cnn-type-8
+
