@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from power_spherical import HypersphericalUniform, PowerSpherical
 from torch.optim import Adam
 
-# from .truncated_normal_distribution import truncated_normal_distribution
+from spherinator.distributions import truncated_normal_distribution
 
 
 class VariationalEncoder(nn.Module):
@@ -71,7 +71,7 @@ class VariationalAutoencoderPure(pl.LightningModule):
             encoder_out_dim (int): output dimension of the encoder
             z_dim (int, optional): latent space dimension. Defaults to 3.
             beta (float, optional): factor for beta-VAE. Defaults to 1.0.
-            loss (str, optional): loss function ["MSE", "KL"]. Defaults to "MSE".
+            loss (str, optional): loss function ["MSE", "NLL", "KL"]. Defaults to "MSE".
             fixed_scale (Optional[float], optional): fixed scale value for the latent space. Defaults to None.
         """
         super().__init__()
@@ -95,7 +95,7 @@ class VariationalAutoencoderPure(pl.LightningModule):
 
         if loss == "MSE":
             self.reconstruction_loss = nn.MSELoss()
-        elif loss != "KL":
+        elif loss not in ["NLL", "KL"]:
             raise ValueError(f"Loss function {loss} not supported")
 
     def encode(self, x):
@@ -125,6 +125,14 @@ class VariationalAutoencoderPure(pl.LightningModule):
 
         if self.loss == "MSE":
             loss_recon = self.reconstruction_loss(batch, recon)
+        elif self.loss == "NLL":
+            loss_recon = -torch.log(
+                truncated_normal_distribution(
+                    recon, mu=batch, sigma=error, a=0.0, b=1.0
+                )
+                .flatten(1)
+                .mean(1)
+            )
         elif self.loss == "KL":
             q = torch.distributions.Normal(recon, error)
             p = torch.distributions.Normal(batch, error)

@@ -7,9 +7,11 @@ from .power_spherical import (
     MarginalTDistribution,
     PowerSpherical,
 )
+from .truncated_normal_distribution import truncated_normal_distribution
 
 __all__ = [
     "HypersphericalUniform",
     "PowerSpherical",
     "MarginalTDistribution",
+    "truncated_normal_distribution",
 ]
