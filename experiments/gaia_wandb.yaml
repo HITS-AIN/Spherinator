@@ -1,9 +1,0 @@
-trainer:
-  logger:
-    class_path: lightning.pytorch.loggers.WandbLogger
-    init_args:
-      project: gaia
-      log_model: True
-      entity: ain-space
-      tags:
-        - subset1
