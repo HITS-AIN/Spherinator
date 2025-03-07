@@ -118,7 +118,7 @@ class VariationalAutoencoderPure(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
 
-        if self.loss == "KL":
+        if self.loss in ["NLL", "KL"]:
             batch, error = batch
 
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
