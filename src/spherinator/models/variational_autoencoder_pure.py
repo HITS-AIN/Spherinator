@@ -71,7 +71,8 @@ class VariationalAutoencoderPure(pl.LightningModule):
             encoder_out_dim (int): output dimension of the encoder
             z_dim (int, optional): latent space dimension. Defaults to 3.
             beta (float, optional): factor for beta-VAE. Defaults to 1.0.
-            loss (str, optional): loss function ["MSE", "NLL", "KL"]. Defaults to "MSE".
+            loss (str, optional): loss function ["MSE", "NLL-normal", "NLL-truncated", "KL"].
+                                  Defaults to "MSE".
             fixed_scale (Optional[float], optional): fixed scale value for the latent space. Defaults to None.
         """
         super().__init__()
@@ -95,7 +96,7 @@ class VariationalAutoencoderPure(pl.LightningModule):
 
         if loss == "MSE":
             self.reconstruction_loss = nn.MSELoss()
-        elif loss not in ["NLL", "KL"]:
+        elif loss not in ["NLL-normal", "NLL-truncated", "KL"]:
             raise ValueError(f"Loss function {loss} not supported")
 
     def encode(self, x):
@@ -118,14 +119,21 @@ class VariationalAutoencoderPure(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
 
-        if self.loss in ["NLL", "KL"]:
+        if self.loss in ["NLL-normal", "NLL-truncated", "KL"]:
             batch, error = batch
 
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
 
         if self.loss == "MSE":
             loss_recon = self.reconstruction_loss(batch, recon)
-        elif self.loss == "NLL":
+        elif self.loss == "NLL-normal":
+            loss_recon = (
+                -torch.distributions.Normal(batch, error)
+                .log_prob(recon)
+                .flatten(1)
+                .mean(1)
+            )
+        elif self.loss == "NLL-truncated":
             loss_recon = -torch.log(
                 truncated_normal_distribution(
                     recon, mu=batch, sigma=error, a=0.0, b=1.0

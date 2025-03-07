@@ -1,3 +1,4 @@
+import pytest
 import torch
 from lightning.pytorch.trainer import Trainer
 
@@ -57,7 +58,8 @@ def test_training(parquet_1d_metadata):
     trainer.fit(model, datamodule=datamodule)
 
 
-def test_training_sampling(parquet_test_sampling):
+@pytest.mark.parametrize("loss", ["NLL-normal", "NLL-truncated", "KL"])
+def test_training_sampling(parquet_test_sampling, loss):
     """Test training of VariationalAutoencoderPure"""
     encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=3)
     decoder = ConvolutionalDecoder1D(input_dim=3, output_dim=12)
@@ -65,7 +67,7 @@ def test_training_sampling(parquet_test_sampling):
         encoder=encoder,
         decoder=decoder,
         encoder_out_dim=3,
-        loss="KL",
+        loss=loss,
     )
 
     datamodule = ParquetDataModule(
