@@ -1,5 +1,4 @@
-""" Iterable dataset reading parquet files.
-"""
+"""Iterable dataset reading parquet files."""
 
 from typing import Union
 

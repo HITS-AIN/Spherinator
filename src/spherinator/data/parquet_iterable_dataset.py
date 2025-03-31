@@ -1,5 +1,4 @@
-""" Iterable dataset reading parquet files.
-"""
+"""Iterable dataset reading parquet files."""
 
 import pyarrow.dataset as ds
 import torch
