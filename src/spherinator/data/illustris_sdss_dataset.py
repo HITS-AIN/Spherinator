@@ -1,5 +1,4 @@
-""" Provides access to the Illustris sdss images.
-"""
+"""Provides access to the Illustris sdss images."""
 
 import os
 import torch

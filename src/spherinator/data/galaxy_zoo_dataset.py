@@ -1,5 +1,4 @@
-""" Provides access to the galaxy zoo images.
-"""
+"""Provides access to the galaxy zoo images."""
 
 import os
 
