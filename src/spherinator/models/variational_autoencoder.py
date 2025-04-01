@@ -2,76 +2,108 @@ from typing import Optional
 
 import lightning.pytorch as pl
 import torch
-import torch.linalg
 import torch.nn as nn
 import torch.nn.functional as F
 from power_spherical import HypersphericalUniform, PowerSpherical
 from torch.optim import Adam
 
-from .convolutional_decoder import ConvolutionalDecoder
-from .convolutional_encoder import ConvolutionalEncoder
+from spherinator.distributions import truncated_normal_distribution
+
+
+class VariationalEncoder(nn.Module):
+    """Variational encoder for extra layer splitting the location and scale of the latent space."""
+
+    def __init__(
+        self,
+        encoder: nn.Module,
+        encoder_out_dim: int,
+        z_dim: int,
+        fixed_scale: Optional[float] = None,
+    ) -> None:
+        """VariationalEncoder initializer
+
+        Args:
+            encoder (nn.Module): encoder model
+            encoder_out_dim (int): output dimension of the encoder
+            z_dim (int): latent space dimension
+            fixed_scale (Optional[float], optional): fixed scale value for the latent space. Defaults to None.
+        """
+        super().__init__()
+        self.encoder = encoder
+        self.encoder_out_dim = encoder_out_dim
+        self.z_dim = z_dim
+
+        self.fc_location = nn.Linear(self.encoder_out_dim, self.z_dim)
+        self.fc_scale = nn.Linear(self.encoder_out_dim, 1)
+
+        # Set scale output and freeze the parameter
+        if fixed_scale is not None:
+            self.fc_scale.weight.data.zero_()
+            self.fc_scale.weight.requires_grad = False
+            self.fc_scale.bias.data.fill_(fixed_scale)
+            self.fc_scale.bias.requires_grad = False
+
+    def forward(self, x) -> tuple[torch.Tensor, torch.Tensor]:
+        x = self.encoder(x)
+        z_location = self.fc_location(x)
+        z_location = torch.nn.functional.normalize(z_location, p=2.0, dim=1)
+        # SVAE code: the `+ 1` prevent collapsing behaviors
+        z_scale = F.softplus(self.fc_scale(x)) + 1
+        return z_location, z_scale
 
 
 class VariationalAutoencoder(pl.LightningModule):
     def __init__(
         self,
-        encoder: Optional[nn.Module] = None,
-        decoder: Optional[nn.Module] = None,
-        h_dim: int = 256,
+        encoder: nn.Module,
+        decoder: nn.Module,
+        encoder_out_dim: int,
         z_dim: int = 3,
         beta: float = 1.0,
-    ):
+        loss: str = "MSE",
+        fixed_scale: Optional[float] = None,
+    ) -> None:
         """VariationalAutoencoder initializer
 
         Args:
-            encoder (Optional[nn.Module], optional): encoder model. Defaults to None.
-            decoder (Optional[nn.Module], optional): decoder model. Defaults to None.
-            h_dim (int, optional): dimension of the hidden layers. Defaults to 256.
-            z_dim (int, optional): dimension of the latent representation. Defaults to 3.
+            encoder (nn.Module): encoder model
+            decoder (nn.Module): decoder model
+            encoder_out_dim (int): output dimension of the encoder
+            z_dim (int, optional): latent space dimension. Defaults to 3.
             beta (float, optional): factor for beta-VAE. Defaults to 1.0.
+            loss (str, optional): loss function ["MSE", "NLL-normal", "NLL-truncated", "KL"].
+                                  Defaults to "MSE".
+            fixed_scale (Optional[float], optional): fixed scale value for the latent space. Defaults to None.
         """
         super().__init__()
-
-        if encoder is None:
-            encoder = ConvolutionalEncoder(latent_dim=h_dim)
-        if decoder is None:
-            decoder = ConvolutionalDecoder(latent_dim=h_dim)
 
         # self.save_hyperparameters(ignore=["encoder", "decoder"])
         self.save_hyperparameters()
 
         self.encoder = encoder
         self.decoder = decoder
-        self.h_dim = h_dim
+        self.encoder_out_dim = encoder_out_dim
         self.z_dim = z_dim
         self.beta = beta
+        self.loss = loss
+
+        self.variational_encoder = VariationalEncoder(
+            encoder, self.encoder_out_dim, self.z_dim, fixed_scale
+        )
 
         self.example_input_array = self.encoder.example_input_array
         # self.example_input_array = torch.randn(2, 1, 12)
 
-        self.fc_location = nn.Linear(h_dim, z_dim)
-        self.fc_scale = nn.Linear(h_dim, 1)
-        self.fc2 = nn.Linear(z_dim, h_dim)
-
-        self.reconstruction_loss = nn.MSELoss()
-        # self.reconstruction_loss = nn.CrossEntropyLoss()
-
-        with torch.no_grad():
-            self.fc_scale.bias.fill_(1.0e3)
+        if loss == "MSE":
+            self.reconstruction_loss = nn.MSELoss()
+        elif loss not in ["NLL-normal", "NLL-truncated", "KL"]:
+            raise ValueError(f"Loss function {loss} not supported")
 
     def encode(self, x):
-        x = self.encoder(x)
-        z_location = self.fc_location(x)
-        z_location = torch.nn.functional.normalize(z_location, p=2.0, dim=1)
-        # SVAE code: the `+ 1` prevent collapsing behaviors
-        z_scale = F.softplus(self.fc_scale(x)) + 1
+        return self.variational_encoder(x)
 
-        return z_location, z_scale
-
-    def decode(self, z):
-        x = F.relu(self.fc2(z))
-        x = self.decoder(x)
-        return x
+    def decode(self, x):
+        return self.decoder(x)
 
     def reparameterize(self, z_location, z_scale):
         q_z = PowerSpherical(z_location, z_scale)
@@ -85,14 +117,40 @@ class VariationalAutoencoder(pl.LightningModule):
         recon = self.decode(z)
         return (z_location, z_scale), (q_z, p_z), z, recon
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
+
+        if self.loss in ["NLL-normal", "NLL-truncated", "KL"]:
+            batch, error = batch
 
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
 
-        loss_recon = self.reconstruction_loss(batch, recon)
-        loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z) * self.beta
+        if self.loss == "MSE":
+            loss_recon = self.reconstruction_loss(batch, recon)
+        elif self.loss == "NLL-normal":
+            loss_recon = (
+                -torch.distributions.Normal(batch, error)
+                .log_prob(recon)
+                .flatten(1)
+                .mean(1)
+            )
+        elif self.loss == "NLL-truncated":
+            loss_recon = -torch.log(
+                truncated_normal_distribution(
+                    recon, mu=batch, sigma=error, a=0.0, b=1.0
+                )
+                .flatten(1)
+                .mean(1)
+            )
+        elif self.loss == "KL":
+            q = torch.distributions.Normal(recon, error)
+            p = torch.distributions.Normal(batch, error)
+            loss_recon = torch.distributions.kl.kl_divergence(q, p).flatten(1).mean(1)
+        else:
+            raise ValueError(f"Unsupported loss: {self.loss}")
 
-        loss = (loss_recon + loss_KL).mean()
+        loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z)
+
+        loss = (loss_recon + self.beta * loss_KL).mean()
         loss_recon = loss_recon.mean()
         loss_KL = loss_KL.mean()
 

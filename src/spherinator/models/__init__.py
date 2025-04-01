@@ -13,7 +13,6 @@ It contains the following modules:
 """
 
 from .autoencoder import Autoencoder
-from .autoencoder_pure import AutoencoderPure
 from .consecutive_conv_1d_layers import ConsecutiveConv1DLayer
 from .consecutive_conv_transpose_1d_layers import ConsecutiveConvTranspose1DLayer
 from .convolutional_decoder import ConvolutionalDecoder
@@ -38,13 +37,11 @@ from .rotational_variational_autoencoder_power import (
 )
 from .spherinator_module import SpherinatorModule
 from .variational_autoencoder import VariationalAutoencoder
-from .variational_autoencoder_pure import VariationalAutoencoderPure
 from .weights_provider import WeightsProvider
 from .yaml2model import yaml2model
 
 __all__ = [
     "Autoencoder",
-    "AutoencoderPure",
     "ConsecutiveConv1DLayer",
     "ConsecutiveConvTranspose1DLayer",
     "ConvolutionalDecoder",
@@ -65,7 +62,6 @@ __all__ = [
     "RotationalVariationalAutoencoderPower",
     "SpherinatorModule",
     "VariationalAutoencoder",
-    "VariationalAutoencoderPure",
     "WeightsProvider",
     "yaml2model",
 ]

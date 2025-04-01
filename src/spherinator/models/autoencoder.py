@@ -1,72 +1,67 @@
-from typing import Optional
-
 import lightning.pytorch as pl
+import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.optim import Adam
 
-from .convolutional_decoder import ConvolutionalDecoder
-from .convolutional_encoder import ConvolutionalEncoder
+# from .truncated_normal_distribution import truncated_normal_distribution
 
 
 class Autoencoder(pl.LightningModule):
     def __init__(
         self,
-        encoder: Optional[nn.Module] = None,
-        decoder: Optional[nn.Module] = None,
-        h_dim: int = 256,
-        z_dim: int = 3,
+        encoder: nn.Module,
+        decoder: nn.Module,
+        loss: str = "MSE",
     ):
         """Autoencoder initializer
 
         Args:
-            encoder (Optional[nn.Module], optional): encoder model. Defaults to None.
-            decoder (Optional[nn.Module], optional): decoder model. Defaults to None.
-            h_dim (int, optional): dimension of the hidden layers. Defaults to 256.
-            z_dim (int, optional): dimension of the latent representation. Defaults to 3.
+            encoder (nn.Module): encoder model
+            decoder (nn.Module): decoder model
+            loss (str, optional): loss function ["MSE", "KL"]. Defaults to "MSE".
         """
         super().__init__()
-
-        if encoder is None:
-            encoder = ConvolutionalEncoder(latent_dim=h_dim)
-        if decoder is None:
-            decoder = ConvolutionalDecoder(latent_dim=h_dim)
 
         # self.save_hyperparameters(ignore=["encoder", "decoder"])
         self.save_hyperparameters()
 
         self.encoder = encoder
         self.decoder = decoder
-        self.h_dim = h_dim
-        self.z_dim = z_dim
+        self.loss = loss
 
-        self.example_input_array = self.encoder.example_input_array
-        # self.example_input_array = torch.randn(2, 1, 12)
+        # self.example_input_array = self.encoder.example_input_array
+        self.example_input_array = torch.randn(2, 1, 12)
 
-        self.fc = nn.Linear(h_dim, z_dim)
-        self.fc2 = nn.Linear(z_dim, h_dim)
-
-        self.reconstruction_loss = nn.MSELoss()
-        # self.reconstruction_loss = nn.CrossEntropyLoss()
+        if loss == "MSE":
+            self.reconstruction_loss = nn.MSELoss()
+        elif loss != "KL":
+            raise ValueError(f"Loss function {loss} not supported")
 
     def encode(self, x):
-        x = self.encoder(x)
-        z = self.fc(x)
-        return z
+        return self.encoder(x)
 
-    def decode(self, z):
-        x = F.relu(self.fc2(z))
-        x = self.decoder(x)
-        return x
+    def decode(self, x):
+        return self.decoder(x)
 
     def forward(self, x):
-        z = self.encode(x)
-        recon = self.decode(z)
-        return recon
+        x = self.encode(x)
+        return self.decode(x)
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
+
+        if self.loss == "KL":
+            batch, error = batch
+
         recon = self.forward(batch)
-        loss = self.reconstruction_loss(batch, recon).mean()
+
+        if self.loss == "MSE":
+            loss = self.reconstruction_loss(batch, recon).mean()
+        elif self.loss == "KL":
+            q = torch.distributions.Normal(recon, error)
+            p = torch.distributions.Normal(batch, error)
+            loss = torch.distributions.kl.kl_divergence(q, p).mean()
+        else:
+            raise ValueError(f"Unsupported loss: {self.loss}")
 
         self.log("train_loss", loss, prog_bar=True)
         self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
