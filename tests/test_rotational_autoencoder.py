@@ -21,7 +21,7 @@ def test_forward_cuda():
     assert recon.shape == input.shape
 
 
-def test_training(shape_path):
+def test_training():
     model = RotationalAutoencoder(norm_brightness=True)
 
     datamodule = ImagesDataModule(

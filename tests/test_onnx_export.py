@@ -1,14 +1,22 @@
+import sys
+
 import pytest
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from power_spherical import PowerSpherical
 
+from spherinator.models import (
+    Autoencoder,
+    ConvolutionalDecoder1D,
+    ConvolutionalEncoder1D,
+)
 
-class Model1(torch.nn.Module):
+
+class Model1(nn.Module):
     def __init__(self) -> None:
         super().__init__()
-        self.linear = torch.nn.Linear(2, 2)
+        self.linear = nn.Linear(2, 2)
 
     def forward(self, x):
         out = self.linear(x)
@@ -56,8 +64,20 @@ class DistributionModel(torch.nn.Module):
             torch.randn(2, 3),
             marks=pytest.mark.xfail,
         ),
+        (
+            ConvolutionalEncoder1D(12, 3),
+            torch.randn(2, 1, 12),
+        ),
+        pytest.param(
+            Autoencoder(ConvolutionalEncoder1D(12, 3), ConvolutionalDecoder1D(3, 12)),
+            torch.randn(2, 1, 12),
+            marks=pytest.mark.xfail(
+                sys.version_info.minor == 9, reason="Fails on Python 3.9"
+            ),
+        ),
     ],
 )
 def test_onnx_dynamo_export(module, input):
+    module.eval()
     module(input)
     torch.onnx.dynamo_export(module, input)

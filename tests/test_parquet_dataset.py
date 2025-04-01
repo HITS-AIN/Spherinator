@@ -4,7 +4,12 @@ import pytest
 import torch
 from torch.utils.data import DataLoader
 
-from spherinator.data import ParquetDataModule, ParquetDataset
+from spherinator.data import (
+    ParquetDataModule,
+    ParquetDataset,
+    ParquetDatasetSampling,
+    ParquetDatasetWithError,
+)
 
 
 def test_pyarray_dataset_scanner(parquet_file):
@@ -169,3 +174,48 @@ def test_absmax_norm(parquet_test_norm):
         torch.tensor([[-0.3077, 1.0000, -0.1282], [0.2073, -1.0000, -0.0488]]),
         atol=1e-3,
     ).all()
+
+
+def test_parquet_dataset_with_index(parquet_numpy_file):
+    """Test the ParquetDataset with returning the data index."""
+    dataset = ParquetDataset(parquet_numpy_file, data_column="data", with_index=True)
+    dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
+
+    _, index = next(iter(dataloader))
+
+    assert (index == torch.tensor([0, 1])).all()
+
+
+def test_parquet_dataset_sampling(parquet_test_sampling):
+    """Test the ParquetDataset with error sampling."""
+    dataset = ParquetDatasetSampling(
+        parquet_test_sampling, data_column="flux", error_column="flux_error"
+    )
+    dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
+
+    batch = next(iter(dataloader))
+
+    assert batch.shape == (2, 1, 12)
+
+
+def test_parquet_dataset_with_error(parquet_test_sampling):
+    """Test the ParquetDataset with error."""
+    dataset = ParquetDatasetWithError(
+        parquet_test_sampling, data_column="flux", error_column="flux_error"
+    )
+    dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
+
+    flux, flux_error = next(iter(dataloader))
+
+    assert flux.shape == (2, 1, 12)
+    assert flux_error.shape == (2, 1, 12)
+
+
+def test_parquet_dataset_2(parquet_test_sampling):
+    """Test the ParquetDataset with error."""
+    dataset = ParquetDataset(parquet_test_sampling, data_column="flux")
+    dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
+
+    batch = next(iter(dataloader))
+
+    assert batch.shape == (2, 1, 12)

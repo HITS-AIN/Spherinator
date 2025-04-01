@@ -26,13 +26,13 @@ spherinator = 'spherinator.main:main'
 [tool.poetry.dependencies]
 astropy = "^6.0.0"
 healpy = "^1.16.6"
-ipykernel = "^6.27.1"
-jsonargparse = {extras = ["signatures"], version = "^4.27.1"}
+jsonargparse = {extras = ["signatures"], version = "^4.37"}
 lightning = "^2.1.2"
 matplotlib = "^3.8.2"
 numpy = "^1.26.2"
 onnx = "^1.15.0"
-onnxscript = "^0.1.0.dev"
+onnxruntime = "^1.20.1"
+onnxscript = "^0.2.2"
 pandas = "^2.1.3"
 power-spherical = "^0.8.1"
 psutil = "^6.0"
@@ -49,18 +49,25 @@ torchvision = "^0"
 # torchvision = {url = "https://download.pytorch.org/whl/nightly/cu121/torchvision-0.18.0.dev20240101%2Bcu121-cp39-cp39-linux_x86_64.whl"}
 
 # pytorch-triton = {url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"}
+gaiaxpy = "^2.1.2"
 pyarrow = "^18.1.0"
+wandb = "^0.19.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1"
 flake8 = "^7.0.0"
+ipykernel = "^6.27.1"
+pytest = "^8.0.2"
+
+[tool.poetry.group.extras]
+optional = true
+
+[tool.poetry.group.extras.dependencies]
 jupytext = "^1.15.2"
 pip-licenses = "^5.0"
-pytest = "^8.0.2"
 pytest-cov = "^6.0"
 scikit-learn = "^1.3.2"
 tensorboard = "^2.15.1"
-wandb = "^0"
 
 [tool.poetry.group.docs]
 optional = true
@@ -102,6 +109,7 @@ filterwarnings = [
     "ignore:torch.onnx.dynamo_export only implements opset version 18 for now.",
     "ignore:GPU available but not used.",
     "ignore:You requested to overfit but enabled train dataloader shuffling.",
+    "ignore::FutureWarning",
 ]
 
 [tool.pylint.TYPECHECK]

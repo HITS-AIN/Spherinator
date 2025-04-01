@@ -15,4 +15,7 @@
         "source.organizeImports": "explicit"
     },
     "python.analysis.autoImportCompletions": true,
+    "sarif-viewer.connectToGithubCodeScanning": "off",
+    "notebook.formatOnSave.enabled": true,
+    "notebook.defaultFormatter": "ms-python.black-formatter",
 }
