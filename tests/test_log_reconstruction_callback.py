@@ -5,8 +5,12 @@ from lightning.pytorch.trainer import Trainer
 from lightning.pytorch.utilities import rank_zero_only
 
 from spherinator.callbacks import LogReconstructionCallback
-from spherinator.data import ShapesDataModule
-from spherinator.models import RotationalVariationalAutoencoderPower
+from spherinator.data import ParquetDataModule
+from spherinator.models import (
+    Autoencoder,
+    ConvolutionalDecoder1D,
+    ConvolutionalEncoder1D,
+)
 
 
 class MyLogger(Logger):
@@ -75,12 +79,13 @@ does_not_raise = MyNullContext()
         ),
     ],
 )
-def test_on_train_epoch_end(samples, exception, shape_path):
+def test_on_train_epoch_end(samples, exception, parquet_numpy_file):
     # Set up the model and dataloader
-    model = RotationalVariationalAutoencoderPower()
+    encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=3)
+    decoder = ConvolutionalDecoder1D(input_dim=3, output_dim=12)
+    model = Autoencoder(encoder=encoder, decoder=decoder)
 
-    datamodule = ShapesDataModule(shape_path, batch_size=2)
-    datamodule.setup("fit")
+    datamodule = ParquetDataModule(parquet_numpy_file, data_column="data", batch_size=2)
 
     logger = MyLogger()
 

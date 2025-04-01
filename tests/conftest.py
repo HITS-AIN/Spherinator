@@ -21,15 +21,6 @@ def pytest_runtest_setup():
 
 
 @pytest.fixture(scope="session")
-def shape_path(tmp_path_factory):
-    """Mock data for the ShapesDataset."""
-    path = tmp_path_factory.mktemp("data")
-    np.save(path / "boxes.npy", np.random.random((2, 64, 64)))
-    np.save(path / "circles.npy", np.random.random((2, 64, 64)))
-    return path
-
-
-@pytest.fixture(scope="session")
 def parquet_file(tmp_path_factory):
     """Mock parquet data file."""
     series = []
