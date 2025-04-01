@@ -11,6 +11,5 @@ dist/
 docs/_build/
 docs/html/
 fast_data/
-HiPSter/
 lightning_logs/
 wandb/
