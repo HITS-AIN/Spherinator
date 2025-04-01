@@ -9,12 +9,12 @@ import spherinator.models
     [
         (
             torchvision.models.resnet18(num_classes=256),
-            spherinator.models.ConvolutionalDecoder(latent_dim=256),
+            spherinator.models.ConvolutionalDecoder2D(input_dim=256, output_dim=128),
             128,
         ),
         (
             torchvision.models.vit_b_16(num_classes=256),
-            spherinator.models.ConvolutionalDecoder224(latent_dim=256),
+            spherinator.models.ConvolutionalDecoder2D(input_dim=256, output_dim=128),
             224,
         ),
     ],
@@ -22,12 +22,11 @@ import spherinator.models
 def test_resnet(encoder, decoder, input_size):
     z_dim = 2
     h_dim = 256
-    model = spherinator.models.RotationalVariationalAutoencoderPower(
-        z_dim=z_dim,
-        h_dim=h_dim,
-        input_size=input_size,
+    model = spherinator.models.VariationalAutoencoder(
         encoder=encoder,
         decoder=decoder,
+        encoder_out_dim=h_dim,
+        z_dim=z_dim,
     )
     input = model.example_input_array
     batch_size = input.shape[0]
