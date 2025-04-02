@@ -8,8 +8,8 @@ from spherinator.callbacks import LogReconstructionCallback
 from spherinator.data import ParquetDataModule
 from spherinator.models import (
     Autoencoder,
-    ConvolutionalDecoder1D,
-    ConvolutionalEncoder1D,
+    ConvolutionalDecoder2D,
+    ConvolutionalEncoder2D,
 )
 
 
@@ -63,7 +63,7 @@ does_not_raise = MyNullContext()
     [
         (2, does_not_raise),
         (
-            5,
+            15,
             pytest.raises(
                 ValueError,
                 match=r"The sample indices must be smaller than the dataset size",
@@ -80,13 +80,15 @@ does_not_raise = MyNullContext()
     ],
 )
 def test_on_train_epoch_end(samples, exception, parquet_2d_metadata):
-    # Set up the model and dataloader
-    encoder = ConvolutionalEncoder1D(input_dim=12, output_dim=3)
-    decoder = ConvolutionalDecoder1D(input_dim=3, output_dim=12)
+    encoder = ConvolutionalEncoder2D([1, 12, 12], 3)
+    decoder = ConvolutionalDecoder2D(3, [1, 12, 12], [1, 12, 12])
     model = Autoencoder(encoder=encoder, decoder=decoder)
 
     datamodule = ParquetDataModule(
-        parquet_2d_metadata, data_column="data", batch_size=2
+        parquet_2d_metadata,
+        data_column="data",
+        batch_size=2,
+        num_workers=1,
     )
 
     logger = MyLogger()

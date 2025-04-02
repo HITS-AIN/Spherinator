@@ -4,7 +4,6 @@ from typing import Union
 import matplotlib
 import numpy as np
 import torch
-import torchvision.transforms.functional as functional
 from lightning.pytorch.callbacks import Callback
 from matplotlib import figure
 
@@ -59,26 +58,19 @@ class LogReconstructionCallback(Callback):
         images = images.to(model.device)
 
         # Generate reconstructions of the samples using the model
-        with torch.no_grad():
-            crop = functional.center_crop(images, [model.crop_size, model.crop_size])
-            scaled = functional.resize(
-                crop, [model.input_size, model.input_size], antialias=True
-            )
+        recon = model.decode(model.encode(images))
+        loss = torch.nn.MSELoss(reduction="none")(images, recon).flatten(1).mean(1)
 
-            z = model.project(scaled)
-            recon = model.reconstruct(z)
-            loss_recon = model.reconstruction_loss(scaled, recon)
-
-        nb_samples = len(self.samples)
         # Plot the original samples and their reconstructions side by side
+        nb_samples = len(self.samples)
         fig = figure.Figure(figsize=(2 * nb_samples, 6))
         ax = fig.subplots(2, nb_samples).flatten()
         for i in range(nb_samples):
-            ax[i].imshow(np.clip(scaled[i].cpu().detach().numpy().T, 0, 1))
+            ax[i].imshow(np.clip(images[i].cpu().detach().numpy().T, 0, 1))
             ax[i].set_title(f"Original {self.samples[i]}")
             ax[i].axis("off")
             ax[i + nb_samples].imshow(np.clip(recon[i].cpu().detach().numpy().T, 0, 1))
-            ax[i + nb_samples].set_title(f"Recon ({loss_recon[i].item():.4f})")
+            ax[i + nb_samples].set_title(f"Recon ({loss[i]:.4f})")
             ax[i + nb_samples].axis("off")
         fig.tight_layout()
 

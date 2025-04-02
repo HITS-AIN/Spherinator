@@ -51,6 +51,8 @@ class ParquetIterableDataModule(LightningDataModule):
             stage (str): Defines for which stage the data is needed.
                          For the moment just fitting is supported.
         """
+        if stage != "fit":
+            raise ValueError(f"Stage {stage} not supported.")
 
         if stage == "fit" and self.data_train is None:
             self.data_train = ParquetIterableDataset(
@@ -64,8 +66,6 @@ class ParquetIterableDataModule(LightningDataModule):
                 batch_size=self.batch_size,
                 num_workers=self.num_workers,
             )
-        else:
-            raise ValueError(f"Stage {stage} not supported.")
 
     def train_dataloader(self):
         """Gets the data loader for training."""

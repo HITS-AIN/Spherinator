@@ -104,10 +104,10 @@ def parquet_2d_metadata(tmp_path_factory):
         {
             "id": range(10),
             "data": [
-                np.random.rand(3, 2).astype(np.float32).flatten() for _ in range(10)
+                np.random.rand(12, 12).astype(np.float32).flatten() for _ in range(10)
             ],
         },
-        metadata={"data_shape": "(1,3,2)"},
+        metadata={"data_shape": "(1,12,12)"},
     )
 
     file = tmp_path_factory.mktemp("data") / "test.parquet"

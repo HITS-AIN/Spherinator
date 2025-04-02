@@ -119,7 +119,7 @@ def test_parquet_data_module_2d(parquet_2d_metadata):
 
     batch = next(iter(dataloader))
 
-    assert batch.shape == (5, 1, 3, 2)
+    assert batch.shape == (5, 1, 12, 12)
     assert batch.dtype == torch.float32
 
     assert len(list(data.train_dataloader())) == 2
@@ -128,7 +128,7 @@ def test_parquet_data_module_2d(parquet_2d_metadata):
 def test_parquet_table_metadata(parquet_2d_metadata):
     """Test reading metadata from a parquet table."""
     table = pq.read_table(parquet_2d_metadata)
-    assert table.schema.metadata[b"data_shape"] == b"(1,3,2)"
+    assert table.schema.metadata[b"data_shape"] == b"(1,12,12)"
 
 
 def test_parquet(parquet_test_merge):
