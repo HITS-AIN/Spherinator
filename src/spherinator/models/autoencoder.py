@@ -22,15 +22,14 @@ class Autoencoder(pl.LightningModule):
         """
         super().__init__()
 
-        # self.save_hyperparameters(ignore=["encoder", "decoder"])
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["encoder", "decoder"])
+        # self.save_hyperparameters()
 
         self.encoder = encoder
         self.decoder = decoder
         self.loss = loss
 
-        # self.example_input_array = self.encoder.example_input_array
-        self.example_input_array = torch.randn(2, 1, 12)
+        self.example_input_array = getattr(self.encoder, "example_input_array", None)
 
         if loss == "MSE":
             self.reconstruction_loss = nn.MSELoss()

@@ -1,10 +1,10 @@
-import lightning.pytorch as pl
+from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
 
-class MNISTDataModule(pl.LightningDataModule):
+class MNISTDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "./data/",

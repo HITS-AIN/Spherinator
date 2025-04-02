@@ -70,6 +70,8 @@ class ParquetDataModule(LightningDataModule):
             stage (str): Defines for which stage the data is needed.
                          For the moment just fitting is supported.
         """
+        if stage != "fit":
+            raise ValueError(f"Stage {stage} not supported.")
 
         if stage == "fit" and self.data_train is None:
             if self.error_column is not None:
@@ -93,8 +95,6 @@ class ParquetDataModule(LightningDataModule):
                 shuffle=self.shuffle,
                 num_workers=self.num_workers,
             )
-        else:
-            raise ValueError(f"Stage {stage} not supported.")
 
     def train_dataloader(self):
         """Gets the data loader for training."""

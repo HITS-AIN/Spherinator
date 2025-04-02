@@ -1,47 +1,58 @@
-import math
+from typing import Optional
 
 import torch
 import torch.nn as nn
+
+from .consecutive_conv_transpose_1d_layers import ConsecutiveConvTranspose1DLayer
+from .weights_provider import WeightsProvider
 
 
 class ConvolutionalDecoder1D(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        output_dim: int,
-    ):
+        output_dim: list[int],
+        cnn_input_dim: list[int],
+        cnn_layers: list[ConsecutiveConvTranspose1DLayer] = [],
+        weights: Optional[WeightsProvider] = None,
+        freeze: bool = False,
+    ) -> None:
         """ConvolutionalDecoder1D initializer
         Args:
             input_dim (int): The number of input features
-            output_dim (int): The number of output features
+            output_dim (list[int]): The number of output features
+            cnn_input_dim (list[int]): The number of input features
+            cnn_layers (list[ConsecutiveConvTranspose1DLayer]): The list of consecutive convolutional layers
+            weights (Optional[WeightsProvider], optional): The weights to load. Defaults to None.
+            freeze (bool, optional): Whether to freeze the model. Defaults to False.
         """
         super().__init__()
 
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.example_input_array = torch.randn(1, 1, input_dim)
+        self.cnn_layers = cnn_layers
 
-        dec2_input_dim = math.ceil(output_dim / 2)
-        dec1_input_dim = math.ceil(dec2_input_dim / 2)
+        self.example_input_array = torch.randn(1, input_dim)
 
-        self.dec1 = nn.Sequential(
-            nn.LazyLinear(64 * dec1_input_dim),
-            nn.Unflatten(1, (64, dec1_input_dim)),
-            nn.BatchNorm1d(64),
+        self.fc = nn.Sequential(
+            nn.Linear(input_dim, cnn_input_dim[0] * cnn_input_dim[1]),
+            nn.Unflatten(1, cnn_input_dim),
+            nn.BatchNorm1d(cnn_input_dim[0]),
             nn.ReLU(),
         )
-        self.dec2 = nn.Sequential(
-            nn.ConvTranspose1d(64, 32, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
-        )
-        self.dec3 = nn.Sequential(
-            nn.ConvTranspose1d(32, 1, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm1d(1),
-        )
+
+        layers = []
+        for layer in cnn_layers:
+            layers.append(layer.get_model())
+        self.cnn = nn.Sequential(*layers)
+
+        if weights is not None:
+            self.load_state_dict(weights.get_state_dict())
+        if freeze:
+            for param in self.parameters():
+                param.requires_grad = False
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.dec1(x)
-        x = self.dec2(x)
-        x = self.dec3(x)
+        x = self.fc(x)
+        x = self.cnn(x)
         return x

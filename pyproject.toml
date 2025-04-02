@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spherinator"
-version = "0.3.0"
+version = "0.4.0"
 description = "Rotation-Invariant Hyperspherical Variational Convolutional Autoencoder"
 authors = [
     "Kai Polsterer <kai.polsterer@h-its.org>",
@@ -13,31 +13,25 @@ readme = "README.md"
 repository = "https://github.com/HITS-AIN/Spherinator"
 packages = [
     { include = "spherinator", from = "src" },
-    { include = "hipster", from = "src" },
 ]
 include = [
     { path = "tests", format = "sdist" },
 ]
 
 [tool.poetry.scripts]
-hipster = 'hipster.main:main'
 spherinator = 'spherinator.main:main'
 
 [tool.poetry.dependencies]
-astropy = "^6.0.0"
-healpy = "^1.16.6"
 jsonargparse = {extras = ["signatures"], version = "^4.37"}
-lightning = "^2.1.2"
-matplotlib = "^3.8.2"
-numpy = "^1.26.2"
+lightning = "^2.1"
+matplotlib = "^3.10"
+numpy = "^2.2"
 onnx = "^1.15.0"
-onnxruntime = "^1.20.1"
-onnxscript = "^0.2.2"
+onnxscript = "^0.2.3"
 pandas = "^2.1.3"
 power-spherical = "^0.8.1"
-psutil = "^6.0"
-python = "^3.9"
-scikit-image = "^0.24"
+python = ">=3.10,<4.0"
+scikit-image = "^0.25"
 scipy = "^1.11.4"
 
 torch = "^2.2"
@@ -50,8 +44,8 @@ torchvision = "^0"
 
 # pytorch-triton = {url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"}
 gaiaxpy = "^2.1.2"
-pyarrow = "^18.1.0"
-wandb = "^0.19.1"
+pyarrow = "^19.0"
+wandb = "^0.19.9"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1"
@@ -65,7 +59,7 @@ optional = true
 [tool.poetry.group.extras.dependencies]
 jupytext = "^1.15.2"
 pip-licenses = "^5.0"
-pytest-cov = "^6.0"
+pytest-cov = "^6.1"
 scikit-learn = "^1.3.2"
 tensorboard = "^2.15.1"
 
@@ -73,11 +67,11 @@ tensorboard = "^2.15.1"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-myst-parser = "^3.0.1"
+myst-parser = "^4.0.1"
 recommonmark = "^0.7.1"
-sphinx = "^7.3.7"
-sphinx-autodoc-typehints = "^2.1.0"
-sphinx-rtd-theme = "^2.0.0"
+sphinx = "^8.1.3"
+sphinx-autodoc-typehints = "^2.5.0"
+sphinx-rtd-theme = "^3.0.2"
 
 [[tool.poetry.source]]
 name = "pypi"

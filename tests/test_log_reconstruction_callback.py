@@ -5,8 +5,12 @@ from lightning.pytorch.trainer import Trainer
 from lightning.pytorch.utilities import rank_zero_only
 
 from spherinator.callbacks import LogReconstructionCallback
-from spherinator.data import ShapesDataModule
-from spherinator.models import RotationalVariationalAutoencoderPower
+from spherinator.data import ParquetDataModule
+from spherinator.models import (
+    Autoencoder,
+    ConvolutionalDecoder2D,
+    ConvolutionalEncoder2D,
+)
 
 
 class MyLogger(Logger):
@@ -59,7 +63,7 @@ does_not_raise = MyNullContext()
     [
         (2, does_not_raise),
         (
-            5,
+            15,
             pytest.raises(
                 ValueError,
                 match=r"The sample indices must be smaller than the dataset size",
@@ -75,12 +79,17 @@ does_not_raise = MyNullContext()
         ),
     ],
 )
-def test_on_train_epoch_end(samples, exception, shape_path):
-    # Set up the model and dataloader
-    model = RotationalVariationalAutoencoderPower()
+def test_on_train_epoch_end(samples, exception, parquet_2d_metadata):
+    encoder = ConvolutionalEncoder2D([1, 12, 12], 3)
+    decoder = ConvolutionalDecoder2D(3, [1, 12, 12], [1, 12, 12])
+    model = Autoencoder(encoder=encoder, decoder=decoder)
 
-    datamodule = ShapesDataModule(shape_path, batch_size=2)
-    datamodule.setup("fit")
+    datamodule = ParquetDataModule(
+        parquet_2d_metadata,
+        data_column="data",
+        batch_size=2,
+        num_workers=1,
+    )
 
     logger = MyLogger()
 

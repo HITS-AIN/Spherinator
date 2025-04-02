@@ -14,15 +14,6 @@
             "justMyCode": true
         },
         {
-            "name": "Python: HiPSter",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "src/hipster/main.py",
-            "args": "-t hips -c /experiments/illustris_power.yaml",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
             "name": "Python: Current File",
             "type": "debugpy",
             "request": "launch",

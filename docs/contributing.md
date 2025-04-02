@@ -1,6 +1,6 @@
-# Contributing to Spherinator & HiPSter
+# Contributing to Spherinator
 
-We welcome contributions to the Spherinator & HiPSter project. This document outlines the guidelines for contributing to the project. Don't worry about the length of this document. There are various ways to contribute to the project at different levels. Just get started, and we will help you through the process. Finally, all the guidelines and checks are in place to ensure the quality of the project.
+We welcome contributions to the Spherinator project. This document outlines the guidelines for contributing to the project. Don't worry about the length of this document. There are various ways to contribute to the project at different levels. Just get started, and we will help you through the process. Finally, all the guidelines and checks are in place to ensure the quality of the project.
 
 ## Code of Conduct
 
@@ -56,4 +56,4 @@ The project uses the [GitHub flow](https://guides.github.com/introduction/flow/)
 
 If you find a bug or have a feature request, please create an issue in the [GitHub issue tracker](https://github.com/HITS-AIN/Spherinator/issues).
 
-Thank you for contributing to the Spherinator & HiPSter project!
+Thank you for contributing to the Spherinator project!

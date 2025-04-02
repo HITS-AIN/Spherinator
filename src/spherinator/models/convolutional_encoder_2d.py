@@ -3,24 +3,24 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from .consecutive_conv_1d_layers import ConsecutiveConv1DLayer
+from .consecutive_conv_2d_layers import ConsecutiveConv2DLayer
 from .weights_provider import WeightsProvider
 
 
-class ConvolutionalEncoder1DGen(nn.Module):
+class ConvolutionalEncoder2D(nn.Module):
     def __init__(
         self,
         input_dim: list[int],
         output_dim: int,
-        cnn_layers: list[ConsecutiveConv1DLayer],
+        cnn_layers: list[ConsecutiveConv2DLayer] = [],
         weights: Optional[WeightsProvider] = None,
         freeze: bool = False,
     ) -> None:
-        """ConvolutionalEncoder1DGen initializer
+        """ConvolutionalEncoder2D initializer
         Args:
             input_dim (tuple[int, int]): The number of input features
             output_dim (int): The number of output features
-            cnn_layers (list[ConsecutiveConv1DLayer]): The list of consecutive convolutional layers
+            cnn_layers (list[ConsecutiveConv2DLayer]): The list of consecutive convolutional layers
             weights (Optional[WeightsProvider], optional): The weights to load. Defaults to None.
             freeze (bool, optional): Whether to freeze the model. Defaults to False.
         """
