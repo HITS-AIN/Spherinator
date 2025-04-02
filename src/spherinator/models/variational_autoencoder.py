@@ -77,8 +77,8 @@ class VariationalAutoencoder(pl.LightningModule):
         """
         super().__init__()
 
-        # self.save_hyperparameters(ignore=["encoder", "decoder"])
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["encoder", "decoder"])
+        # self.save_hyperparameters()
 
         self.encoder = encoder
         self.decoder = decoder
