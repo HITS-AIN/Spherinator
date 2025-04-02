@@ -13,7 +13,7 @@ class ConvolutionalDecoder1D(nn.Module):
         input_dim: int,
         output_dim: list[int],
         cnn_input_dim: list[int],
-        cnn_layers: list[ConsecutiveConvTranspose1DLayer],
+        cnn_layers: list[ConsecutiveConvTranspose1DLayer] = [],
         weights: Optional[WeightsProvider] = None,
         freeze: bool = False,
     ) -> None:

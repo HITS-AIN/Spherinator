@@ -12,7 +12,7 @@ class ConvolutionalEncoder1D(nn.Module):
         self,
         input_dim: list[int],
         output_dim: int,
-        cnn_layers: list[ConsecutiveConv1DLayer],
+        cnn_layers: list[ConsecutiveConv1DLayer] = [],
         weights: Optional[WeightsProvider] = None,
         freeze: bool = False,
     ) -> None:

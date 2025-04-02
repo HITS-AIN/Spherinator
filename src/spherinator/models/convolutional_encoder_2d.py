@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from .consecutive_conv_2D_layers import ConsecutiveConv2DLayer
+from .consecutive_conv_2d_layers import ConsecutiveConv2DLayer
 from .weights_provider import WeightsProvider
 
 
@@ -12,7 +12,7 @@ class ConvolutionalEncoder2D(nn.Module):
         self,
         input_dim: list[int],
         output_dim: int,
-        cnn_layers: list[ConsecutiveConv2DLayer],
+        cnn_layers: list[ConsecutiveConv2DLayer] = [],
         weights: Optional[WeightsProvider] = None,
         freeze: bool = False,
     ) -> None:

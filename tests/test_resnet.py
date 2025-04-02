@@ -1,7 +1,11 @@
 import pytest
 import torchvision.models
 
-import spherinator.models
+from spherinator.models import (
+    ConsecutiveConv2DLayer,
+    ConvolutionalDecoder2D,
+    VariationalAutoencoder,
+)
 
 
 @pytest.mark.parametrize(
@@ -9,12 +13,20 @@ import spherinator.models
     [
         (
             torchvision.models.resnet18(num_classes=256),
-            spherinator.models.ConvolutionalDecoder2D(input_dim=256, output_dim=128),
+            ConvolutionalDecoder2D(
+                input_dim=256,
+                output_dim=[128, 128],
+                cnn_input_dim=[128, 128],
+            ),
             128,
         ),
         (
             torchvision.models.vit_b_16(num_classes=256),
-            spherinator.models.ConvolutionalDecoder2D(input_dim=256, output_dim=128),
+            ConvolutionalDecoder2D(
+                input_dim=256,
+                output_dim=[128, 128],
+                cnn_input_dim=[128, 128],
+            ),
             224,
         ),
     ],
@@ -22,7 +34,7 @@ import spherinator.models
 def test_resnet(encoder, decoder, input_size):
     z_dim = 2
     h_dim = 256
-    model = spherinator.models.VariationalAutoencoder(
+    model = VariationalAutoencoder(
         encoder=encoder,
         decoder=decoder,
         encoder_out_dim=h_dim,
