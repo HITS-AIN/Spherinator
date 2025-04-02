@@ -13,7 +13,7 @@ class ConsecutiveConv2DLayer:
         base_channel_number: int = 16,
         channel_increment: int = 4,
         activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
-        norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm1d,
+        norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm2d,
         pooling: Optional[nn.Module] = None,
     ) -> None:
         """A class that defines a consecutive convolutional layer.
@@ -27,7 +27,7 @@ class ConsecutiveConv2DLayer:
             activation (Optional[Callable[..., nn.Module]], optional): The activation function.
             Defaults to nn.ReLU.
             norm (Optional[Callable[..., nn.Module]], optional): The normalization layer.
-            Defaults to nn.BatchNorm1d.
+            Defaults to nn.BatchNorm2d.
             pooling (Optional[Callable[..., nn.Module]], optional): The pooling layer.
             Defaults to None.
         """

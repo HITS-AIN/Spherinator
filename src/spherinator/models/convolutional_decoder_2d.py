@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 
 import torch
@@ -17,7 +18,7 @@ class ConvolutionalDecoder2D(nn.Module):
         weights: Optional[WeightsProvider] = None,
         freeze: bool = False,
     ) -> None:
-        """ConvolutionalDecoder1DGen initializer
+        """ConvolutionalDecoder2DGen initializer
         Args:
             input_dim (int): The number of input features
             output_dim (list[int]): The number of output features
@@ -35,9 +36,9 @@ class ConvolutionalDecoder2D(nn.Module):
         self.example_input_array = torch.randn(1, input_dim)
 
         self.fc = nn.Sequential(
-            nn.Linear(input_dim, cnn_input_dim[0] * cnn_input_dim[1]),
+            nn.Linear(input_dim, math.prod(cnn_input_dim)),
             nn.Unflatten(1, cnn_input_dim),
-            nn.BatchNorm1d(cnn_input_dim[0]),
+            nn.BatchNorm2d(cnn_input_dim[0]),
             nn.ReLU(),
         )
 

@@ -11,7 +11,7 @@ class ConsecutiveConvTranspose2DLayer:
         padding: int = 0,
         out_channels_list: list[int] = [1],
         activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
-        norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm1d,
+        norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm2d,
         pooling: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
         """A class that defines a consecutive convolutional layer.
@@ -23,7 +23,7 @@ class ConsecutiveConvTranspose2DLayer:
             activation (Optional[Callable[..., nn.Module]], optional): The activation function.
             Defaults to nn.ReLU.
             norm (Optional[Callable[..., nn.Module]], optional): The normalization layer.
-            Defaults to nn.BatchNorm1d.
+            Defaults to nn.BatchNorm2d.
             pooling (Optional[Callable[..., nn.Module]], optional): The pooling layer.
             Defaults to None.
             transpose (bool, optional): If the convolutional layer is a transpose convolutional layer.
