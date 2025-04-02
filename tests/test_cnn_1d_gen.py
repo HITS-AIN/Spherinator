@@ -5,8 +5,8 @@ from torch import nn
 from spherinator.models import (
     ConsecutiveConv1DLayer,
     ConsecutiveConvTranspose1DLayer,
-    ConvolutionalDecoder1DGen,
-    ConvolutionalEncoder1DGen,
+    ConvolutionalDecoder1D,
+    ConvolutionalEncoder1D,
 )
 
 
@@ -17,7 +17,7 @@ def test_convolutional_encoder_1d_gen(input_dim):
             num_layers=2,
         )
     ]
-    encoder = ConvolutionalEncoder1DGen(
+    encoder = ConvolutionalEncoder1D(
         input_dim=input_dim,
         output_dim=3,
         cnn_layers=cnn_layers,
@@ -49,7 +49,7 @@ def test_convolutional_decoder_1d_gen(output_dim):
     cnn_layers = [
         ConsecutiveConvTranspose1DLayer(out_channels_list=[16, output_dim[0]])
     ]
-    decoder = ConvolutionalDecoder1DGen(
+    decoder = ConvolutionalDecoder1D(
         input_dim=3,
         output_dim=output_dim,
         cnn_input_dim=(20, 124),
@@ -72,7 +72,7 @@ def test_convolutional_decoder_1d_gen_deep():
             out_channels_list=out_channels_list,
         )
     ]
-    decoder = ConvolutionalDecoder1DGen(
+    decoder = ConvolutionalDecoder1D(
         input_dim=3,
         output_dim=(1, 344),
         cnn_input_dim=(252, 104),
