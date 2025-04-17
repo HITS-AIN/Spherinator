@@ -46,6 +46,10 @@ class Autoencoder(pl.LightningModule):
         x = self.encode(x)
         return self.decode(x)
 
+    def pure_forward(self, x):
+        x = self.encode(x)
+        return self.decode(x)
+
     def training_step(self, batch, batch_idx) -> torch.Tensor:
 
         if self.loss == "KL":

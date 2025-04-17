@@ -116,6 +116,10 @@ class VariationalAutoencoder(pl.LightningModule):
         recon = self.decode(z)
         return (z_location, z_scale), (q_z, p_z), z, recon
 
+    def pure_forward(self, x):
+        z_location, _ = self.encode(x)
+        return self.decode(z_location)
+
     def training_step(self, batch, batch_idx) -> torch.Tensor:
 
         if self.loss in ["NLL-normal", "NLL-truncated", "KL"]:

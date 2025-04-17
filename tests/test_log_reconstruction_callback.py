@@ -7,9 +7,9 @@ from lightning.pytorch.utilities import rank_zero_only
 from spherinator.callbacks import LogReconstructionCallback
 from spherinator.data import ParquetDataModule
 from spherinator.models import (
-    Autoencoder,
     ConvolutionalDecoder2D,
     ConvolutionalEncoder2D,
+    VariationalAutoencoder,
 )
 
 
@@ -82,7 +82,7 @@ does_not_raise = MyNullContext()
 def test_on_train_epoch_end(samples, exception, parquet_2d_metadata):
     encoder = ConvolutionalEncoder2D([1, 12, 12], 3)
     decoder = ConvolutionalDecoder2D(3, [1, 12, 12], [1, 12, 12])
-    model = Autoencoder(encoder=encoder, decoder=decoder)
+    model = VariationalAutoencoder(encoder=encoder, decoder=decoder, encoder_out_dim=3)
 
     datamodule = ParquetDataModule(
         parquet_2d_metadata,
