@@ -151,9 +151,9 @@ class VariationalAutoencoder(pl.LightningModule):
         else:
             raise ValueError(f"Unsupported loss: {self.loss}")
 
-        loss_KL = torch.distributions.kl.kl_divergence(q_z, p_z)
+        loss_KL = self.beta * torch.distributions.kl.kl_divergence(q_z, p_z)
 
-        loss = (loss_recon + self.beta * loss_KL).mean()
+        loss = (loss_recon + loss_KL).mean()
         loss_recon = loss_recon.mean()
         loss_KL = loss_KL.mean()
 
