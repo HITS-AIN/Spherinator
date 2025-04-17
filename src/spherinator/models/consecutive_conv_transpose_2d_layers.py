@@ -9,7 +9,7 @@ class ConsecutiveConvTranspose2DLayer:
         kernel_size: int = 3,
         stride: int = 1,
         padding: int = 0,
-        out_channels_list: list[int] = [1],
+        out_channels: list[int] = [1],
         activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
         norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm2d,
         pooling: Optional[Callable[..., nn.Module]] = None,
@@ -19,7 +19,7 @@ class ConsecutiveConvTranspose2DLayer:
             kernel_size (int, optional): The kernel size. Defaults to 3.
             stride (int, optional): The stride. Defaults to 1.
             padding (int, optional): The padding. Defaults to 0.
-            out_channels_list (list[int], optional): The list of output channels.
+            out_channels (list[int], optional): The list of output channels. Defaults to [1].
             activation (Optional[Callable[..., nn.Module]], optional): The activation function.
             Defaults to nn.ReLU.
             norm (Optional[Callable[..., nn.Module]], optional): The normalization layer.
@@ -33,7 +33,7 @@ class ConsecutiveConvTranspose2DLayer:
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
-        self.out_channels_list = out_channels_list
+        self.out_channels = out_channels
         self.activation = activation
         self.norm = norm
         self.pooling = pooling
@@ -58,6 +58,6 @@ class ConsecutiveConvTranspose2DLayer:
 
     def get_model(self) -> nn.Module:
         layers = []
-        for out_channels in self.out_channels_list:
+        for out_channels in self.out_channels:
             layers.append(self.__get_single_layer(out_channels))
         return nn.Sequential(*layers)

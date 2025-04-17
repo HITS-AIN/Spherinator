@@ -9,9 +9,7 @@ class ConsecutiveConv2DLayer:
         kernel_size: int = 3,
         stride: int = 1,
         padding: int = 0,
-        num_layers: int = 5,
-        base_channel_number: int = 16,
-        channel_increment: int = 4,
+        out_channels: list[int] = [1],
         activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
         norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm2d,
         pooling: Optional[nn.Module] = None,
@@ -21,9 +19,7 @@ class ConsecutiveConv2DLayer:
             kernel_size (int, optional): The kernel size. Defaults to 3.
             stride (int, optional): The stride. Defaults to 1.
             padding (int, optional): The padding. Defaults to 0.
-            num_layers (int, optional): The number of layers. Defaults to 5.
-            base_channel_number (int, optional): The base channel number. Defaults to 16.
-            channel_increment (int, optional): The channel increment. Defaults to 4.
+            out_channels (list[int], optional): The list of output channels. Defaults to [1].
             activation (Optional[Callable[..., nn.Module]], optional): The activation function.
             Defaults to nn.ReLU.
             norm (Optional[Callable[..., nn.Module]], optional): The normalization layer.
@@ -36,9 +32,7 @@ class ConsecutiveConv2DLayer:
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
-        self.num_layers = num_layers
-        self.base_channel_number = base_channel_number
-        self.channel_increment = channel_increment
+        self.out_channels = out_channels
         self.activation = activation
         self.norm = norm
         self.pooling = pooling
@@ -62,12 +56,7 @@ class ConsecutiveConv2DLayer:
         return nn.Sequential(*layers)
 
     def get_model(self) -> nn.Module:
-        channel_numbers = [
-            self.base_channel_number + i * self.channel_increment
-            for i in range(0, self.num_layers)
-        ]
-
         layers = []
-        for nb_channels in channel_numbers:
-            layers.append(self.__get_single_layer(nb_channels))
+        for out_channels in self.out_channels:
+            layers.append(self.__get_single_layer(out_channels))
         return nn.Sequential(*layers)
