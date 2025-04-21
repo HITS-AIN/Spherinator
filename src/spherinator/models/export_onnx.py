@@ -2,7 +2,7 @@ import os
 
 import torch
 
-from spherinator.models import yaml2model
+from .yaml2model import yaml2model
 
 
 def export_onnx(

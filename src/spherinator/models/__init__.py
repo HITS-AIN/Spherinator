@@ -13,6 +13,7 @@ from .convolutional_encoder_1d import ConvolutionalEncoder1D
 from .convolutional_encoder_2d import ConvolutionalEncoder2D
 from .dense_model import DenseModel
 from .embedding_reconstruction import EmbeddingReconstruction
+from .export_onnx import export_onnx
 from .variational_autoencoder import VariationalAutoencoder
 from .weights_provider import WeightsProvider
 from .yaml2model import yaml2model
@@ -29,6 +30,7 @@ __all__ = [
     "ConvolutionalEncoder2D",
     "DenseModel",
     "EmbeddingReconstruction",
+    "export_onnx",
     "VariationalAutoencoder",
     "WeightsProvider",
     "yaml2model",
