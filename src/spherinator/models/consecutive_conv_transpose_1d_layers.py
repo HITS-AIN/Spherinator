@@ -9,6 +9,9 @@ class ConsecutiveConvTranspose1DLayer:
         kernel_size: int = 3,
         stride: int = 1,
         padding: int = 0,
+        output_padding: int = 0,
+        dilation: int = 1,
+        bias: bool = True,
         out_channels: list[int] = [1],
         activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
         norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm1d,
@@ -19,6 +22,9 @@ class ConsecutiveConvTranspose1DLayer:
             kernel_size (int, optional): The kernel size. Defaults to 3.
             stride (int, optional): The stride. Defaults to 1.
             padding (int, optional): The padding. Defaults to 0.
+            output_padding (int, optional): The output padding. Defaults to 0.
+            dilation (int, optional): The dilation. Defaults to 1.
+            bias (bool, optional): If the convolutional layer has a bias. Defaults to True.
             out_channels (list[int], optional): The list of output channels. Defaults to [1].
             activation (Optional[Callable[..., nn.Module]], optional): The activation function.
             Defaults to nn.ReLU.
@@ -33,6 +39,9 @@ class ConsecutiveConvTranspose1DLayer:
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
+        self.output_padding = output_padding
+        self.dilation = dilation
+        self.bias = bias
         self.out_channels = out_channels
         self.activation = activation
         self.norm = norm
@@ -46,6 +55,9 @@ class ConsecutiveConvTranspose1DLayer:
                 kernel_size=self.kernel_size,
                 stride=self.stride,
                 padding=self.padding,
+                output_padding=self.output_padding,
+                dilation=self.dilation,
+                bias=self.bias,
             )
         )
         if self.norm:
