@@ -44,7 +44,7 @@ torchvision = "^0"
 
 # pytorch-triton = {url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"}
 gaiaxpy = "^2.1.2"
-pyarrow = "^19.0"
+pyarrow = "^20.0"
 wandb = "^0.19.9"
 
 [tool.poetry.group.dev.dependencies]
