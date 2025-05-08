@@ -25,7 +25,7 @@ spherinator = 'spherinator.main:main'
 jsonargparse = {extras = ["signatures"], version = "^4.37"}
 lightning = "^2.1"
 matplotlib = "^3.10"
-numpy = "^2.2"
+numpy = ">=2.0.2, <3.0"
 onnx = "^1.15.0"
 onnxscript = "^0.2.4"
 pandas = "^2.1.3"
@@ -44,7 +44,7 @@ torchvision = "^0"
 
 # pytorch-triton = {url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"}
 gaiaxpy = "^2.1.2"
-pyarrow = "^20.0"
+pyarrow = ">=19.0"
 wandb = "^0.19.9"
 
 [tool.poetry.group.dev.dependencies]
