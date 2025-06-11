@@ -115,7 +115,7 @@ class ViewpointTransformation:
             for f in range(2 if self.add_flipped_viewport else 1):
                 if f == 1:
                     resize = TF.hflip(resize)
-                four_crop = TF.five_crop(resize, self.target_size)[:-1]  # ignor the center crop -1
+                four_crop = TF.five_crop(resize, self.target_size)[:-1]  # ignore the center crop -1
                 for i in range(len(four_crop)):
                     # new_x = copy.copy(x) # non flipped crop
                     # new_x['image']
