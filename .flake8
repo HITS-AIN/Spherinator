@@ -1,5 +1,0 @@
-[flake8]
-exclude = .git, .venv*
-max-line-length = 120
-max-complexity = 12
-ignore = E203, W503

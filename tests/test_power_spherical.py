@@ -17,12 +17,8 @@ def test_power_spherical_large_scale():
     z_scale = torch.nn.functional.softplus(z_scale) + 1
     dist = PowerSpherical(z_mean, z_scale)
 
-    assert torch.allclose(
-        dist.rsample(), torch.Tensor([1.0000e00, -2.9921e-04, -3.8586e-04])
-    )
-    assert torch.allclose(
-        dist.rsample(), torch.Tensor([1.0000e00, -4.6703e-04, 1.4249e-04])
-    )
+    assert torch.allclose(dist.rsample(), torch.Tensor([1.0000e00, -2.9921e-04, -3.8586e-04]))
+    assert torch.allclose(dist.rsample(), torch.Tensor([1.0000e00, -4.6703e-04, 1.4249e-04]))
 
 
 def test_power_spherical_2d_batch():

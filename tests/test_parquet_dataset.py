@@ -188,9 +188,7 @@ def test_parquet_dataset_with_index(parquet_numpy_file):
 
 def test_parquet_dataset_sampling(parquet_test_sampling):
     """Test the ParquetDataset with error sampling."""
-    dataset = ParquetDatasetSampling(
-        parquet_test_sampling, data_column="flux", error_column="flux_error"
-    )
+    dataset = ParquetDatasetSampling(parquet_test_sampling, data_column="flux", error_column="flux_error")
     dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
 
     batch = next(iter(dataloader))
@@ -200,9 +198,7 @@ def test_parquet_dataset_sampling(parquet_test_sampling):
 
 def test_parquet_dataset_with_error(parquet_test_sampling):
     """Test the ParquetDataset with error."""
-    dataset = ParquetDatasetWithError(
-        parquet_test_sampling, data_column="flux", error_column="flux_error"
-    )
+    dataset = ParquetDatasetWithError(parquet_test_sampling, data_column="flux", error_column="flux_error")
     dataloader = DataLoader(dataset, batch_size=2, num_workers=1)
 
     flux, flux_error = next(iter(dataloader))

@@ -42,17 +42,13 @@ class LogReconstructionCallback(Callback):
             return
 
         # Check sample indices
-        if any(
-            sample >= len(trainer.train_dataloader.dataset) for sample in self.samples
-        ):
+        if any(sample >= len(trainer.train_dataloader.dataset) for sample in self.samples):
             raise ValueError("The sample indices must be smaller than the dataset size")
 
         # Get the samples from the dataset
         images = torch.unsqueeze(trainer.train_dataloader.dataset[self.samples[0]], 0)
         for sample in self.samples[1:]:
-            images = torch.cat(
-                (images, torch.unsqueeze(trainer.train_dataloader.dataset[sample], 0))
-            )
+            images = torch.cat((images, torch.unsqueeze(trainer.train_dataloader.dataset[sample], 0)))
 
         # Move the samples to the device used by the model
         images = images.to(model.device)

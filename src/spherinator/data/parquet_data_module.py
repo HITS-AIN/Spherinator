@@ -40,9 +40,7 @@ class ParquetDataModule(LightningDataModule):
         super().__init__()
 
         self.data_directory = data_directory
-        self.data_column = (
-            [data_column] if isinstance(data_column, str) else data_column
-        )
+        self.data_column = [data_column] if isinstance(data_column, str) else data_column
         self.error_column = error_column
         self.normalize = normalize
         self.shuffle = shuffle
@@ -55,13 +53,9 @@ class ParquetDataModule(LightningDataModule):
 
         self.transform_train = None
         if normalize == "minmax":
-            self.transform_train = transforms.Lambda(
-                lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
-            )
+            self.transform_train = transforms.Lambda(lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x)))
         elif normalize == "absmax":
-            self.transform_train = transforms.Lambda(
-                lambda x: x / torch.max(torch.abs(x))
-            )
+            self.transform_train = transforms.Lambda(lambda x: x / torch.max(torch.abs(x)))
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.

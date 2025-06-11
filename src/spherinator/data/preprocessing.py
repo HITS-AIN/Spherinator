@@ -7,18 +7,12 @@ import torchvision.transforms.functional as TF
 class DielemanTransformation:
     def __init__(self, rotation_range, translation_range, scaling_range, flip):
         self.scaling_range = scaling_range
-        self.random_affine = transforms.RandomAffine(
-            degrees=rotation_range, translate=translation_range, shear=None
-        )
+        self.random_affine = transforms.RandomAffine(degrees=rotation_range, translate=translation_range, shear=None)
         self.flip = transforms.RandomHorizontalFlip(p=flip)
 
     def __call__(self, images):
         transformed_image = self.random_affine(images)
-        zoom = numpy.exp(
-            numpy.random.uniform(
-                numpy.log(self.scaling_range[0]), numpy.log(self.scaling_range[1])
-            )
-        )
+        zoom = numpy.exp(numpy.random.uniform(numpy.log(self.scaling_range[0]), numpy.log(self.scaling_range[1])))
         resize = TF.resize(
             transformed_image,
             [int(images.shape[1] * zoom), int(images.shape[2] * zoom)],
@@ -81,10 +75,7 @@ class CreateNormalizedRGBColors:
 
         mean = torch.mean(resulting_image, dim=0)
         resulting_image = (
-            resulting_image
-            * torch.asinh(self.stretch * self.range * (mean - self.lower_limit))
-            / self.range
-            / mean
+            resulting_image * torch.asinh(self.stretch * self.range * (mean - self.lower_limit)) / self.range / mean
         )
 
         resulting_image = torch.nan_to_num(resulting_image, nan=0, posinf=0, neginf=0)
@@ -119,22 +110,16 @@ class ViewpointTransformation:
         n = 0
         for angle in self.rotation_angles:
             rotation = TF.rotate(images, angle)
-            crop = TF.center_crop(
-                rotation, [int(self.downsampling_factor * i) for i in self.crop_size]
-            )
+            crop = TF.center_crop(rotation, [int(self.downsampling_factor * i) for i in self.crop_size])
             resize = TF.resize(crop, self.crop_size, antialias=True)
             for f in range(2 if self.add_flipped_viewport else 1):
                 if f == 1:
                     resize = TF.hflip(resize)
-                four_crop = TF.five_crop(resize, self.target_size)[
-                    :-1
-                ]  # ignor the center crop -1
+                four_crop = TF.five_crop(resize, self.target_size)[:-1]  # ignore the center crop -1
                 for i in range(len(four_crop)):
                     # new_x = copy.copy(x) # non flipped crop
                     # new_x['image']
-                    result[n] = TF.rotate(
-                        four_crop[i], ViewpointTransformation.ROTATIONS[i]
-                    )
+                    result[n] = TF.rotate(four_crop[i], ViewpointTransformation.ROTATIONS[i])
                     n = n + 1
                     # result.append(new_x)
         return result

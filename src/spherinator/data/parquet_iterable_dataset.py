@@ -39,7 +39,6 @@ class ParquetIterableDataset(IterableDataset):
             self.shape = tuple(map(int, shape))
 
     def __iter__(self):
-
         worker_info = torch.utils.data.get_worker_info()
 
         iterator = self.scanner.to_batches()

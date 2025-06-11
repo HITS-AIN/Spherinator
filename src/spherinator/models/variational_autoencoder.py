@@ -87,9 +87,7 @@ class VariationalAutoencoder(pl.LightningModule):
         self.beta = beta
         self.loss = loss
 
-        self.variational_encoder = VariationalEncoder(
-            encoder, self.encoder_out_dim, self.z_dim, fixed_scale
-        )
+        self.variational_encoder = VariationalEncoder(encoder, self.encoder_out_dim, self.z_dim, fixed_scale)
 
         self.example_input_array = getattr(self.encoder, "example_input_array", None)
 
@@ -121,7 +119,6 @@ class VariationalAutoencoder(pl.LightningModule):
         return self.decode(z_location)
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
-
         if self.loss in ["NLL-normal", "NLL-truncated", "KL"]:
             batch, error = batch
 
@@ -130,19 +127,10 @@ class VariationalAutoencoder(pl.LightningModule):
         if self.loss == "MSE":
             loss_recon = self.reconstruction_loss(batch, recon)
         elif self.loss == "NLL-normal":
-            loss_recon = (
-                -torch.distributions.Normal(batch, error)
-                .log_prob(recon)
-                .flatten(1)
-                .mean(1)
-            )
+            loss_recon = -torch.distributions.Normal(batch, error).log_prob(recon).flatten(1).mean(1)
         elif self.loss == "NLL-truncated":
             loss_recon = -torch.log(
-                truncated_normal_distribution(
-                    recon, mu=batch, sigma=error, a=0.0, b=1.0
-                )
-                .flatten(1)
-                .mean(1)
+                truncated_normal_distribution(recon, mu=batch, sigma=error, a=0.0, b=1.0).flatten(1).mean(1)
             )
         elif self.loss == "KL":
             q = torch.distributions.Normal(recon, error)

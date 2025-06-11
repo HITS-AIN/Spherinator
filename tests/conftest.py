@@ -103,9 +103,7 @@ def parquet_2d_metadata(tmp_path_factory):
     table = pa.table(
         {
             "id": range(10),
-            "data": [
-                np.random.rand(12, 12).astype(np.float32).flatten() for _ in range(10)
-            ],
+            "data": [np.random.rand(12, 12).astype(np.float32).flatten() for _ in range(10)],
         },
         metadata={"data_shape": "(1,12,12)"},
     )

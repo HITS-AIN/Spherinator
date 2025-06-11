@@ -43,9 +43,7 @@ def test_convolutional_decoder_2D():
         input_dim=3,
         output_dim=output_dim,
         cnn_input_dim=[20, 124, 124],
-        cnn_layers=[
-            ConsecutiveConvTranspose2DLayer(out_channels=[16, output_dim[0]], norm=None)
-        ],
+        cnn_layers=[ConsecutiveConvTranspose2DLayer(out_channels=[16, output_dim[0]], norm=None)],
     )
     data = torch.randn([2, 3])
     out = decoder(data)

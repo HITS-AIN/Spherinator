@@ -50,17 +50,13 @@ class ParquetDataset(Dataset):
                 self.data = self.data.apply(lambda x: x.reshape(shape))
         else:
             data = table.to_pandas()
-            data["concat"] = data.apply(
-                lambda x: np.concatenate((x[data_column[0]], x[data_column[1]])), axis=1
-            )
+            data["concat"] = data.apply(lambda x: np.concatenate((x[data_column[0]], x[data_column[1]])), axis=1)
             self.data = data["concat"]
 
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(
-        self, index: int
-    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
+    def __getitem__(self, index: int) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         batch = torch.tensor(self.data[index], dtype=torch.float32)
         if self.transform is not None:
             batch = self.transform(batch)

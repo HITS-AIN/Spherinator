@@ -24,7 +24,6 @@ class Model1(nn.Module):
 
 
 class Model2(nn.Module):
-
     def __init__(self):
         super(Model2, self).__init__()
         self.conv1 = nn.Conv2d(1, 6, 5)
@@ -58,9 +57,7 @@ class DistributionModel(torch.nn.Module):
         (Model1(), torch.randn(2, 2, 2)),
         (Model2(), torch.randn(1, 1, 32, 32)),
         pytest.param(
-            DistributionModel(
-                PowerSpherical(torch.Tensor([0.0, 1.0]), torch.Tensor([1.0]))
-            ),
+            DistributionModel(PowerSpherical(torch.Tensor([0.0, 1.0]), torch.Tensor([1.0]))),
             torch.randn(2, 3),
             marks=pytest.mark.xfail,
         ),
@@ -74,9 +71,7 @@ class DistributionModel(torch.nn.Module):
                 ConvolutionalDecoder1D(3, [1, 12], [1, 12]),
             ),
             torch.randn(2, 1, 12),
-            marks=pytest.mark.xfail(
-                sys.version_info.minor == 9, reason="Fails on Python 3.9"
-            ),
+            marks=pytest.mark.xfail(sys.version_info.minor == 9, reason="Fails on Python 3.9"),
         ),
     ],
 )

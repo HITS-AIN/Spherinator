@@ -1,95 +1,68 @@
-[tool.poetry]
+[project]
 name = "spherinator"
 version = "0.4.0"
 description = "Rotation-Invariant Hyperspherical Variational Convolutional Autoencoder"
 authors = [
-    "Kai Polsterer <kai.polsterer@h-its.org>",
-    "Bernd Doser <bernd.doser@h-its.org>",
-    "Andreas Fehlner <andreas.fehlner@h-its.org>",
-    "Sebastian T. Gomez <sebastian.trujillogomez@h-its.org>",
+  {name = "Kai Polsterer", email = "kai.polsterer@h-its.org"},
+  {name = "Bernd Doser", email = "bernd.doser@h-its.org"},
+  {name = "Andreas Fehlner", email = "andreas.fehlner@h-its.org"},
+  {name = "Sebastian T. Gomez", email = "sebastian.trujillogomez@h-its.org"},
 ]
 license = "Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/HITS-AIN/Spherinator"
-packages = [
-    { include = "spherinator", from = "src" },
-]
-include = [
-    { path = "tests", format = "sdist" },
+
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "jsonargparse[signatures] >=4.37",
+    "lightning >=2.1",
+    "matplotlib >=3.10",
+    "numpy >=2.2, <3.0",
+    "onnx >=1.15",
+    "onnxscript >=0.3",
+    "pandas >=2.1",
+    "power-spherical >=0.8",
+    "scikit-image >=0.25",
+    "scipy >=1.11",
+    "torch >=2.2",
+    "torchvision >=0.20",
+    "gaiaxpy >=2.1",
+    "pyarrow >=19.0",
+    "wandb >=0.20",
 ]
 
-[tool.poetry.scripts]
+[project.optional-dependencies]
+dev = [
+    "ipykernel >=6.29",
+    "pytest >=8.3",
+    "ruff >=0.11",
+]
+extra = [
+    "jupytext >=1.15",
+    "pip-licenses >=5.0",
+    "pytest-cov >=6.1",
+    "scikit-learn >=1.3",
+    "tensorboard >=2.15",
+]
+docs = [
+    "myst-parser >=4.0",
+    "recommonmark >=0.7",
+    "sphinx >= 8.1",
+    "sphinx-autodoc-typehints >= 2.5",
+    "sphinx-rtd-theme >= 3.0",
+]
+
+[project.scripts]
 spherinator = 'spherinator.main:main'
 
-[tool.poetry.dependencies]
-jsonargparse = {extras = ["signatures"], version = "^4.37"}
-lightning = "^2.1"
-matplotlib = "^3.10"
-numpy = ">=2.2, <3.0"
-onnx = "^1.15.0"
-onnxscript = "^0.3"
-pandas = "^2.1.3"
-power-spherical = "^0.8.1"
-python = ">=3.10,<4.0"
-scikit-image = "^0.25"
-scipy = "^1.11.4"
-
-torch = "^2.2"
-# torch = {version = "^2.1.2", source = "pytorch-nightly-cu121"}
-# torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.3.0.dev20240101%2Bcu121-cp39-cp39-linux_x86_64.whl"}
-
-torchvision = "^0"
-# torchvision = {version = "0.18.0.dev20231221", source = "pytorch-nightly-cu121"}
-# torchvision = {url = "https://download.pytorch.org/whl/nightly/cu121/torchvision-0.18.0.dev20240101%2Bcu121-cp39-cp39-linux_x86_64.whl"}
-
-# pytorch-triton = {url = "https://download.pytorch.org/whl/nightly/pytorch_triton-2.2.0%2Be28a256d71-cp39-cp39-linux_x86_64.whl"}
-gaiaxpy = "^2.1.2"
-pyarrow = ">=19.0"
-wandb = "^0.20"
-
-[tool.poetry.group.dev.dependencies]
-black = "^25.1"
-flake8 = "^7.0.0"
-ipykernel = "^6.27.1"
-pytest = "^8.0"
-
-[tool.poetry.group.extras]
-optional = true
-
-[tool.poetry.group.extras.dependencies]
-jupytext = "^1.15.2"
-pip-licenses = "^5.0"
-pytest-cov = "^6.1"
-scikit-learn = "^1.3.2"
-tensorboard = "^2.15.1"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-myst-parser = "^4.0.1"
-recommonmark = "^0.7.1"
-sphinx = "^8.1.3"
-sphinx-autodoc-typehints = "^2.5.0"
-sphinx-rtd-theme = "^3.0.2"
-
-[[tool.poetry.source]]
-name = "pypi"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "pytorch-nightly-cu121"
-url = "https://download.pytorch.org/whl/nightly/cu121"
-priority = "explicit"
-
-[[tool.poetry.source]]
-name = "testpypi"
-url = "https://test.pypi.org/simple/"
-priority = "explicit"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.pytest]
 timeout = 300
@@ -108,3 +81,9 @@ filterwarnings = [
 
 [tool.pylint.TYPECHECK]
 generated-members = 'numpy.*, torch.*'
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
