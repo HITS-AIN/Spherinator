@@ -1,6 +1,7 @@
 __pycache__
 .venv*/
 *.ckpt
+*.egg-info/
 *.ncu-rep
 *.onnx
 *.parquet
