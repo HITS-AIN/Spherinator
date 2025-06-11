@@ -26,9 +26,7 @@ class MNISTDataModule(LightningDataModule):
             transformations += [transforms.RandomAffine(degrees=[0, 360])]
         transformations += [
             transforms.Resize((29, 29)),
-            transforms.Lambda(
-                lambda x: (x - x.min()) / (x.max() - x.min())
-            ),  # Normalize to [0, 1]
+            transforms.Lambda(lambda x: (x - x.min()) / (x.max() - x.min())),  # Normalize to [0, 1]
         ]
         self.transform = transforms.Compose(transformations)
 
@@ -42,14 +40,10 @@ class MNISTDataModule(LightningDataModule):
             self.mnist_train, self.mnist_val = random_split(mnist_full, [55000, 5000])
 
         if stage == "test":
-            self.mnist_test = MNIST(
-                self.data_dir, train=False, transform=self.transform
-            )
+            self.mnist_test = MNIST(self.data_dir, train=False, transform=self.transform)
 
         if stage == "predict":
-            self.mnist_predict = MNIST(
-                self.data_dir, train=False, transform=self.transform
-            )
+            self.mnist_predict = MNIST(self.data_dir, train=False, transform=self.transform)
 
     def train_dataloader(self):
         return DataLoader(

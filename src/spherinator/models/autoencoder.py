@@ -51,7 +51,6 @@ class Autoencoder(pl.LightningModule):
         return self.decode(x)
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
-
         if self.loss == "KL":
             batch, error = batch
 

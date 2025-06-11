@@ -19,9 +19,7 @@ class DistributionModel(torch.nn.Module):
         (nn.Linear(3, 2), torch.randn(2, 3)),
         (DistributionModel(torch.distributions.normal.Normal(0, 1)), torch.randn(2, 3)),
         pytest.param(
-            DistributionModel(
-                PowerSpherical(torch.Tensor([0.0, 1.0]), torch.Tensor([1.0]))
-            ),
+            DistributionModel(PowerSpherical(torch.Tensor([0.0, 1.0]), torch.Tensor([1.0]))),
             torch.randn(2, 3),
             marks=pytest.mark.xfail(
                 reason="torch._dynamo.exc.UserError: Tried to use data-dependent value in the subsequent computation."

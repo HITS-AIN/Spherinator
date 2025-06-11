@@ -56,9 +56,7 @@ def test_batch_sampler():
 
     assert batch.shape == (1, 10, 1)
     assert dataset.current_index == [26, 88, 59, 58, 73, 11, 65, 2, 84, 79]
-    assert batch.tolist() == [
-        [[26.0], [88.0], [59.0], [58.0], [73.0], [11.0], [65.0], [2.0], [84.0], [79.0]]
-    ]
+    assert batch.tolist() == [[[26.0], [88.0], [59.0], [58.0], [73.0], [11.0], [65.0], [2.0], [84.0], [79.0]]]
     assert dataset.calls == 1
 
 

@@ -31,11 +31,7 @@ def truncated_normal_distribution(
     alpha_normal_cdf = normal.cdf(alpha)
     beta_normal_cdf = normal.cdf(beta)
 
-    probability = (
-        sigma.reciprocal()
-        * 10 ** normal.log_prob(xi)
-        * (beta_normal_cdf - alpha_normal_cdf).reciprocal()
-    )
+    probability = sigma.reciprocal() * 10 ** normal.log_prob(xi) * (beta_normal_cdf - alpha_normal_cdf).reciprocal()
 
     probability = torch.where(((x < a) | (x > b)), 1e-5, probability)
 

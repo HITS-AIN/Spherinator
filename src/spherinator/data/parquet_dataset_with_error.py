@@ -41,9 +41,7 @@ class ParquetDatasetWithError(Dataset):
         self.transform = transform
         self.with_index = with_index
 
-        dataset = ds.dataset(
-            data_directory, format="parquet", ignore_prefixes=["_", "."]
-        )
+        dataset = ds.dataset(data_directory, format="parquet", ignore_prefixes=["_", "."])
         table = dataset.to_table(columns=[data_column, error_column])
         self.data = table.to_pandas()
 
@@ -59,7 +57,9 @@ class ParquetDatasetWithError(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, index: int) -> Union[
+    def __getitem__(
+        self, index: int
+    ) -> Union[
         tuple[torch.Tensor, torch.Tensor],
         tuple[torch.Tensor, torch.Tensor, torch.Tensor],
     ]:

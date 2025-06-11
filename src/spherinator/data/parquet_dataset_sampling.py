@@ -41,9 +41,7 @@ class ParquetDatasetSampling(Dataset):
         self.transform = transform
         self.with_index = with_index
 
-        dataset = ds.dataset(
-            data_directory, format="parquet", ignore_prefixes=["_", "."]
-        )
+        dataset = ds.dataset(data_directory, format="parquet", ignore_prefixes=["_", "."])
         table = dataset.to_table(columns=[data_column, error_column])
         self.data = table.to_pandas()
 
@@ -59,10 +57,7 @@ class ParquetDatasetSampling(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(
-        self, index: int
-    ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
-
+    def __getitem__(self, index: int) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         batch = torch.normal(
             mean=torch.tensor(self.data[self.data_column][index], dtype=torch.float32),
             std=torch.tensor(self.data[self.error_column][index], dtype=torch.float32),
