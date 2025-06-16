@@ -31,4 +31,5 @@ pest.md
 spherinator.md
 hipster.md
 contributing.md
+workflow_orchestration.md
 ```
