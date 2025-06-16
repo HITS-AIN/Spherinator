@@ -1,4 +1,4 @@
-# Contributing to Spherinator
+# Contributing
 
 We welcome contributions to the Spherinator project. This document outlines the guidelines for contributing to the project. Don't worry about the length of this document. There are various ways to contribute to the project at different levels. Just get started, and we will help you through the process. Finally, all the guidelines and checks are in place to ensure the quality of the project.
 
@@ -12,7 +12,9 @@ The Python code must adhere to the [PEP8 Python coding style guide](https://peps
 
 ## Python dependencies
 
-The project uses [Poetry](https://python-poetry.org/) for dependency management. The dependencies are listed in the `pyproject.toml` file. To add new dependencies, use Poetry's `poetry add` command. It is recommended to keep the number of dependencies to a minimum.
+The project uses [uv](https://docs.astral.sh/uv/) for dependency management. The dependencies are
+listed in the `pyproject.toml` file. To add new dependencies, use the command `uv add`. It is
+recommended to keep the number of dependencies to a minimum.
 
 ## Documentation
 

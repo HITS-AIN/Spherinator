@@ -9,7 +9,7 @@ and point clouds.
 PEST can be installed via `pip`:
 
 ```bash
-pip install git+https://github.com/HITS-AIN/PEST
+pip install astro-pest
 ```
 
 ## Usage

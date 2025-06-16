@@ -27,7 +27,6 @@ large amounts of data efficiently.
 ```{toctree}
 :maxdepth: 2
 
-installation.md
 pest.md
 spherinator.md
 hipster.md

@@ -1,5 +1,16 @@
 # HiPSter: Generate HiPS and catalog
 
+## Installation
+
+HiPSter can be installed via `pip`:
+
+```bash
+pip install astro-hipster
+```
+
+
+## Usage
+
 The following command generates a HiPS representation and a catalog showing the real images located
 on the latent space using the trained model.
 
@@ -22,8 +33,3 @@ tasks:
 ```
 
 For visualization, a Python HTTP server can be started by executing `python3 -m http.server 8082` within the HiPSter output file.
-
-
-## The HiPSter workflow
-
-![](assets/HiPSter_workflow.svg)

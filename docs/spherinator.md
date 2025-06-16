@@ -1,4 +1,12 @@
-# Spherinator Model Training
+# Spherinator: Model Training
+
+## Installation
+
+Sperinator can be installed via `pip`:
+
+```bash
+pip install spherinator
+```
 
 ## LightningCLI
 
