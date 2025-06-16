@@ -1,5 +1,17 @@
 # Spherinator: Model Training
 
+Spherinator provide representation learning using a Variational Autoencoder (VAE) to reduce generic
+data to a spherical latent space. The spherical latent space is suitable for the visualization of
+high-dimensional data, such as images, point clouds, and cubes.
+
+```{figure} assets/vae.svg
+---
+name: fig:pest
+width: 500px
+align: center
+---
+```
+
 ## Installation
 
 Sperinator can be installed via `pip`:

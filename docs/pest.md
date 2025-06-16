@@ -4,7 +4,13 @@
 Spherinator & HiPSter, including arbitrary single- and multi-channel images, 3D PPP and PPV cubes,
 and point clouds.
 
-![](assets/PEST.png)
+```{figure} assets/PEST.png
+---
+name: fig:pest
+width: 400px
+align: center
+---
+```
 
 ## Installation
 
