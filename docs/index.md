@@ -5,7 +5,12 @@ astrophysical data. The modulare design allows to use them independently or in c
 [Apache Parquet](https://parquet.apache.org/) is used as internal data format, which allows to store
 large amounts of data efficiently.
 
-![](assets/projectx_v2.svg)
+```{figure} assets/projectx_v2.svg
+---
+name: fig:projectx
+width: 500px
+align: center
+---
 
 
 - [PEST](https://github.com/HITS-AIN/PEST)
@@ -22,7 +27,12 @@ large amounts of data efficiently.
 
 
 
-![](assets/P404_f2.png)
+```{figure} assets/P404_f2.png.svg
+---
+name: fig:latent_space
+width: 500px
+align: center
+---
 
 ```{toctree}
 :maxdepth: 2
