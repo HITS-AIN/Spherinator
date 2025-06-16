@@ -11,7 +11,7 @@
 
 [StreamFlow](https://streamflow.di.unito.it/) executes **Common Workflow Language (CWL)** using a deployment model that includes containers, Slurm (HPC), and Kubernetes.
 
-```{figure} https://github.com/BerndDoser/Spherinator/tree/main/docs/assets/streamflow-model.png
+```{figure} assets/streamflow-model.png
 ---
 name: fig:streamflow
 width: 400px
