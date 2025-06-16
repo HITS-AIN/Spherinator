@@ -9,7 +9,7 @@ name: fig:healpix
 width: 500px
 align: center
 ---
-Source: :cite:t:`Fernique_2015`
+Source: {cite}`Fernique_2015`
 ```
 
 ## Installation

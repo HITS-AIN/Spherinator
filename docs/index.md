@@ -11,6 +11,7 @@ name: fig:projectx
 width: 500px
 align: center
 ---
+```
 
 
 - [PEST](https://github.com/HITS-AIN/PEST)
@@ -33,6 +34,7 @@ name: fig:latent_space
 width: 500px
 align: center
 ---
+```
 
 ```{toctree}
 :maxdepth: 2
