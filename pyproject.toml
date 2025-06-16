@@ -1,6 +1,6 @@
 [project]
 name = "spherinator"
-version = "0.4.0"
+version = "1.0.0"
 description = "Rotation-Invariant Hyperspherical Variational Convolutional Autoencoder"
 authors = [
   {name = "Kai Polsterer", email = "kai.polsterer@h-its.org"},
