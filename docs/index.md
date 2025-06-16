@@ -28,7 +28,7 @@ align: center
 
 
 
-```{figure} assets/P404_f2.png.svg
+```{figure} assets/P404_f2.png
 ---
 name: fig:latent_space
 width: 500px
