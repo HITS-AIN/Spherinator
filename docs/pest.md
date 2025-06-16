@@ -4,10 +4,7 @@
 Spherinator & HiPSter, including arbitrary single- and multi-channel images, 3D PPP and PPV cubes,
 and point clouds.
 
-:::{figure-md}
-![](assets/PEST.svg)
-PEST: Preprocessing Engine for Spherinator Training
-:::
+![](assets/PEST.png)
 
 ## Installation
 
