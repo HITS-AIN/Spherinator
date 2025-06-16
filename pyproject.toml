@@ -28,6 +28,7 @@ dependencies = [
     "gaiaxpy >=2.1",
     "pyarrow >=19.0",
     "wandb >=0.20",
+    "sphinxcontrib-bibtex>=2.6.3",
 ]
 
 [project.optional-dependencies]
@@ -49,6 +50,7 @@ docs = [
     "sphinx >= 8.1",
     "sphinx-autodoc-typehints >= 2.5",
     "sphinx-rtd-theme >= 3.0",
+    "sphinxcontrib-bibtex>=2.6.3",
 ]
 
 [project.scripts]
