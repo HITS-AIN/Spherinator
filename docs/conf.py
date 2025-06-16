@@ -11,6 +11,7 @@ author = """Kai Polsterer <kai.polsterer@h-its.org>,
 
 extensions = [
     "myst_parser",
+    "sphinxcontrib.bibtex",
     # "recommonmark",
     # "sphinx.ext.autodoc",
     # "sphinx.ext.napoleon",
@@ -18,3 +19,4 @@ extensions = [
 ]
 
 html_theme = "sphinx_rtd_theme"
+bibtex_bibfiles = ["references.bib"]
