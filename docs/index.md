@@ -8,7 +8,6 @@ large amounts of data efficiently.
 ```{figure} assets/projectx_v2.svg
 ---
 name: fig:projectx
-width: 500px
 align: center
 ---
 ```
@@ -31,7 +30,7 @@ align: center
 ```{figure} assets/P404_f2.png
 ---
 name: fig:latent_space
-width: 500px
+width: 300px
 align: center
 ---
 ```

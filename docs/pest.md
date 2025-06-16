@@ -7,7 +7,7 @@ and point clouds.
 ```{figure} assets/PEST.png
 ---
 name: fig:pest
-width: 400px
+width: 300px
 align: center
 ---
 ```

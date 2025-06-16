@@ -7,7 +7,6 @@ high-dimensional data, such as images, point clouds, and cubes.
 ```{figure} assets/vae.svg
 ---
 name: fig:pest
-width: 500px
 align: center
 ---
 ```
