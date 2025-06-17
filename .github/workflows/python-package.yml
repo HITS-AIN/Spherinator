@@ -47,6 +47,4 @@ jobs:
         run: uv run --extra dev ruff format --check
 
       - name: Run unit tests
-        run: uv run --extra dev python${{ matrix.python-version }} -m pytest
-        env:
-          ILLUSTRIS_API_KEY: ${{ secrets.ILLUSTRIS_API_KEY }}
+        run: uv run --extra dev -p ${{ matrix.python-version }} pytest
