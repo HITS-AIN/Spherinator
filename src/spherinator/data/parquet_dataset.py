@@ -33,7 +33,11 @@ class ParquetDataset(Dataset):
         if not isinstance(data_column, list):
             data_column = [data_column]
 
-        dataset = ds.dataset(data_directory, format="parquet")
+        dataset = ds.dataset(
+            data_directory,
+            format="parquet",
+            exclude_invalid_files=True,
+        )
         table = dataset.to_table(columns=data_column)
         self.transform = transform
         self.with_index = with_index
