@@ -6,8 +6,7 @@ import numpy as np
 import torch
 from lightning.pytorch.callbacks import Callback
 from matplotlib import figure
-
-matplotlib.use("Agg")
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 class LogReconstructionCallback(Callback):
@@ -60,6 +59,7 @@ class LogReconstructionCallback(Callback):
         # Plot the original samples and their reconstructions side by side
         nb_samples = len(self.samples)
         fig = figure.Figure(figsize=(2 * nb_samples, 6))
+        FigureCanvasAgg(fig)
         ax = fig.subplots(2, nb_samples).flatten()
         for i in range(nb_samples):
             ax[i].imshow(np.clip(images[i].cpu().detach().numpy().transpose(1, 2, 0), 0, 1))
