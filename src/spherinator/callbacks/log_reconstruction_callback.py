@@ -1,7 +1,6 @@
 import gc
 from typing import Union
 
-import matplotlib
 import numpy as np
 import torch
 from lightning.pytorch.callbacks import Callback
