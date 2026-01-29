@@ -39,7 +39,7 @@ gaia_converter.convert_all("data/gaia/csv", "data/gaia/parquet")
 ```
 
 
-### Example 2: Convert Illustris TNG SKIRT fits images to Parquet
+### Example 2: Convert IllustrisTNG SKIRT fits images to Parquet
 
 ```python
 from pest import FitsConverter
