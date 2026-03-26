@@ -6,11 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from power_spherical import PowerSpherical
 
-from spherinator.models import (
-    Autoencoder,
-    ConvolutionalDecoder1D,
-    ConvolutionalEncoder1D,
-)
+from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D
 
 
 class Model1(nn.Module):
@@ -78,4 +74,4 @@ class DistributionModel(torch.nn.Module):
 def test_onnx_dynamo_export(module, input):
     module.eval()
     module(input)
-    torch.onnx.dynamo_export(module, input)
+    torch.onnx.export(module, (input,), dynamo=True)
