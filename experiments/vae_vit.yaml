@@ -1,0 +1,35 @@
+seed_everything: 42
+# ckpt_path: artifacts/model-56k0f026:v0/model.ckpt
+
+model:
+  class_path: spherinator.models.VariationalAutoencoder
+  init_args:
+    encoder:
+      class_path: spherinator.models.HuggingFaceViTEncoder
+      init_args:
+        model_name: google/vit-base-patch16-224
+        output_dim: 64
+    decoder:
+      class_path: spherinator.models.UpsamplingDecoder2D
+      init_args:
+        input_dim: 3
+        output_dim: [3, 224, 224]
+        base_channels: 512
+        seed_size: 7
+    z_dim: 3
+    beta: 1.0e-3
+    encoder_out_dim: 64
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.001
+
+trainer:
+  max_epochs: -1
+  accelerator: gpu
+  devices: auto
+  precision: 16-mixed
+  log_every_n_steps: 1
+  enable_progress_bar: True
+  enable_model_summary: True

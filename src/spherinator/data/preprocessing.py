@@ -4,6 +4,27 @@ import torchvision.transforms as transforms
 import torchvision.transforms.functional as TF
 
 
+class ToTensor:
+    """Custom transform to convert input data to a PyTorch tensor of type float32."""
+
+    def __init__(self, dtype: str = "float32"):
+        self.dtype = getattr(torch, dtype)
+
+    def __call__(self, x):
+        if isinstance(x, torch.Tensor):
+            return x.detach().clone().to(self.dtype)
+        return torch.tensor(x, dtype=self.dtype)
+
+
+class MinMaxNormalize:
+    """Normalizes a tensor to the range [0, 1] using its own min and max values."""
+
+    def __call__(self, x):
+        x_min = torch.min(x)
+        x_max = torch.max(x)
+        return (x - x_min) / (x_max - x_min)
+
+
 class DielemanTransformation:
     def __init__(self, rotation_range, translation_range, scaling_range, flip):
         self.scaling_range = scaling_range
