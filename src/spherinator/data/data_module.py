@@ -3,6 +3,7 @@ from typing import Any, Callable, Optional
 import lightning as L
 import pyarrow.dataset as pa_ds
 import torch
+from datasets import load_dataset
 from torch.utils.data import Dataset
 
 
@@ -163,6 +164,7 @@ class DataModule(L.LightningDataModule):
             return
         dataset = load_dataset(self.path)
         train_dataset = dataset["train"]
+        train_dataset.set_format("torch")  # Ensure the dataset returns PyTorch tensors
 
         # Read parquet schema metadata and attach shape info to columns.
         pa_dataset = pa_ds.dataset(self.path, format="parquet", exclude_invalid_files=True)

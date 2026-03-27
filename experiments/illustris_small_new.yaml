@@ -5,17 +5,14 @@ data:
     columns:
       - name: data
         transform:
-          class_path: spherinator.data.ToTensor
-          # class_path: torchvision.transforms.v2.Compose
-          # init_args:
-          #   transforms:
-          #     # - class_path: torchvision.transforms.v2.Resize
-          #     #   init_args:
-          #     #     size: 224
-          #     - class_path: spherinator.data.ToTensor
-          #     # - class_path: spherinator.data.MinMaxNormalize
+          class_path: torchvision.transforms.v2.Compose
+          init_args:
+            transforms:
+              - class_path: torchvision.transforms.v2.Resize
+                init_args:
+                  size: 224
     return_dict: False
   dict_kwargs:
     batch_size: 512
     shuffle: True
-    num_workers: 0
+    num_workers: 4

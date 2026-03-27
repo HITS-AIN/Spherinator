@@ -5,4 +5,4 @@ data:
     data_column: data
     normalize: minmax
     batch_size: 512
-    num_workers: 0
+    num_workers: 4
