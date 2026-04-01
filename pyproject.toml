@@ -1,6 +1,6 @@
 [project]
 name = "spherinator"
-version = "1.0.0"
+version = "0.5.0"
 description = "Rotation-Invariant Hyperspherical Variational Convolutional Autoencoder"
 authors = [
   {name = "Kai Polsterer", email = "kai.polsterer@h-its.org"},
@@ -23,8 +23,8 @@ dependencies = [
     "power-spherical >=0.8",
     "scikit-image >=0.25",
     "scipy >=1.11",
-    "torch >=2.2, <2.11",
-    "torchvision >=0.20",
+    "torch >=2.11",
+    "torchvision >=0.26",
     "gaiaxpy >=2.1",
     "pyarrow >=19.0",
     "wandb >=0.20",
@@ -81,6 +81,19 @@ filterwarnings = [
 
 [tool.pylint.TYPECHECK]
 generated-members = 'numpy.*, torch.*'
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu126" },
+]
+torchvision = [
+    { index = "pytorch-cu126" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
 
 [[tool.uv.index]]
 name = "testpypi"
