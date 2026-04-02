@@ -55,7 +55,6 @@ def test_training(parquet_1d_metadata, encoder, decoder):
     trainer = Trainer(
         max_epochs=1,
         enable_model_summary=False,
-        enable_checkpointing=False,
         accelerator="cpu",
         log_every_n_steps=1,
     )
@@ -90,8 +89,44 @@ def test_training_sampling(parquet_test_sampling, loss, encoder, decoder):
     trainer.fit(model, datamodule=datamodule)
 
 
-def test_training_fixed_scale(parquet_test_sampling, encoder, decoder):
+def test_training_fixed_scale(parquet_test_sampling, encoder, decoder, tmp_path):
     """Test training of VariationalAutoencoder"""
+    model = VariationalAutoencoder(
+        encoder=encoder,
+        decoder=decoder,
+        encoder_out_dim=3,
+        z_dim=3,
+        loss="KL",
+        fixed_scale=1e3,
+    )
+
+    assert model.fixed_scale == 1e3
+    assert not model.variational_encoder.fc_scale.weight.requires_grad
+    assert not model.variational_encoder.fc_scale.bias.requires_grad
+    assert torch.all(model.variational_encoder.fc_scale.weight.data == 0)
+    assert torch.all(model.variational_encoder.fc_scale.bias.data == 1e3)
+
+    datamodule = ParquetDataModule(
+        parquet_test_sampling,
+        data_column="flux",
+        error_column="flux_error",
+        batch_size=2,
+        num_workers=1,
+    )
+
+    trainer = Trainer(
+        max_epochs=1,
+        enable_model_summary=False,
+        enable_checkpointing=False,
+        accelerator="cpu",
+        log_every_n_steps=1,
+        default_root_dir=tmp_path,
+    )
+    trainer.fit(model, datamodule=datamodule)
+
+
+def test_training_restart_without_fixed_scale(parquet_test_sampling, encoder, decoder, tmp_path):
+    """Test training of VariationalAutoencoder with fixed scale and restarting without fixed scale"""
     model = VariationalAutoencoder(
         encoder=encoder,
         decoder=decoder,
@@ -112,8 +147,29 @@ def test_training_fixed_scale(parquet_test_sampling, encoder, decoder):
     trainer = Trainer(
         max_epochs=1,
         enable_model_summary=False,
-        enable_checkpointing=False,
         accelerator="cpu",
         log_every_n_steps=1,
+        default_root_dir=tmp_path,
     )
     trainer.fit(model, datamodule=datamodule)
+
+    # Restart training without fixed scale
+    model_no_fixed_scale = VariationalAutoencoder(
+        encoder=encoder,
+        decoder=decoder,
+        encoder_out_dim=3,
+        z_dim=3,
+        loss="KL",
+    )
+
+    trainer.fit(
+        model_no_fixed_scale,
+        datamodule=datamodule,
+        ckpt_path=tmp_path / "lightning_logs" / "version_0" / "checkpoints" / "epoch=0-step=5.ckpt",
+    )
+
+    assert model_no_fixed_scale.fixed_scale == None
+    assert model_no_fixed_scale.variational_encoder.fc_scale.weight.requires_grad
+    assert model_no_fixed_scale.variational_encoder.fc_scale.bias.requires_grad
+    assert torch.all(model.variational_encoder.fc_scale.weight.data == 0)
+    assert torch.all(model.variational_encoder.fc_scale.bias.data == 1e3)

@@ -124,11 +124,13 @@ class VariationalAutoencoder(pl.LightningModule):
 
     def on_load_checkpoint(self, checkpoint) -> None:
         if self.fixed_scale is not None:
-            ve = self.variational_encoder
-            ve.fc_scale.weight.data.zero_()
-            ve.fc_scale.weight.requires_grad = False
-            ve.fc_scale.bias.data.fill_(self.fixed_scale)
-            ve.fc_scale.bias.requires_grad = False
+            state_dict = checkpoint["state_dict"]
+            weight_key = "variational_encoder.fc_scale.weight"
+            bias_key = "variational_encoder.fc_scale.bias"
+            if weight_key in state_dict:
+                state_dict[weight_key] = torch.zeros_like(state_dict[weight_key])
+            if bias_key in state_dict:
+                state_dict[bias_key] = torch.full_like(state_dict[bias_key], self.fixed_scale)
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         if self.loss in ["NLL-normal", "NLL-truncated", "KL"]:

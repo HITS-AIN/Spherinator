@@ -37,6 +37,7 @@ dependencies = [
 dev = [
     "ipykernel >=6.29",
     "pytest >=8.3",
+    "pytest-timeout >=2.0",
     "ruff >=0.11",
 ]
 extra = [
@@ -69,7 +70,7 @@ line-length = 120
 max-complexity = 10
 
 [tool.pytest]
-timeout = 300
+timeout = "300"
 testpaths = ['tests']
 xfail_strict = true
 filterwarnings = [
@@ -84,13 +85,13 @@ filterwarnings = [
 [tool.pylint.TYPECHECK]
 generated-members = 'numpy.*, torch.*'
 
-[tool.uv.sources]
-torch = [
-    { index = "pytorch-cu126" },
-]
-torchvision = [
-    { index = "pytorch-cu126" },
-]
+# [tool.uv.sources]
+# torch = [
+#     { index = "pytorch-cu126" },
+# ]
+# torchvision = [
+#     { index = "pytorch-cu126" },
+# ]
 
 [[tool.uv.index]]
 name = "pytorch-cu126"
