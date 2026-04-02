@@ -80,7 +80,7 @@ class VariationalAutoencoder(pl.LightningModule):
         """
         super().__init__()
 
-        self.save_hyperparameters(ignore=["encoder", "decoder"])
+        self.save_hyperparameters(ignore=["encoder", "decoder", "fixed_scale"])
         # self.save_hyperparameters()
 
         self.encoder = encoder
@@ -89,6 +89,7 @@ class VariationalAutoencoder(pl.LightningModule):
         self.z_dim = z_dim
         self.beta = beta
         self.loss = loss
+        self.fixed_scale = fixed_scale
 
         self.variational_encoder = VariationalEncoder(encoder, self.encoder_out_dim, self.z_dim, fixed_scale)
 
@@ -120,6 +121,14 @@ class VariationalAutoencoder(pl.LightningModule):
     def pure_forward(self, x):
         z_location, _ = self.encode(x)
         return self.decode(z_location)
+
+    def on_load_checkpoint(self, checkpoint) -> None:
+        if self.fixed_scale is not None:
+            ve = self.variational_encoder
+            ve.fc_scale.weight.data.zero_()
+            ve.fc_scale.weight.requires_grad = False
+            ve.fc_scale.bias.data.fill_(self.fixed_scale)
+            ve.fc_scale.bias.requires_grad = False
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         if self.loss in ["NLL-normal", "NLL-truncated", "KL"]:
