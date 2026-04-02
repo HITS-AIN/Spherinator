@@ -168,7 +168,7 @@ def test_training_restart_without_fixed_scale(parquet_test_sampling, encoder, de
         ckpt_path=tmp_path / "lightning_logs" / "version_0" / "checkpoints" / "epoch=0-step=5.ckpt",
     )
 
-    assert model_no_fixed_scale.fixed_scale == None
+    assert model_no_fixed_scale.fixed_scale is None
     assert model_no_fixed_scale.variational_encoder.fc_scale.weight.requires_grad
     assert model_no_fixed_scale.variational_encoder.fc_scale.bias.requires_grad
     assert torch.all(model.variational_encoder.fc_scale.weight.data == 0)
