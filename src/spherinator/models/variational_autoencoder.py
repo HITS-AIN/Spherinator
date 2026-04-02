@@ -42,6 +42,9 @@ class VariationalEncoder(nn.Module):
             self.fc_scale.weight.requires_grad = False
             self.fc_scale.bias.data.fill_(fixed_scale)
             self.fc_scale.bias.requires_grad = False
+        else:
+            self.fc_scale.weight.requires_grad = True
+            self.fc_scale.bias.requires_grad = True
 
     def forward(self, x) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.encoder(x)
