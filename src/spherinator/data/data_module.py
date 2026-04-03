@@ -141,6 +141,8 @@ class DataModule(L.LightningDataModule):
         path: str,
         columns: Optional[list[Column]] = None,
         return_dict: bool = True,
+        validation_size: float = 0.1,
+        test_size: float = 0.1,
         **dataloader_kwargs,
     ):
         super().__init__()
@@ -151,7 +153,11 @@ class DataModule(L.LightningDataModule):
         self.path: str = path
         self.columns: list[Column] = columns
         self.return_dict: bool = return_dict
-        self._dataset: Optional[TransformedDataset] = None
+        self.validation_size: float = validation_size
+        self.test_size: float = test_size
+        self._train_ds: Optional[TransformedDataset] = None
+        self._val_ds: Optional[TransformedDataset] = None
+        self._test_ds: Optional[TransformedDataset] = None
 
         # Store DataLoader kwargs for forwarding
         self.dataloader_kwargs = dataloader_kwargs
@@ -159,14 +165,14 @@ class DataModule(L.LightningDataModule):
     def prepare_data(self):
         load_dataset(self.path)
 
-    def setup(self, stage: str):
-        if self._dataset is not None:
-            return
-        dataset = load_dataset(self.path)
-        train_dataset = dataset["train"]
-        train_dataset.set_format("torch")  # Ensure the dataset returns PyTorch tensors
+    def setup(self, stage: str = None):
+        full_ds = load_dataset(self.path, split="train")
 
-        # Read parquet schema metadata and attach shape info to columns.
+        # Ensure the dataset returns PyTorch tensors
+        full_ds.set_format("torch")
+
+        # Read parquet schema metadata and attach shape info to columns
+        # train_ds._data.schema.metadata
         pa_dataset = pa_ds.dataset(self.path, format="parquet", exclude_invalid_files=True)
         schema_meta = pa_dataset.schema.metadata or {}
         for column in self.columns:
@@ -175,14 +181,63 @@ class DataModule(L.LightningDataModule):
                 parts = schema_meta[key].decode().strip("()").split(",")
                 setattr(column, "shape", tuple(int(p) for p in parts if p.strip()))
 
-        self._dataset = TransformedDataset(
-            train_dataset,
-            self.columns,
-            return_dict=self.return_dict,
-        )
+        if self.validation_size > 0.0:
+            split_ds = full_ds.train_test_split(test_size=self.validation_size, seed=42)
+            train_ds = split_ds["train"]
+            val_test_ds = split_ds["test"]
+        else:
+            train_ds = full_ds
+            val_test_ds = full_ds
+
+        if self.test_size > 0.0:
+            split_ds = val_test_ds.train_test_split(test_size=self.test_size, seed=42)
+            val_ds = split_ds["train"]
+            test_ds = split_ds["test"]
+        else:
+            val_ds = val_test_ds
+            test_ds = val_test_ds
+
+        # Assign train/val datasets for use in dataloaders
+        if stage == "fit" or stage is None:
+            self._train_ds = TransformedDataset(
+                train_ds,
+                self.columns,
+                return_dict=self.return_dict,
+            )
+            self._val_ds = TransformedDataset(
+                val_ds,
+                self.columns,
+                return_dict=self.return_dict,
+            )
+
+        # Assign train/val datasets for use in dataloaders
+        if stage == "test" or stage is None:
+            self._test_ds = TransformedDataset(
+                test_ds,
+                self.columns,
+                return_dict=self.return_dict,
+            )
 
     def train_dataloader(self):
+        if self._train_ds is None:
+            raise ValueError("Train dataset not set up. Call setup('fit') first.")
         return torch.utils.data.DataLoader(
-            self._dataset,
+            self._train_ds,
+            **self.dataloader_kwargs,
+        )
+
+    def val_dataloader(self):
+        if self._val_ds is None:
+            raise ValueError("Validation dataset not set up. Call setup('fit') first.")
+        return torch.utils.data.DataLoader(
+            self._val_ds,
+            **self.dataloader_kwargs,
+        )
+
+    def test_dataloader(self):
+        if self._test_ds is None:
+            raise ValueError("Test dataset not set up. Call setup('test') first.")
+        return torch.utils.data.DataLoader(
+            self._test_ds,
             **self.dataloader_kwargs,
         )
