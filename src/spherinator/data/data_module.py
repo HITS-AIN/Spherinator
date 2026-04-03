@@ -1,7 +1,9 @@
 from typing import Any, Callable, Optional
 
+import pyarrow.parquet as pq
+from pathlib import Path
+
 import lightning as L
-import pyarrow.dataset as pa_ds
 import torch
 from datasets import load_dataset
 from torch.utils.data import Dataset
@@ -172,9 +174,16 @@ class DataModule(L.LightningDataModule):
         full_ds.set_format("torch")
 
         # Read parquet schema metadata and attach shape info to columns
-        # train_ds._data.schema.metadata
-        pa_dataset = pa_ds.dataset(self.path, format="parquet", exclude_invalid_files=True)
-        schema_meta = pa_dataset.schema.metadata or {}
+        schema_meta = {}
+        _path = Path(self.path)
+        if _path.is_file() and _path.suffix == ".parquet":
+            _parquet_file = _path
+        elif _path.is_dir():
+            _parquet_file = next(_path.rglob("*.parquet"), None)
+        else:
+            _parquet_file = None
+        if _parquet_file is not None:
+            schema_meta = pq.read_schema(_parquet_file).metadata or {}
         for column in self.columns:
             key = column.name.encode() + b"_shape"
             if key in schema_meta:

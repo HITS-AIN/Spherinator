@@ -1,0 +1,10 @@
+data:
+  class_path: spherinator.data.DataModule
+  init_args:
+    path: ylecun/mnist
+    columns:
+      - name: image
+  dict_kwargs:
+    batch_size: 512
+    shuffle: True
+    num_workers: 0

@@ -3621,7 +3621,6 @@ source = { editable = "." }
 dependencies = [
     { name = "datasets" },
     { name = "gaiaxpy" },
-    { name = "ipywidgets" },
     { name = "jsonargparse", extra = ["signatures"] },
     { name = "lightning" },
     { name = "matplotlib" },
@@ -3643,6 +3642,7 @@ dependencies = [
 [package.optional-dependencies]
 dev = [
     { name = "ipykernel" },
+    { name = "ipywidgets" },
     { name = "pytest" },
     { name = "pytest-timeout" },
     { name = "ruff" },
@@ -3668,7 +3668,7 @@ requires-dist = [
     { name = "datasets", specifier = ">=4.8.4" },
     { name = "gaiaxpy", specifier = ">=2.1" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29" },
-    { name = "ipywidgets", specifier = ">=8.1.8" },
+    { name = "ipywidgets", marker = "extra == 'dev'", specifier = ">=8.1.8" },
     { name = "jsonargparse", extras = ["signatures"], specifier = ">=4.37" },
     { name = "jupytext", marker = "extra == 'extra'", specifier = ">=1.15" },
     { name = "lightning", specifier = ">=2.1" },
