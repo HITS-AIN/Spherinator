@@ -1,9 +1,8 @@
+from pathlib import Path
 from typing import Any, Callable, Optional
 
-import pyarrow.parquet as pq
-from pathlib import Path
-
 import lightning as L
+import pyarrow.parquet as pq
 import torch
 from datasets import load_dataset
 from torch.utils.data import Dataset
@@ -46,6 +45,8 @@ class Column:
         """
         if isinstance(data, list):
             data = torch.tensor(data)
+        if isinstance(data, torch.Tensor) and data.dtype == torch.uint8:
+            data = data.float().div(255.0)
         shape = getattr(self, "shape", None)
         if shape is not None:
             data = data.reshape(shape)
@@ -143,8 +144,8 @@ class DataModule(L.LightningDataModule):
         path: str,
         columns: Optional[list[Column]] = None,
         return_dict: bool = True,
-        validation_size: float = 0.1,
-        test_size: float = 0.1,
+        validation_size: float = 0.2,
+        test_size: float = 0.5,
         **dataloader_kwargs,
     ):
         super().__init__()

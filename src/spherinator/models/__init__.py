@@ -15,6 +15,8 @@ from .dense_model import DenseModel
 from .embedding_reconstruction import EmbeddingReconstruction
 from .export_onnx import export_onnx
 from .huggingface_vit_encoder import HuggingFaceViTEncoder
+from .mlp_decoder import MLPDecoder
+from .mlp_encoder import MLPEncoder
 from .upsampling_decoder_2d import UpsamplingDecoder2D
 from .variational_autoencoder import VariationalAutoencoder
 from .weights_provider import WeightsProvider
@@ -31,6 +33,8 @@ __all__ = [
     "ConvolutionalEncoder1D",
     "ConvolutionalEncoder2D",
     "DenseModel",
+    "MLPDecoder",
+    "MLPEncoder",
     "EmbeddingReconstruction",
     "HuggingFaceViTEncoder",
     "UpsamplingDecoder2D",

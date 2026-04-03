@@ -50,23 +50,35 @@ class Autoencoder(pl.LightningModule):
         x = self.encode(x)
         return self.decode(x)
 
-    def training_step(self, batch, batch_idx) -> torch.Tensor:
+    def _compute_loss(self, batch):
         if self.loss == "KL":
             batch, error = batch
 
         recon = self.forward(batch)
 
         if self.loss == "MSE":
-            loss = self.reconstruction_loss(batch, recon).mean()
+            return self.reconstruction_loss(batch, recon).mean()
         elif self.loss == "KL":
             q = torch.distributions.Normal(recon, error)
             p = torch.distributions.Normal(batch, error)
-            loss = torch.distributions.kl.kl_divergence(q, p).mean()
+            return torch.distributions.kl.kl_divergence(q, p).mean()
         else:
             raise ValueError(f"Unsupported loss: {self.loss}")
 
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
+        loss = self._compute_loss(batch)
         self.log("train_loss", loss, prog_bar=True)
         self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
+        return loss
+
+    def validation_step(self, batch, batch_idx) -> torch.Tensor:
+        loss = self._compute_loss(batch)
+        self.log("val_loss", loss, prog_bar=True)
+        return loss
+
+    def test_step(self, batch, batch_idx) -> torch.Tensor:
+        loss = self._compute_loss(batch)
+        self.log("test_loss", loss, prog_bar=True)
         return loss
 
     def configure_optimizers(self):
