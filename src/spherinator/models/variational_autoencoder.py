@@ -132,7 +132,7 @@ class VariationalAutoencoder(pl.LightningModule):
             if bias_key in state_dict:
                 state_dict[bias_key] = torch.full_like(state_dict[bias_key], self.fixed_scale)
 
-    def training_step(self, batch, batch_idx) -> torch.Tensor:
+    def _compute_loss(self, batch, training_step: bool = False):
         if self.loss in ["NLL-normal", "NLL-truncated", "KL"]:
             batch, error = batch
 
@@ -159,13 +159,28 @@ class VariationalAutoencoder(pl.LightningModule):
         loss_recon = loss_recon.mean()
         loss_KL = loss_KL.mean()
 
-        self.log("train_loss", loss, prog_bar=True)
-        self.log("loss_recon", loss_recon, prog_bar=True)
-        self.log("loss_KL", loss_KL)
-        self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
-        self.log("mean(z_location)", torch.mean(z_location))
-        self.log("mean(z_scale)", torch.mean(z_scale))
+        if training_step:
+            self.log("loss_recon", loss_recon, prog_bar=True)
+            self.log("loss_KL", loss_KL)
+            self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
+            self.log("mean(z_location)", torch.mean(z_location))
+            self.log("mean(z_scale)", torch.mean(z_scale))
 
+        return loss
+
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
+        loss = self._compute_loss(batch, training_step=True)
+        self.log("train_loss", loss, prog_bar=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx) -> torch.Tensor:
+        loss = self._compute_loss(batch)
+        self.log("val_loss", loss, prog_bar=True)
+        return loss
+
+    def test_step(self, batch, batch_idx) -> torch.Tensor:
+        loss = self._compute_loss(batch)
+        self.log("test_loss", loss, prog_bar=True)
         return loss
 
     def configure_optimizers(self):
