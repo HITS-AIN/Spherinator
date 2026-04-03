@@ -8,10 +8,11 @@ data:
     return_dict: False
     validation_size: 0.2
     test_size: 0.5
+    in_gpu_memory: True
   dict_kwargs:
     batch_size: 4096
     shuffle: True
-    num_workers: 4
+    num_workers: 0
 
 model:
   class_path: spherinator.models.Autoencoder
@@ -38,6 +39,6 @@ trainer:
   accelerator: gpu
   devices: auto
   precision: bf16-mixed
-  # log_every_n_steps: 1
+  log_every_n_steps: 50
   enable_progress_bar: True
   enable_model_summary: True

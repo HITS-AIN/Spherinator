@@ -146,8 +146,20 @@ class DataModule(L.LightningDataModule):
         return_dict: bool = True,
         validation_size: float = 0.2,
         test_size: float = 0.5,
+        in_gpu_memory: bool = False,
         **dataloader_kwargs,
     ):
+        """DataModule for loading datasets from Hugging Face Datasets library and preparing them for PyTorch.
+
+        Args:
+            path (str): Path to the dataset in Hugging Face Datasets format (e.g. "ylecun/mnist" or local path to parquet files)
+            columns (list[Column], optional): List of Column objects specifying which columns to load and how to transform them. Defaults to a single column named "data" with no transformation.
+            return_dict (bool, optional): Whether to return samples as dictionaries (with column names as keys) or as lists. Defaults to True (return dict).
+            validation_size (float, optional): Proportion of the dataset to use for validation. Defaults to 0.2 (20%).
+            test_size (float, optional): Proportion of the validation set to use for testing (if validation_size > 0). Defaults to 0.5 (50% of the validation set, which is 10% of the total dataset).
+            in_gpu_memory (bool, optional): Whether to load the entire dataset into GPU memory. Defaults to False (load on CPU and transfer batches to GPU during training).
+            **dataloader_kwargs: Additional keyword arguments to pass to the DataLoader (e.g. batch_size, shuffle, num_workers, etc.)
+        """
         super().__init__()
 
         if columns is None:
@@ -161,6 +173,7 @@ class DataModule(L.LightningDataModule):
         self._train_ds: Optional[TransformedDataset] = None
         self._val_ds: Optional[TransformedDataset] = None
         self._test_ds: Optional[TransformedDataset] = None
+        self.in_gpu_memory: bool = in_gpu_memory
 
         # Store DataLoader kwargs for forwarding
         self.dataloader_kwargs = dataloader_kwargs
@@ -172,7 +185,10 @@ class DataModule(L.LightningDataModule):
         full_ds = load_dataset(self.path, split="train")
 
         # Ensure the dataset returns PyTorch tensors
-        full_ds.set_format("torch")
+        device = "cpu"
+        if self.in_gpu_memory and torch.cuda.is_available():
+            device = "cuda"
+        full_ds.set_format("torch", device=device)
 
         # Read parquet schema metadata and attach shape info to columns
         schema_meta = {}
