@@ -52,7 +52,7 @@ class LogReconstructionCallback(Callback):
         images = images.to(model.device)
 
         # Generate reconstructions of the samples using the model
-        recon = model.pure_forward(images)
+        recon = model.reconstruct(images)
         loss = torch.nn.MSELoss(reduction="none")(images, recon).flatten(1).mean(1)
 
         # Plot the original samples and their reconstructions side by side
