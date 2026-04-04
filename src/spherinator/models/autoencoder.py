@@ -38,9 +38,8 @@ class Autoencoder(pl.LightningModule):
         x = self.encode(x)
         return self.decode(x)
 
-    def pure_forward(self, x):
-        x = self.encode(x)
-        return self.decode(x)
+    def reconstruct(self, x):
+        return self.forward(x)
 
     def _compute_loss(self, batch):
         recon = self.forward(batch)
