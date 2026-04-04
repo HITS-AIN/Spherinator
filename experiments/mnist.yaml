@@ -35,10 +35,21 @@ optimizer:
     lr: 0.001
 
 trainer:
-  max_epochs: 5
+  max_epochs: 500
   accelerator: gpu
   devices: auto
   precision: bf16-mixed
-  log_every_n_steps: 50
+  # log_every_n_steps: 50
   enable_progress_bar: True
   enable_model_summary: True
+
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: spherinator
+      log_model: True
+      entity: bernddoser
+      tags:
+        - mnist
+        - autoencoder
+        - mlp
