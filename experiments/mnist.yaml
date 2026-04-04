@@ -18,15 +18,15 @@ model:
   class_path: spherinator.models.Autoencoder
   init_args:
     encoder:
-      class_path: spherinator.models.MLPEncoder
+      class_path: spherinator.models.MLP
       init_args:
         input_size: 784
         hidden_sizes: [512, 256]
-        latent_size: 3
+        output_size: 3
     decoder:
-      class_path: spherinator.models.MLPDecoder
+      class_path: spherinator.models.MLP
       init_args:
-        latent_size: 3
+        input_size: 3
         hidden_sizes: [256, 512]
         output_size: 784
 optimizer:
