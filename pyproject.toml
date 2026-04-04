@@ -31,6 +31,8 @@ dependencies = [
     "wandb >=0.20",
     "sphinxcontrib-bibtex>=2.6.3",
     "datasets>=4.8.4",
+    "gmr-conv>=1.0.3",
+    "torchio>=1.0.2",
 ]
 
 [project.optional-dependencies]

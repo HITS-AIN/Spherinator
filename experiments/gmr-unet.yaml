@@ -1,0 +1,49 @@
+data:
+  class_path: spherinator.data.ParquetDataModule
+  init_args:
+    data_directory: /home/bernd/data/SKIRT_synthetic_images_small/parquet-128
+    data_column: data
+    normalize: minmax
+    batch_size: 16
+    num_workers: 4
+
+model:
+  class_path: spherinator.models.UNetWrapper
+  init_args:
+    model:
+      class_path: GMR_Conv.gmr_unet.GMRUNet
+      init_args:
+        spatial_dims: 2
+        features: [64, 128, 256, 512, 1024, 128]
+        in_channels: 3
+        out_channels: 3
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.001
+
+trainer:
+  max_epochs: 500
+  accelerator: gpu
+  devices: auto
+  precision: bf16-mixed
+  # log_every_n_steps: 50
+  enable_progress_bar: True
+  enable_model_summary: True
+
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: spherinator
+      log_model: True
+      entity: bernddoser
+      tags:
+        - mnist
+        - autoencoder
+        - GMRUnet
+
+  callbacks:
+    - class_path: spherinator.callbacks.LogReconstructionCallback
+      init_args:
+        samples: 6

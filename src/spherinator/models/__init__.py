@@ -17,6 +17,7 @@ from .export_onnx import export_onnx
 from .huggingface_vit_encoder import HuggingFaceViTEncoder
 from .mlp_decoder import MLPDecoder
 from .mlp_encoder import MLPEncoder
+from .unet_wrapper import UNetWrapper
 from .upsampling_decoder_2d import UpsamplingDecoder2D
 from .variational_autoencoder import VariationalAutoencoder
 from .weights_provider import WeightsProvider
@@ -33,12 +34,13 @@ __all__ = [
     "ConvolutionalEncoder1D",
     "ConvolutionalEncoder2D",
     "DenseModel",
+    "EmbeddingReconstruction",
+    "export_onnx",
+    "HuggingFaceViTEncoder",
     "MLPDecoder",
     "MLPEncoder",
-    "EmbeddingReconstruction",
-    "HuggingFaceViTEncoder",
+    "UNetWrapper",
     "UpsamplingDecoder2D",
-    "export_onnx",
     "VariationalAutoencoder",
     "WeightsProvider",
     "yaml2model",
