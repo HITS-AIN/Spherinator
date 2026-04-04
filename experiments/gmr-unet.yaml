@@ -1,10 +1,13 @@
 data:
-  class_path: spherinator.data.ParquetDataModule
+  class_path: spherinator.data.DataModule
   init_args:
-    data_directory: /home/bernd/data/SKIRT_synthetic_images_small/parquet-128
-    data_column: data
-    normalize: minmax
+    path: /home/bernd/data/SKIRT_synthetic_images_small/parquet-128
+    columns:
+      - name: data
+    return_dict: False
+  dict_kwargs:
     batch_size: 16
+    shuffle: True
     num_workers: 4
 
 model:
@@ -17,6 +20,8 @@ model:
         features: [64, 128, 256, 512, 1024, 128]
         in_channels: 3
         out_channels: 3
+    criterion:
+      class_path: torch.nn.MSELoss
 
 optimizer:
   class_path: torch.optim.Adam
@@ -39,9 +44,8 @@ trainer:
       log_model: True
       entity: bernddoser
       tags:
-        - mnist
-        - autoencoder
         - GMRUnet
+        - illustris_small
 
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback

@@ -5,13 +5,16 @@ import torch.optim as optim
 
 
 class UNetWrapper(L.LightningModule):
-    def __init__(self, model):
+    def __init__(self, model, criterion: nn.Module = nn.BCEWithLogitsLoss()):
         super().__init__()
         self.model = model
-        self.criterion = nn.BCEWithLogitsLoss()
+        self.criterion = criterion
 
     def forward(self, x):
         return self.model(x)
+
+    def reconstruct(self, x):
+        return self.forward(x)
 
     def _common_step(self, batch, batch_idx):
         x, y = batch, batch
