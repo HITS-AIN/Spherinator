@@ -5,7 +5,11 @@ import torch.optim as optim
 
 
 class UNetWrapper(L.LightningModule):
-    def __init__(self, model, criterion: nn.Module = nn.BCEWithLogitsLoss()):
+    def __init__(
+        self,
+        model: nn.Module,
+        criterion: nn.Module = nn.BCEWithLogitsLoss(),
+    ):
         super().__init__()
         self.model = model
         self.criterion = criterion
