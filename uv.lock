@@ -1100,16 +1100,13 @@ wheels = [
 [[package]]
 name = "gmr-conv"
 version = "1.0.3"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/BerndDoser/GMR-Conv.git?branch=union#82a7ff6d8bfbb67054d7a23b88a9dc1320541ca5" }
 dependencies = [
     { name = "monai" },
     { name = "numpy" },
     { name = "pillow" },
     { name = "scipy" },
     { name = "torch" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e9/cf/60da57edeefa354affccf4249999060b222446cad3b9119f7e07c885e5b5/gmr_conv-1.0.3-py3-none-any.whl", hash = "sha256:5d9b1264902224c378ef7b4a00bcfa62191597871f087a60f672aa05a639d07d", size = 27800, upload-time = "2026-02-15T08:58:20.296Z" },
 ]
 
 [[package]]
@@ -3766,7 +3763,7 @@ extra = [
 requires-dist = [
     { name = "datasets", specifier = ">=4.8.4" },
     { name = "gaiaxpy", specifier = ">=2.1" },
-    { name = "gmr-conv", specifier = ">=1.0.3" },
+    { name = "gmr-conv", git = "https://github.com/BerndDoser/GMR-Conv.git?branch=union" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29" },
     { name = "ipywidgets", marker = "extra == 'dev'", specifier = ">=8.1.8" },
     { name = "jsonargparse", extras = ["signatures"], specifier = ">=4.37" },

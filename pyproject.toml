@@ -31,8 +31,8 @@ dependencies = [
     "wandb >=0.20",
     "sphinxcontrib-bibtex>=2.6.3",
     "datasets>=4.8.4",
-    "gmr-conv>=1.0.3",
     "torchio>=1.0.2",
+    "gmr-conv",
 ]
 
 [project.optional-dependencies]
@@ -106,3 +106,6 @@ name = "testpypi"
 url = "https://test.pypi.org/simple/"
 publish-url = "https://test.pypi.org/legacy/"
 explicit = true
+
+[tool.uv.sources]
+gmr-conv = { git = "https://github.com/BerndDoser/GMR-Conv.git", branch = "union" }
