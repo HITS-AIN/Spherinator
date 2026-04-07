@@ -139,6 +139,31 @@ class TransformedDataset(Dataset):
 
 
 class DataModule(L.LightningDataModule):
+    """DataModule for loading datasets from Hugging Face Datasets library and preparing them for
+    PyTorch. This DataModule supports loading datasets from Hugging Face Datasets format (e.g.
+    "ylecun/mnist") or from local parquet files. It also allows specifying which columns to load
+    and how to transform them using Column objects. It also handles splitting the dataset into
+    training, validation, and test sets based on specified proportions.
+
+
+    Args:
+        path (str): Path to the dataset in Hugging Face Datasets format (e.g. "ylecun/mnist" or
+            local path to parquet files)
+        columns (list[Column], optional): List of Column objects specifying which columns to load
+            and how to transform them. Defaults to a single column named "data" with no transformation.
+        return_dict (bool, optional): Whether to return samples as dictionaries (with column names
+            as keys) or as lists. Defaults to True (return dict).
+        validation_size (float, optional): Proportion of the dataset to use for validation. Defaults
+            to 0.2 (20%).
+        test_size (float, optional): Proportion of the validation set to use for testing (if
+            validation_size > 0). Defaults to 0.5 (50% of the validation set, which is 10% of the total
+            dataset).
+        in_gpu_memory (bool, optional): Whether to load the entire dataset into GPU memory. Defaults
+            to False (load on CPU and transfer batches to GPU during training).
+        **dataloader_kwargs: Additional keyword arguments to pass to the DataLoader (e.g.
+            batch_size, shuffle, num_workers, etc.)
+    """
+
     def __init__(
         self,
         path: str,
@@ -149,17 +174,6 @@ class DataModule(L.LightningDataModule):
         in_gpu_memory: bool = False,
         **dataloader_kwargs,
     ):
-        """DataModule for loading datasets from Hugging Face Datasets library and preparing them for PyTorch.
-
-        Args:
-            path (str): Path to the dataset in Hugging Face Datasets format (e.g. "ylecun/mnist" or local path to parquet files)
-            columns (list[Column], optional): List of Column objects specifying which columns to load and how to transform them. Defaults to a single column named "data" with no transformation.
-            return_dict (bool, optional): Whether to return samples as dictionaries (with column names as keys) or as lists. Defaults to True (return dict).
-            validation_size (float, optional): Proportion of the dataset to use for validation. Defaults to 0.2 (20%).
-            test_size (float, optional): Proportion of the validation set to use for testing (if validation_size > 0). Defaults to 0.5 (50% of the validation set, which is 10% of the total dataset).
-            in_gpu_memory (bool, optional): Whether to load the entire dataset into GPU memory. Defaults to False (load on CPU and transfer batches to GPU during training).
-            **dataloader_kwargs: Additional keyword arguments to pass to the DataLoader (e.g. batch_size, shuffle, num_workers, etc.)
-        """
         super().__init__()
 
         if columns is None:

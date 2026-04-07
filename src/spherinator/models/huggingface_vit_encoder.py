@@ -8,6 +8,20 @@ from .weights_provider import WeightsProvider
 
 
 class HuggingFaceViTEncoder(nn.Module):
+    """HuggingFaceViTEncoder is a PyTorch module that wraps a Hugging Face ViTModel to be used
+    as an encoder in the Spherinator framework. It takes an image input and produces a
+    fixed-size embedding vector. The CLS token from the ViT model is used as the output
+    representation, and an optional linear projection can be applied on top of it to match a
+    desired output dimension.
+
+    Args:
+        model_name (str): HuggingFace model name. Defaults to "google/vit-base-patch16-224".
+        output_dim (Optional[int]): If set, adds a linear projection on top of the CLS token.
+            Defaults to None (uses the model's hidden size directly).
+        freeze (bool): Whether to freeze the ViT backbone weights. Defaults to False.
+        weights (Optional[WeightsProvider]): Weights to load. Defaults to None.
+    """
+
     def __init__(
         self,
         model_name: str = "google/vit-base-patch16-224",
@@ -15,15 +29,6 @@ class HuggingFaceViTEncoder(nn.Module):
         freeze: bool = False,
         weights: Optional[WeightsProvider] = None,
     ) -> None:
-        """HuggingFaceViTEncoder initializer
-
-        Args:
-            model_name (str): HuggingFace model name. Defaults to "google/vit-base-patch16-224".
-            output_dim (Optional[int]): If set, adds a linear projection on top of the CLS token.
-                Defaults to None (uses the model's hidden size directly).
-            freeze (bool): Whether to freeze the ViT backbone weights. Defaults to False.
-            weights (Optional[WeightsProvider]): Weights to load. Defaults to None.
-        """
         super().__init__()
 
         self.vit = ViTModel.from_pretrained(model_name)
