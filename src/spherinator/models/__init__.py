@@ -13,6 +13,7 @@ from .convolutional_encoder_1d import ConvolutionalEncoder1D
 from .convolutional_encoder_2d import ConvolutionalEncoder2D
 from .embedding_reconstruction import EmbeddingReconstruction
 from .export_onnx import export_onnx
+from .gmr_upsampling_decoder_2d import GMRUpsamplingDecoder2D
 from .huggingface_vit_encoder import HuggingFaceViTEncoder
 from .mlp import MLP
 from .unet_wrapper import UNetWrapper
@@ -34,6 +35,7 @@ __all__ = [
     "EmbeddingReconstruction",
     "EmbeddingReconstruction",
     "export_onnx",
+    "GMRUpsamplingDecoder2D",
     "HuggingFaceViTEncoder",
     "HuggingFaceViTEncoder",
     "MLP",
