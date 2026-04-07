@@ -20,17 +20,19 @@ model:
   class_path: spherinator.models.Autoencoder
   init_args:
     encoder:
-      class_path: GMR_Conv.GMR_ResNet
+      class_path: spherinator.models.GMRResNetEncoder
       init_args:
         block: GMR_Conv.GMRBasicBlock
         layers: [2, 2, 2, 2]
-        num_classes: 64
+        latent_channels: 64
+        latent_size: 7
+        gmr_conv_size: 9
     decoder:
       class_path: spherinator.models.GMRUpsamplingDecoder2D
       init_args:
-        input_dim: 64
+        input_dim: 3136
         output_dim: [3, 224, 224]
-        base_channels: 512
+        base_channels: 64
         seed_size: 7
         gmr_conv_size: 9
 
