@@ -42,8 +42,9 @@ trainer:
   devices: auto
   precision: bf16-mixed
   # log_every_n_steps: 50
-  enable_progress_bar: True
+  enable_progress_bar: False
   enable_model_summary: True
+  simple_profiler: True
 
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger
