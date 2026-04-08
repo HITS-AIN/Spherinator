@@ -107,8 +107,8 @@ class GMRResNetDecoder(nn.Module):
 
     Architecture (mirroring encoder with default settings)::
 
-        z (input_dim)
-        → fc → reshape  (8*inplanes × seed × seed)
+        z  (input_channels × seed_h × seed_w)  — spatial latent from encoder
+        → 1×1 conv  (input_channels → 8*inplanes)
         → layer4  (8*inplanes → 4*inplanes, upsample 2×)
         → layer3  (4*inplanes → 2*inplanes, upsample 2×)
         → layer2  (2*inplanes → inplanes,   upsample 2×)
@@ -117,7 +117,9 @@ class GMRResNetDecoder(nn.Module):
         → conv_out → Sigmoid  (inplanes → out_channels)
 
     Args:
-        input_dim: Latent vector size (must match encoder ``num_classes``).
+        input_channels: Number of channels in the spatial latent tensor
+            produced by ``GMRResNetSpatialEncoder`` (must match encoder
+            ``latent_channels``).
         output_dim: Target image shape ``[C, H, W]``.
         inplanes: Base channel width (must match encoder ``inplanes``).
         layers: Number of residual blocks per stage, in encoder order
@@ -136,7 +138,7 @@ class GMRResNetDecoder(nn.Module):
 
     def __init__(
         self,
-        input_dim: int,
+        input_channels: int,
         output_dim: list[int],
         inplanes: int = 64,
         layers: list[int] = [2, 2, 2, 2],
@@ -149,11 +151,9 @@ class GMRResNetDecoder(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.input_dim = input_dim
+        self.input_channels = input_channels
         self.output_dim = output_dim
         out_channels, out_h, out_w = output_dim
-
-        self.example_input_array = torch.randn(1, input_dim)
 
         # Broadcast scalar gmr_conv_size / num_rings to per-stage lists
         if isinstance(gmr_conv_size, int):
@@ -179,10 +179,14 @@ class GMRResNetDecoder(nn.Module):
 
         top_channels = 8 * inplanes  # encoder's deepest channels
 
-        # -- fc: latent → spatial feature map --------------------------------
+        # example_input_array for Lightning model summary / ONNX export
+        self.example_input_array = torch.randn(1, input_channels, seed_size_h, seed_size_w)
+
+        # -- 1×1 conv: spatial latent → top feature channels ------------------
+        # Accepts (B, input_channels, H, W) and expands channels to top_channels
+        # while preserving the full spatial structure from the encoder.
         self.fc = nn.Sequential(
-            nn.Linear(input_dim, top_channels * seed_size_h * seed_size_w),
-            nn.Unflatten(1, (top_channels, seed_size_h, seed_size_w)),
+            nn.Conv2d(input_channels, top_channels, kernel_size=1, bias=False),
             nn.BatchNorm2d(top_channels),
             nn.ReLU(inplace=True),
         )

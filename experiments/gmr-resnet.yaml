@@ -6,10 +6,6 @@ data:
     path: /home/bernd/data/SKIRT_synthetic_images_small/parquet-128
     columns:
       - name: data
-        transform:
-          class_path: torchvision.transforms.v2.Resize
-          init_args:
-            size: 224
     return_dict: False
   dict_kwargs:
     batch_size: 16
@@ -20,15 +16,15 @@ model:
   class_path: spherinator.models.Autoencoder
   init_args:
     encoder:
-      class_path: GMR_Conv.GMR_ResNet
+      class_path: spherinator.models.GMRResNetSpatialEncoder
       init_args:
         block: GMR_Conv.GMRBasicBlock
         layers: [2, 2, 2, 2]
-        num_classes: 64
+        latent_channels: 64
     decoder:
       class_path: spherinator.models.GMRResNetDecoder
       init_args:
-        input_dim: 64
+        input_channels: 64
         output_dim: [3, 224, 224]
 
 optimizer:
@@ -44,7 +40,7 @@ trainer:
   # log_every_n_steps: 50
   enable_progress_bar: False
   enable_model_summary: True
-  simple_profiler: True
+  profiler: simple
 
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger
