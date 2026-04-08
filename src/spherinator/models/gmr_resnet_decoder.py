@@ -2,13 +2,36 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
+from GMR_Conv import GMR_Conv2d
 
 from .weights_provider import WeightsProvider
+
+
+def _gmr_convtransposekxk(
+    k: int,
+    in_planes: int,
+    out_planes: int,
+    stride: int = 1,
+    bias: bool = False,
+    num_rings: int = None,
+) -> GMR_Conv2d:
+    """k×k GMR transposed convolution with padding (mirrors GMR_convkxk)."""
+    return GMR_Conv2d(
+        in_planes,
+        out_planes,
+        kernel_size=k,
+        stride=stride,
+        padding=k // 2,
+        bias=bias,
+        num_rings=num_rings,
+        transposed=True,
+    )
 
 
 class _DecoderBasicBlock(nn.Module):
     """Residual block for decoder, mirroring GMRBasicBlock.
 
+    Uses GMR_ConvTranspose2d to mirror the encoder's GMR_Conv2d layers.
     Optionally upsamples spatially (reverse of encoder's stride/avgpool).
     """
 
@@ -17,10 +40,14 @@ class _DecoderBasicBlock(nn.Module):
         in_channels: int,
         out_channels: int,
         upsample_factor: int = 1,
+        gmr_conv_size: int = 3,
+        num_rings: int = None,
     ) -> None:
         super().__init__()
 
-        layers = []
+        self.upsample_factor = upsample_factor
+
+        layers: list[nn.Module] = []
         if upsample_factor > 1:
             layers.append(
                 nn.Upsample(
@@ -31,10 +58,10 @@ class _DecoderBasicBlock(nn.Module):
             )
         layers.extend(
             [
-                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
+                _gmr_convtransposekxk(gmr_conv_size, in_channels, out_channels, num_rings=num_rings),
                 nn.BatchNorm2d(out_channels),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
+                _gmr_convtransposekxk(gmr_conv_size, out_channels, out_channels, num_rings=num_rings),
                 nn.BatchNorm2d(out_channels),
             ]
         )
@@ -53,7 +80,12 @@ class _DecoderBasicBlock(nn.Module):
                 )
             skip_layers.extend(
                 [
-                    nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),
+                    nn.Conv2d(
+                        in_channels,
+                        out_channels,
+                        kernel_size=1,
+                        bias=False,
+                    ),
                     nn.BatchNorm2d(out_channels),
                 ]
             )
@@ -67,7 +99,7 @@ class _DecoderBasicBlock(nn.Module):
         return self.relu(self.block(x) + self.skip(x))
 
 
-class GMR_ResNetDecoder(nn.Module):
+class GMRResNetDecoder(nn.Module):
     """ResNet-style decoder that mirrors the GMR_ResNet encoder architecture.
 
     Reverses the spatial and channel transformations of the encoder using
@@ -95,6 +127,9 @@ class GMR_ResNetDecoder(nn.Module):
         skip_first_maxpool: Must match the encoder setting. When *False*
             (default) the encoder applies an initial 2× avg-pool, which
             the decoder undoes with an extra 2× upsample.
+        gmr_conv_size: GMR kernel size (or list of 4 per stage). Must
+            match the encoder setting.
+        num_rings: Number of GMR rings (or list of 4 per stage).
         weights: Optional pre-trained weights.
         freeze: Freeze all parameters after initialisation.
     """
@@ -107,6 +142,8 @@ class GMR_ResNetDecoder(nn.Module):
         layers: list[int] = [2, 2, 2, 2],
         layer_stride: list[int] = [1, 2, 2, 2],
         skip_first_maxpool: bool = False,
+        gmr_conv_size: int | list[int] = 3,
+        num_rings: int | list[int] | None = None,
         weights: Optional[WeightsProvider] = None,
         freeze: bool = False,
     ) -> None:
@@ -117,6 +154,16 @@ class GMR_ResNetDecoder(nn.Module):
         out_channels, out_h, out_w = output_dim
 
         self.example_input_array = torch.randn(1, input_dim)
+
+        # Broadcast scalar gmr_conv_size / num_rings to per-stage lists
+        if isinstance(gmr_conv_size, int):
+            gmr_conv_size_list = [gmr_conv_size] * 4
+        else:
+            gmr_conv_size_list = list(gmr_conv_size)
+        if num_rings is None or isinstance(num_rings, int):
+            num_rings_list: list[int | None] = [num_rings] * 4
+        else:
+            num_rings_list = list(num_rings)
 
         # Compute the spatial size at the deepest encoder feature map.
         # The encoder halves with an initial avg-pool (unless skip_first_maxpool)
@@ -153,13 +200,23 @@ class GMR_ResNetDecoder(nn.Module):
             out_ch = channel_schedule[stage_idx]
             stride = layer_stride[stage_idx]
             n_blocks = layers[stage_idx]
+            conv_size = gmr_conv_size_list[stage_idx]
+            rings = num_rings_list[stage_idx]
 
             blocks: list[nn.Module] = []
             # Repeat blocks (at same channels) — mirrors encoder's extra blocks
             for _ in range(n_blocks - 1):
-                blocks.append(_DecoderBasicBlock(in_ch, in_ch))
+                blocks.append(_DecoderBasicBlock(in_ch, in_ch, gmr_conv_size=conv_size, num_rings=rings))
             # Final block: channel change + upsampling (mirrors encoder's first block)
-            blocks.append(_DecoderBasicBlock(in_ch, out_ch, upsample_factor=stride))
+            blocks.append(
+                _DecoderBasicBlock(
+                    in_ch,
+                    out_ch,
+                    upsample_factor=stride,
+                    gmr_conv_size=conv_size,
+                    num_rings=rings,
+                )
+            )
             decoder_stages.append(nn.Sequential(*blocks))
 
         self.decoder_layers = nn.Sequential(*decoder_stages)
@@ -170,9 +227,16 @@ class GMR_ResNetDecoder(nn.Module):
         else:
             self.final_upsample = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False)
 
-        # -- final projection (mirrors encoder conv1) -------------------------
+        # -- final projection (mirrors encoder conv1: GMR_Conv2d k=5) ----------
         self.conv_out = nn.Sequential(
-            nn.Conv2d(inplanes, out_channels, kernel_size=5, padding=2, bias=False),
+            GMR_Conv2d(
+                inplanes,
+                out_channels,
+                kernel_size=5,
+                padding=2,
+                bias=False,
+                transposed=True,
+            ),
             nn.Sigmoid(),
         )
 
