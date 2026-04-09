@@ -55,6 +55,7 @@ def test_training(parquet_1d_metadata, encoder, decoder):
     trainer = Trainer(
         max_epochs=1,
         enable_model_summary=False,
+        enable_checkpointing=False,
         accelerator="cpu",
         log_every_n_steps=1,
     )
@@ -172,4 +173,5 @@ def test_training_restart_without_fixed_scale(parquet_test_sampling, encoder, de
     assert model_no_fixed_scale.variational_encoder.fc_scale.weight.requires_grad
     assert model_no_fixed_scale.variational_encoder.fc_scale.bias.requires_grad
     assert torch.all(model.variational_encoder.fc_scale.weight.data == 0)
+    assert torch.all(model.variational_encoder.fc_scale.bias.data == 1e3)
     assert torch.all(model.variational_encoder.fc_scale.bias.data == 1e3)
