@@ -11,6 +11,7 @@ from .convolutional_decoder_1d import ConvolutionalDecoder1D
 from .convolutional_decoder_2d import ConvolutionalDecoder2D
 from .convolutional_encoder_1d import ConvolutionalEncoder1D
 from .convolutional_encoder_2d import ConvolutionalEncoder2D
+from .dual_head_variational_autoencoder import DualHeadVariationalAutoencoder
 from .embedding_reconstruction import EmbeddingReconstruction
 from .export_onnx import export_onnx
 from .gmr_resnet_decoder import GMRResNetDecoder
@@ -33,6 +34,7 @@ __all__ = [
     "ConvolutionalDecoder2D",
     "ConvolutionalEncoder1D",
     "ConvolutionalEncoder2D",
+    "DualHeadVariationalAutoencoder",
     "EmbeddingReconstruction",
     "EmbeddingReconstruction",
     "export_onnx",
