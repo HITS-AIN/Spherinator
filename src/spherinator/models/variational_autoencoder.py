@@ -42,6 +42,9 @@ class VariationalEncoder(nn.Module):
             self.fc_scale.weight.requires_grad = False
             self.fc_scale.bias.data.fill_(fixed_scale)
             self.fc_scale.bias.requires_grad = False
+        else:
+            self.fc_scale.weight.requires_grad = True
+            self.fc_scale.bias.requires_grad = True
 
     def forward(self, x) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.encoder(x)
@@ -77,7 +80,7 @@ class VariationalAutoencoder(pl.LightningModule):
         """
         super().__init__()
 
-        self.save_hyperparameters(ignore=["encoder", "decoder"])
+        self.save_hyperparameters(ignore=["encoder", "decoder", "fixed_scale"])
         # self.save_hyperparameters()
 
         self.encoder = encoder
@@ -86,6 +89,7 @@ class VariationalAutoencoder(pl.LightningModule):
         self.z_dim = z_dim
         self.beta = beta
         self.loss = loss
+        self.fixed_scale = fixed_scale
 
         self.variational_encoder = VariationalEncoder(encoder, self.encoder_out_dim, self.z_dim, fixed_scale)
 
@@ -114,11 +118,21 @@ class VariationalAutoencoder(pl.LightningModule):
         recon = self.decode(z)
         return (z_location, z_scale), (q_z, p_z), z, recon
 
-    def pure_forward(self, x):
+    def reconstruct(self, x):
         z_location, _ = self.encode(x)
         return self.decode(z_location)
 
-    def training_step(self, batch, batch_idx) -> torch.Tensor:
+    def on_load_checkpoint(self, checkpoint) -> None:
+        if self.fixed_scale is not None:
+            state_dict = checkpoint["state_dict"]
+            weight_key = "variational_encoder.fc_scale.weight"
+            bias_key = "variational_encoder.fc_scale.bias"
+            if weight_key in state_dict:
+                state_dict[weight_key] = torch.zeros_like(state_dict[weight_key])
+            if bias_key in state_dict:
+                state_dict[bias_key] = torch.full_like(state_dict[bias_key], self.fixed_scale)
+
+    def _compute_loss(self, batch, training_step: bool = False):
         if self.loss in ["NLL-normal", "NLL-truncated", "KL"]:
             batch, error = batch
 
@@ -145,13 +159,28 @@ class VariationalAutoencoder(pl.LightningModule):
         loss_recon = loss_recon.mean()
         loss_KL = loss_KL.mean()
 
-        self.log("train_loss", loss, prog_bar=True)
-        self.log("loss_recon", loss_recon, prog_bar=True)
-        self.log("loss_KL", loss_KL)
-        self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
-        self.log("mean(z_location)", torch.mean(z_location))
-        self.log("mean(z_scale)", torch.mean(z_scale))
+        if training_step:
+            self.log("loss_recon", loss_recon, prog_bar=True)
+            self.log("loss_KL", loss_KL)
+            self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
+            self.log("mean(z_location)", torch.mean(z_location))
+            self.log("mean(z_scale)", torch.mean(z_scale))
 
+        return loss
+
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
+        loss = self._compute_loss(batch, training_step=True)
+        self.log("train_loss", loss, prog_bar=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx) -> torch.Tensor:
+        loss = self._compute_loss(batch)
+        self.log("val_loss", loss, prog_bar=True)
+        return loss
+
+    def test_step(self, batch, batch_idx) -> torch.Tensor:
+        loss = self._compute_loss(batch)
+        self.log("test_loss", loss, prog_bar=True)
         return loss
 
     def configure_optimizers(self):

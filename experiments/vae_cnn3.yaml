@@ -51,6 +51,7 @@ model:
     z_dim: 3
     beta: 1.0e-3
     encoder_out_dim: 64
+    fixed_scale: null
 
 optimizer:
   class_path: torch.optim.Adam
