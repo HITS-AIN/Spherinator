@@ -22,7 +22,10 @@ class MinMaxNormalize:
     def __call__(self, x):
         x_min = torch.min(x)
         x_max = torch.max(x)
-        return (x - x_min) / (x_max - x_min)
+        x_range = x_max - x_min
+        if x_range == 0:
+            return torch.zeros_like(x)
+        return (x - x_min) / x_range
 
 
 class DielemanTransformation:
