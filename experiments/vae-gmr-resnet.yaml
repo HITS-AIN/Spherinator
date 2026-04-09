@@ -13,7 +13,7 @@ data:
     num_workers: 4
 
 model:
-  class_path: spherinator.models.Autoencoder
+  class_path: spherinator.models.VariationalAutoencoder
   init_args:
     encoder:
       class_path: spherinator.models.GMRResNetSpatialEncoder
@@ -21,12 +21,15 @@ model:
         block: GMR_Conv.GMRBasicBlock
         layers: [2, 2, 2, 2]
         input_dim: [3, 128, 128]
-        latent_channels: 64
+        latent_channels: 3
     decoder:
       class_path: spherinator.models.GMRResNetDecoder
       init_args:
-        input_channels: 64
+        input_channels: 3
         output_dim: [3, 128, 128]
+    z_dim: 3
+    beta: 1.0e-2
+    encoder_out_dim: 3
 
 optimizer:
   class_path: torch.optim.Adam
@@ -52,8 +55,8 @@ trainer:
       tags:
         - GMRResNet
         - illustris_small
-        - z64
-        - ae
+        - z3
+        - vae
 
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback

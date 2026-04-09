@@ -39,11 +39,11 @@ class GMRResNetSpatialEncoder(GMR_ResNet):
         self,
         block: Type[Union[GMRBasicBlock, GMRBottleneck]],
         layers: List[int],
+        input_dim: List[int],
         latent_channels: int = 64,
         inplanes: int = 64,
         layer_stride: Union[int, List[int]] = [1, 2, 2, 2],
         skip_first_maxpool: bool = False,
-        in_channels: int = 3,
         weights: Optional[WeightsProvider] = None,
         freeze: bool = False,
         **kwargs: Any,
@@ -57,7 +57,7 @@ class GMRResNetSpatialEncoder(GMR_ResNet):
             inplanes=inplanes,
             layer_stride=layer_stride,
             skip_first_maxpool=skip_first_maxpool,
-            in_channels=in_channels,
+            in_channels=input_dim[0],
             **kwargs,
         )
 
@@ -73,7 +73,7 @@ class GMRResNetSpatialEncoder(GMR_ResNet):
         )
 
         # example_input_array for Lightning model summary / ONNX export
-        self.example_input_array = torch.randn(1, in_channels, 224, 224)
+        self.example_input_array = torch.randn(1, *input_dim)
 
         if weights is not None:
             self.load_state_dict(weights.get_state_dict())
