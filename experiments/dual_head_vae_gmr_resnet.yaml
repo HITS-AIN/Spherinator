@@ -6,6 +6,14 @@ data:
     path: /home/bernd/data/SKIRT_synthetic_images_small/parquet-128
     columns:
       - name: data
+        transform:
+          class_path: torchvision.transforms.v2.Compose
+          init_args:
+            transforms:
+              - class_path: torchvision.transforms.v2.RandomHorizontalFlip
+              - class_path: torchvision.transforms.v2.RandomRotation
+                init_args:
+                  degrees: 180
     return_dict: False
   dict_kwargs:
     batch_size: 16
