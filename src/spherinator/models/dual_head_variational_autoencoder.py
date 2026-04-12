@@ -1,13 +1,9 @@
-from typing import Optional
-
 import lightning.pytorch as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from power_spherical import HypersphericalUniform, PowerSpherical
 from torch.optim import Adam
-
-from spherinator.distributions import truncated_normal_distribution
 
 
 class SphereHead(nn.Module):

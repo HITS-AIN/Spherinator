@@ -3,7 +3,7 @@ seed_everything: 42
 data:
   class_path: spherinator.data.DataModule
   init_args:
-    path: /home/doserbd/data/SKIRT_synthetic_images_small/parquet-128
+    path: /home/bernd/data/SKIRT_synthetic_images_small/parquet-128
     columns:
       - name: data
     return_dict: False
@@ -21,15 +21,18 @@ model:
         block: GMR_Conv.GMRBasicBlock
         layers: [2, 2, 2, 2]
         input_dim: [3, 128, 128]
+        layer_stride: [2, 2, 2, 2]
         latent_channels: 3
     decoder:
       class_path: spherinator.models.GMRResNetDecoder
       init_args:
         input_channels: 3
         output_dim: [3, 128, 128]
-    z_dim: 3
+        layer_stride: [2, 2, 2, 2]
+    z_dim: 49
     beta: 1.0e-2
-    encoder_out_dim: 3
+    encoder_out_dim: [3, 4, 4]
+    fixed_scale: 1e3
 
 optimizer:
   class_path: torch.optim.Adam
@@ -55,7 +58,7 @@ trainer:
       tags:
         - GMRResNet
         - illustris_small
-        - z3
+        - z3-4-4
         - vae
 
   callbacks:

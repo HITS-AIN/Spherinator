@@ -75,6 +75,11 @@ class GMRResNetSpatialEncoder(GMR_ResNet):
         # example_input_array for Lightning model summary / ONNX export
         self.example_input_array = torch.randn(1, *input_dim)
 
+        # Infer spatial latent shape from a dummy forward pass
+        with torch.no_grad():
+            dummy_out = self.forward(self.example_input_array)
+        self.output_dim = tuple(dummy_out.shape[1:])  # (C, H, W)
+
         if weights is not None:
             self.load_state_dict(weights.get_state_dict())
         if freeze:
