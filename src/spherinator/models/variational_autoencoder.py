@@ -85,9 +85,13 @@ class VariationalAutoencoder(pl.LightningModule):
         flat = spatial.flatten(1)
         return self.sphere_head(flat)
 
-    def decode(self, x):
-        """Decode a spatial latent ``(B, C, H, W)``."""
-        return self.decoder(x)
+    def decode(self, z):
+        """Decode from the latent space. If the decoder expects a spatial input, reshape the flat latent vector accordingly."""
+        if len(self.encoder_out_dim) > 1:
+            z_spatial = self.fc_decode(z).view(z.shape[0], *self.encoder_out_dim)
+        else:
+            z_spatial = z
+        return self.decoder(z_spatial)
 
     def reparameterize(self, z_location, z_scale):
         q_z = PowerSpherical(z_location, z_scale)
@@ -98,16 +102,12 @@ class VariationalAutoencoder(pl.LightningModule):
         z_location, z_scale = self.encode(x)
         q_z, p_z = self.reparameterize(z_location, z_scale.squeeze())
         z = q_z.rsample()
-        if len(self.encoder_out_dim) > 1:
-            z_spatial = self.fc_decode(z).view(z.shape[0], *self.encoder_out_dim)
-        else:
-            z_spatial = z
-        recon = self.decoder(z_spatial)
+        recon = self.decode(z)
         return (z_location, z_scale), (q_z, p_z), z, recon
 
     def reconstruct(self, x):
-        spatial = self.encoder(x)
-        return self.decoder(spatial)
+        z, _ = self.encode(x)
+        return self.decode(z)
 
     def _compute_loss(self, batch, training_step: bool = False):
         (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)

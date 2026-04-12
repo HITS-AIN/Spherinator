@@ -40,7 +40,7 @@ optimizer:
     lr: 0.001
 
 trainer:
-  max_epochs: 500
+  max_epochs: 2000
   accelerator: gpu
   devices: auto
   precision: bf16-mixed
