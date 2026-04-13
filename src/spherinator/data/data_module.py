@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-import lightning as L
 import pyarrow.parquet as pq
 import torch
 from datasets import load_dataset
+from lightning.pytorch import LightningDataModule
 from torch.utils.data import Dataset
 
 
@@ -138,7 +138,7 @@ class TransformedDataset(Dataset):
         return transformed_sample
 
 
-class DataModule(L.LightningDataModule):
+class DataModule(LightningDataModule):
     """DataModule for loading datasets from Hugging Face Datasets library and preparing them for
     PyTorch. This DataModule supports loading datasets from Hugging Face Datasets format (e.g.
     "ylecun/mnist") or from local parquet files. It also allows specifying which columns to load
