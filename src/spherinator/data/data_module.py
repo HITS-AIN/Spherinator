@@ -15,7 +15,7 @@ class Column:
     Args:
         name: The name of the column
         transform: Optional transformation function to apply to the column data
-        **kwargs: Additional parameters that can be stored with the column
+        shape: Optional shape to reshape the data to before applying the transform
     """
 
     def __init__(
@@ -23,15 +23,10 @@ class Column:
         name: str,
         transform: Optional[Callable[[Any], Any]] = None,
         shape: Optional[tuple[int, ...]] = None,
-        **kwargs,
     ):
         self.name = name
         self.transform = transform
         self.shape = shape
-
-        # Store any additional parameters
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
     def apply_transform(self, data: Any) -> Any:
         """
