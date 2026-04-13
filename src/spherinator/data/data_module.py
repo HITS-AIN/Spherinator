@@ -162,7 +162,7 @@ class DataModule(LightningDataModule):
     def __init__(
         self,
         path: str,
-        columns: Optional[list[Column]] = None,
+        columns: Optional[list[dict[str, Any]]] = None,
         return_dict: bool = True,
         validation_size: float = 0.2,
         test_size: float = 0.5,
@@ -175,6 +175,8 @@ class DataModule(LightningDataModule):
 
         if columns is None:
             columns = [Column(name="data")]
+        else:
+            columns = [Column(**c) if isinstance(c, dict) else c for c in columns]
 
         self.path: str = path
         self.columns: list[Column] = columns
