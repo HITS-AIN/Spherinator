@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-import lightning as L
 import pyarrow.parquet as pq
 import torch
 from datasets import load_dataset
+from lightning.pytorch import LightningDataModule
 from torch.utils.data import Dataset
 
 
@@ -15,7 +15,7 @@ class Column:
     Args:
         name: The name of the column
         transform: Optional transformation function to apply to the column data
-        **kwargs: Additional parameters that can be stored with the column
+        shape: Optional shape to reshape the data to before applying the transform
     """
 
     def __init__(
@@ -23,15 +23,10 @@ class Column:
         name: str,
         transform: Optional[Callable[[Any], Any]] = None,
         shape: Optional[tuple[int, ...]] = None,
-        **kwargs,
     ):
         self.name = name
         self.transform = transform
         self.shape = shape
-
-        # Store any additional parameters
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
     def apply_transform(self, data: Any) -> Any:
         """
@@ -138,7 +133,7 @@ class TransformedDataset(Dataset):
         return transformed_sample
 
 
-class DataModule(L.LightningDataModule):
+class DataModule(LightningDataModule):
     """DataModule for loading datasets from Hugging Face Datasets library and preparing them for
     PyTorch. This DataModule supports loading datasets from Hugging Face Datasets format (e.g.
     "ylecun/mnist") or from local parquet files. It also allows specifying which columns to load
@@ -167,17 +162,21 @@ class DataModule(L.LightningDataModule):
     def __init__(
         self,
         path: str,
-        columns: Optional[list[Column]] = None,
+        columns: Optional[list[dict[str, Any]]] = None,
         return_dict: bool = True,
         validation_size: float = 0.2,
         test_size: float = 0.5,
         in_gpu_memory: bool = False,
-        **dataloader_kwargs,
+        batch_size: int = 32,
+        shuffle: bool = True,
+        num_workers: int = 0,
     ):
         super().__init__()
 
         if columns is None:
             columns = [Column(name="data")]
+        else:
+            columns = [Column(**c) if isinstance(c, dict) else c for c in columns]
 
         self.path: str = path
         self.columns: list[Column] = columns
@@ -190,7 +189,7 @@ class DataModule(L.LightningDataModule):
         self.in_gpu_memory: bool = in_gpu_memory
 
         # Store DataLoader kwargs for forwarding
-        self.dataloader_kwargs = dataloader_kwargs
+        self.dataloader_kwargs = {"batch_size": batch_size, "shuffle": shuffle, "num_workers": num_workers}
 
     def prepare_data(self):
         load_dataset(self.path)
