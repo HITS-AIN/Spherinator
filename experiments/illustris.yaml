@@ -16,7 +16,6 @@ data:
                 init_args:
                   degrees: 180
     return_dict: False
-  dict_kwargs:
     batch_size: 512
     shuffle: True
     num_workers: 4
