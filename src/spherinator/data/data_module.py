@@ -172,7 +172,9 @@ class DataModule(LightningDataModule):
         validation_size: float = 0.2,
         test_size: float = 0.5,
         in_gpu_memory: bool = False,
-        **dataloader_kwargs,
+        batch_size: int = 32,
+        shuffle: bool = True,
+        num_workers: int = 0,
     ):
         super().__init__()
 
@@ -190,7 +192,7 @@ class DataModule(LightningDataModule):
         self.in_gpu_memory: bool = in_gpu_memory
 
         # Store DataLoader kwargs for forwarding
-        self.dataloader_kwargs = dataloader_kwargs
+        self.dataloader_kwargs = {"batch_size": batch_size, "shuffle": shuffle, "num_workers": num_workers}
 
     def prepare_data(self):
         load_dataset(self.path)
