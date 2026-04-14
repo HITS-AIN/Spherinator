@@ -15,7 +15,7 @@ to compress the structural data into a low-dimensional spherical latent space.
 
 
 <p align="center">
-  <img src="docs/assets/P404_f2.png" width="400" height="400">
+  <img src="https://github.com/BerndDoser/Spherinator/raw/main/docs/assets/P404_f2.png" width="400" height="400">
 </p>
 
 

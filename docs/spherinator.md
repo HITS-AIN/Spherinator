@@ -83,7 +83,6 @@ data:
           init_args:
             size: 224
     return_dict: False
-  dict_kwargs:
     batch_size: 16
     shuffle: True
     num_workers: 4
