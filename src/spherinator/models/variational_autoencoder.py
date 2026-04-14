@@ -144,21 +144,6 @@ class VariationalAutoencoder(pl.LightningModule):
         self.log("test_loss_KL", loss_KL)
         return loss
 
-    def training_step(self, batch, batch_idx) -> torch.Tensor:
-        loss = self._compute_loss(batch, training_step=True)
-        self.log("train_loss", loss, prog_bar=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx) -> torch.Tensor:
-        loss = self._compute_loss(batch)
-        self.log("val_loss", loss, prog_bar=True)
-        return loss
-
-    def test_step(self, batch, batch_idx) -> torch.Tensor:
-        loss = self._compute_loss(batch)
-        self.log("test_loss", loss, prog_bar=True)
-        return loss
-
     def configure_optimizers(self):
         """Default Adam optimizer if missing from the configuration file."""
         return Adam(self.parameters(), lr=1e-3)
