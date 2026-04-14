@@ -8,11 +8,14 @@ data:
           class_path: torchvision.transforms.v2.Compose
           init_args:
             transforms:
-              - class_path: torchvision.transforms.v2.Resize
+              # - class_path: torchvision.transforms.v2.Resize
+              #   init_args:
+              #     size: 224
+              - class_path: torchvision.transforms.v2.RandomHorizontalFlip
+              - class_path: torchvision.transforms.v2.RandomRotation
                 init_args:
-                  size: 224
+                  degrees: 180
     return_dict: False
-  dict_kwargs:
-    batch_size: 16384
+    batch_size: 512
     shuffle: True
     num_workers: 4

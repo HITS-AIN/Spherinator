@@ -4,7 +4,8 @@ trainer:
     init_args:
       project: spherinator
       log_model: True
-      entity: bernddoser
+      entity: ain-space
       tags:
-        - illustris_small
-        - vae_vit
+        - illustris
+        - vae
+        - vit

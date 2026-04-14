@@ -1,5 +1,4 @@
 seed_everything: 42
-# ckpt_path: artifacts/model-56k0f026:v0/model.ckpt
 
 model:
   class_path: spherinator.models.VariationalAutoencoder
