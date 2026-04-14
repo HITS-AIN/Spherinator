@@ -5,6 +5,16 @@ data:
     columns:
       - name: image
         shape: [1,28,28]
+        transform:
+          class_path: torchvision.transforms.v2.Compose
+          init_args:
+            transforms:
+              - class_path: torchvision.transforms.v2.RandomHorizontalFlip
+              - class_path: torchvision.transforms.v2.RandomRotation
+                init_args:
+                  degrees: 180
+      - name: image
+        shape: [1,28,28]
     return_dict: False
     validation_size: 0.2
     test_size: 0.5
