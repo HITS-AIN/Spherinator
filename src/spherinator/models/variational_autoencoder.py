@@ -110,8 +110,12 @@ class VariationalAutoencoder(pl.LightningModule):
         return self.decode(z)
 
     def _compute_loss(self, batch, training_step: bool = False):
-        (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
-        loss_recon = self.reconstruction_loss(batch, recon)
+        if isinstance(batch, (tuple, list)):
+            batch_augmented, batch_original = batch
+        else:
+            batch_augmented = batch_original = batch
+        (_, z_scale), (q_z, p_z), _, recon = self.forward(batch_augmented)
+        loss_recon = self.reconstruction_loss(batch_original, recon)
         loss_KL = self.beta * torch.distributions.kl.kl_divergence(q_z, p_z)
         loss = (loss_recon + loss_KL).mean()
         loss_recon = loss_recon.mean()
