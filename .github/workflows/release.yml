@@ -21,8 +21,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6.1.0
       - run: uv build
       - name: Publish to TestPyPI
-        if: github.repository != 'Spherinator/Spherinator'
+        if: github.repository != 'HITS-AIN/Spherinator'
         run: uv publish --trusted-publishing always --index testpypi
       - name: Publish to PyPI
-        if: github.repository == 'Spherinator/Spherinator'
+        if: github.repository == 'HITS-AIN/Spherinator'
         run: uv publish --trusted-publishing always
