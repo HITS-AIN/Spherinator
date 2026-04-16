@@ -35,6 +35,7 @@ class SphereHead(nn.Module):
             self.fc_scale.bias.requires_grad = False
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        x = torch.flatten(x, 1)
         z_location = F.normalize(self.fc_location(x), p=2.0, dim=1)
         z_scale = F.softplus(self.fc_scale(x)) + 1
         return z_location, z_scale
@@ -47,7 +48,7 @@ class VariationalAutoencoder(pl.LightningModule):
         self,
         encoder: nn.Module,
         decoder: nn.Module,
-        encoder_out_dim: List[int],
+        encoder_out_dim: int,
         z_dim: int = 3,
         beta: float = 1.0,
         reconstruction_loss: nn.Module = nn.MSELoss(),
@@ -68,30 +69,22 @@ class VariationalAutoencoder(pl.LightningModule):
 
         self.encoder = encoder
         self.decoder = decoder
-        self.encoder_out_dim = (encoder_out_dim,) if isinstance(encoder_out_dim, int) else tuple(encoder_out_dim)
-        self.encoder_output_flat_dim = math.prod(self.encoder_out_dim)
+        self.encoder_output_dim = encoder_out_dim
         self.z_dim = z_dim
         self.beta = beta
         self.reconstruction_loss = reconstruction_loss
-
-        self.sphere_head = SphereHead(self.encoder_output_flat_dim, z_dim, fixed_scale=fixed_scale)
-        self.fc_decode = nn.Linear(z_dim, self.encoder_output_flat_dim)
+        self.sphere_head = SphereHead(self.encoder_output_dim, z_dim, fixed_scale=fixed_scale)
 
         self.example_input_array = getattr(self.encoder, "example_input_array", None)
 
     def encode(self, x):
         """Return sphere embedding ``(z_location, z_scale)``."""
-        spatial = self.encoder(x)
-        flat = spatial.flatten(1)
-        return self.sphere_head(flat)
+        z = self.encoder(x)
+        return self.sphere_head(z)
 
     def decode(self, z):
-        """Decode from the latent space. If the decoder expects a spatial input, reshape the flat latent vector accordingly."""
-        if len(self.encoder_out_dim) > 1:
-            z_spatial = self.fc_decode(z).view(z.shape[0], *self.encoder_out_dim)
-        else:
-            z_spatial = z
-        return self.decoder(z_spatial)
+        """Decode from the latent space."""
+        return self.decoder(z)
 
     def reparameterize(self, z_location, z_scale):
         q_z = PowerSpherical(z_location, z_scale)

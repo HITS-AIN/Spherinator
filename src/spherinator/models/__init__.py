@@ -18,6 +18,7 @@ from .gmr_resnet_decoder import GMRResNetDecoder
 from .gmr_resnet_spatial_encoder import GMRResNetSpatialEncoder
 from .huggingface_vit_encoder import HuggingFaceViTEncoder
 from .mlp import MLP
+from .sequential import Sequential
 from .unet_wrapper import UNetWrapper
 from .upsampling_decoder_2d import UpsamplingDecoder2D
 from .variational_autoencoder import VariationalAutoencoder
@@ -37,6 +38,7 @@ __all__ = [
     "DualHeadVariationalAutoencoder",
     "EmbeddingReconstruction",
     "MLP",
+    "Sequential",
     "EmbeddingReconstruction",
     "HuggingFaceViTEncoder",
     "UpsamplingDecoder2D",

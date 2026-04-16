@@ -1,3 +1,5 @@
+seed_everything: 42
+
 data:
   class_path: spherinator.data.DataModule
   init_args:
@@ -17,7 +19,6 @@ data:
         shape: [1,28,28]
     return_dict: False
     validation_size: 0.2
-    test_size: 0.5
     in_gpu_memory: True
   dict_kwargs:
     batch_size: 512
@@ -28,27 +29,45 @@ model:
   class_path: spherinator.models.VariationalAutoencoder
   init_args:
     encoder:
-      class_path: spherinator.models.GMRResNetSpatialEncoder
+      class_path: spherinator.models.Sequential
       init_args:
-        block: GMR_Conv.GMRBasicBlock
-        layers: [1, 1, 2, 2]
-        input_dim: [1, 28, 28]
-        latent_channels: 4
-        inplanes: 16
-        layer_stride: [1, 1, 2, 2]
-        skip_first_maxpool: True
+        modules:
+          - class_path: spherinator.models.GMRResNetSpatialEncoder
+            init_args:
+              block: GMR_Conv.GMRBasicBlock
+              layers: [1, 1, 2, 2]
+              input_dim: [1, 28, 28]
+              latent_channels: 4
+              inplanes: 16
+              layer_stride: [1, 1, 2, 2]
+              skip_first_maxpool: True
+          - class_path: torch.nn.AdaptiveAvgPool2d
+            init_args:
+              output_size: 1
     decoder:
-      class_path: spherinator.models.GMRResNetDecoder
+      class_path: spherinator.models.Sequential
       init_args:
-        input_channels: 4
-        output_dim: [1, 28, 28]
-        inplanes: 16
-        layers: [1, 1, 2, 2]
-        layer_stride: [1, 1, 2, 2]
-        skip_first_maxpool: True
+        modules:
+          - class_path: torch.nn.Linear
+            init_args:
+              in_features: 17
+              out_features: 196
+          - class_path: torch.nn.Unflatten
+            init_args:
+              dim: 1
+              unflattened_size: [4, 7, 7]
+          - class_path: spherinator.models.GMRResNetDecoder
+            init_args:
+              input_channels: 4
+              output_dim: [1, 28, 28]
+              inplanes: 16
+              layers: [1, 1, 2, 2]
+              layer_stride: [1, 1, 2, 2]
+              skip_first_maxpool: True
+    reconstruction_loss:
+      class_path: spherinator.losses.PerceptualLoss
     z_dim: 17
     beta: 1.0e-2
-    encoder_out_dim: [4, 7, 7]
     fixed_scale: 1.0e3
 
 optimizer:
@@ -72,11 +91,13 @@ trainer:
       log_model: True
       entity: bernddoser
       tags:
-        - mnist
+        - mnist-aug
         - vae
         - gmr-resnet
         - S16
-        - dual
+        - z4-7-7
+        - perceptual-loss
+        - avg-pool
 
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback

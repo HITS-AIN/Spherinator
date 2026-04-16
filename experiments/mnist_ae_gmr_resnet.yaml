@@ -1,3 +1,5 @@
+seed_everything: 42
+
 data:
   class_path: spherinator.data.DataModule
   init_args:
