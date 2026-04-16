@@ -14,3 +14,4 @@ docs/html/
 fast_data/
 lightning_logs*/
 wandb/
+tea_debug.log

@@ -76,6 +76,7 @@ trainer:
         - vae
         - gmr-resnet
         - S16
+        - dual
 
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback

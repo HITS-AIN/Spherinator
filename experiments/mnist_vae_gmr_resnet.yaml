@@ -13,11 +13,8 @@ data:
               - class_path: torchvision.transforms.v2.RandomRotation
                 init_args:
                   degrees: 180
-      # - name: image
-      #   shape: [1,28,28]
     return_dict: False
     validation_size: 0.2
-    test_size: 0.5
     in_gpu_memory: True
   dict_kwargs:
     batch_size: 512
@@ -46,6 +43,8 @@ model:
         layers: [1, 1, 2, 2]
         layer_stride: [1, 1, 2, 2]
         skip_first_maxpool: True
+    reconstruction_loss:
+      class_path: spherinator.losses.PerceptualLoss
     z_dim: 17
     beta: 1.0e-2
     encoder_out_dim: [4, 7, 7]
@@ -72,10 +71,12 @@ trainer:
       log_model: True
       entity: bernddoser
       tags:
-        - mnist
+        - mnist-aug
         - vae
         - gmr-resnet
         - S16
+        - z4-7-7
+        - perceptual-loss
 
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback
