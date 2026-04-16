@@ -21,7 +21,6 @@ data:
     validation_size: 0.2
     test_size: 0.5
     in_gpu_memory: True
-  dict_kwargs:
     batch_size: 512
     shuffle: True
     num_workers: 0
