@@ -1,4 +1,3 @@
-import math
 from typing import List, Optional
 
 import lightning.pytorch as pl
@@ -17,22 +16,10 @@ class SphereHead(nn.Module):
     S^{z_dim-1} plus a concentration scalar for the PowerSpherical distribution.
     """
 
-    def __init__(
-        self,
-        input_dim: int,
-        z_dim: int,
-        fixed_scale: Optional[float] = None,
-    ) -> None:
+    def __init__(self, input_dim: int, z_dim: int) -> None:
         super().__init__()
         self.fc_location = nn.Linear(input_dim, z_dim)
         self.fc_scale = nn.Linear(input_dim, 1)
-        self.fixed_scale = fixed_scale
-
-        if fixed_scale is not None:
-            self.fc_scale.weight.data.zero_()
-            self.fc_scale.weight.requires_grad = False
-            self.fc_scale.bias.data.fill_(fixed_scale)
-            self.fc_scale.bias.requires_grad = False
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = torch.flatten(x, 1)
@@ -52,7 +39,6 @@ class VariationalAutoencoder(pl.LightningModule):
         z_dim: int = 3,
         beta: float = 1.0,
         reconstruction_loss: nn.Module = nn.MSELoss(),
-        fixed_scale: Optional[float] = None,
     ) -> None:
         """
         Args:
@@ -73,7 +59,7 @@ class VariationalAutoencoder(pl.LightningModule):
         self.z_dim = z_dim
         self.beta = beta
         self.reconstruction_loss = reconstruction_loss
-        self.sphere_head = SphereHead(self.encoder_output_dim, z_dim, fixed_scale=fixed_scale)
+        self.sphere_head = SphereHead(self.encoder_output_dim, z_dim)
 
         self.example_input_array = getattr(self.encoder, "example_input_array", None)
 

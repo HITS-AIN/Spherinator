@@ -9,17 +9,18 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 class LogReconstructionCallback(Callback):
+    """
+    Callback that logs the original samples and their reconstructions side by side
+
+    Args:
+        samples (Union[int, list[int]], optional): The number of samples or a list of indices to log.
+                                                    Defaults to 6.
+    """
+
     def __init__(
         self,
         samples: Union[int, list[int]] = 6,
     ):
-        """
-        Callback that logs the original samples and their reconstructions side by side
-
-        Args:
-            samples (Union[int, list[int]], optional): The number of samples or a list of indices to log.
-                                                       Defaults to 6.
-        """
         super().__init__()
 
         if isinstance(samples, int):

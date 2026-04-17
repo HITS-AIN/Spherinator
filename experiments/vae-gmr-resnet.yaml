@@ -32,7 +32,6 @@ model:
     z_dim: 49
     beta: 1.0e-2
     encoder_out_dim: [3, 4, 4]
-    fixed_scale: 1e3
 
 optimizer:
   class_path: torch.optim.Adam
@@ -65,3 +64,12 @@ trainer:
     - class_path: spherinator.callbacks.LogReconstructionCallback
       init_args:
         samples: 6
+    - class_path: spherinator.callbacks.ParamManager
+      init_args:
+        configs:
+          - pattern: "sphere_head.fc_scale.bias"
+            value: 1.0e3
+            freeze: true
+          - pattern: "sphere_head.fc_scale.weight"
+            value: 0.0
+            freeze: true
