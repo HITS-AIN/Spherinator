@@ -9,14 +9,14 @@ class Autoencoder(pl.LightningModule):
         self,
         encoder: nn.Module,
         decoder: nn.Module,
-        loss: nn.Module = nn.MSELoss(),
+        reconstruction_loss: nn.Module = nn.MSELoss(),
     ):
         """Autoencoder initializer
 
         Args:
             encoder (nn.Module): encoder model
             decoder (nn.Module): decoder model
-            loss (nn.Module, optional): loss function. Defaults to nn.MSELoss().
+            reconstruction_loss (nn.Module, optional): loss function. Defaults to nn.MSELoss().
         """
         super().__init__()
 
@@ -24,7 +24,7 @@ class Autoencoder(pl.LightningModule):
 
         self.encoder = encoder
         self.decoder = decoder
-        self.loss = loss
+        self.reconstruction_loss = reconstruction_loss
 
         self.example_input_array = getattr(self.encoder, "example_input_array", None)
 
@@ -42,8 +42,12 @@ class Autoencoder(pl.LightningModule):
         return self.forward(x)
 
     def _compute_loss(self, batch):
-        recon = self.forward(batch)
-        return self.loss(batch, recon).mean()
+        if isinstance(batch, (tuple, list)):
+            batch_augmented, batch_original = batch
+        else:
+            batch_augmented = batch_original = batch
+        recon = self.forward(batch_augmented)
+        return self.reconstruction_loss(batch_original, recon).mean()
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         loss = self._compute_loss(batch)
