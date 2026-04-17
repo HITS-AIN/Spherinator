@@ -44,25 +44,12 @@ model:
             init_args:
               output_size: 1
     decoder:
-      class_path: spherinator.models.Sequential
+      class_path: spherinator.models.UpsamplingDecoder2D
       init_args:
-        modules:
-          - class_path: torch.nn.Linear
-            init_args:
-              in_features: 3
-              out_features: 784
-          - class_path: torch.nn.Unflatten
-            init_args:
-              dim: 1
-              unflattened_size: [16, 7, 7]
-          - class_path: spherinator.models.GMRResNetDecoder
-            init_args:
-              input_channels: 16
-              output_dim: [1, 28, 28]
-              inplanes: 16
-              layers: [1, 1, 2, 2]
-              layer_stride: [1, 1, 2, 2]
-              skip_first_maxpool: True
+        input_dim: 3
+        output_dim: [1, 28, 28]
+        base_channels: 64
+        seed_size: 7
     reconstruction_loss:
       class_path: spherinator.losses.PerceptualLoss
     z_dim: 3
