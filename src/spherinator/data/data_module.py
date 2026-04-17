@@ -189,7 +189,11 @@ class DataModule(LightningDataModule):
         self.in_gpu_memory: bool = in_gpu_memory
 
         # Store DataLoader kwargs for forwarding
-        self.dataloader_kwargs = {"batch_size": batch_size, "shuffle": shuffle, "num_workers": num_workers}
+        # When data lives in GPU memory, forked worker processes cannot re-initialize
+        # CUDA (the default 'fork' start method on Linux is incompatible with CUDA).
+        # GPU-resident data loads instantly, so workers provide no benefit.
+        effective_num_workers = 0 if in_gpu_memory else num_workers
+        self.dataloader_kwargs = {"batch_size": batch_size, "shuffle": shuffle, "num_workers": effective_num_workers}
 
     def prepare_data(self):
         load_dataset(self.path)
@@ -270,7 +274,7 @@ class DataModule(LightningDataModule):
             raise ValueError("Validation dataset not set up. Call setup('fit') first.")
         return torch.utils.data.DataLoader(
             self._val_ds,
-            **self.dataloader_kwargs,
+            **{**self.dataloader_kwargs, "shuffle": False},
         )
 
     def test_dataloader(self):
@@ -278,5 +282,5 @@ class DataModule(LightningDataModule):
             raise ValueError("Test dataset not set up. Call setup('test') first.")
         return torch.utils.data.DataLoader(
             self._test_ds,
-            **self.dataloader_kwargs,
+            **{**self.dataloader_kwargs, "shuffle": False},
         )
