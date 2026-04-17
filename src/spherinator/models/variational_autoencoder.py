@@ -1,4 +1,4 @@
-from typing import List, Optional
+import math
 
 import lightning.pytorch as pl
 import torch
@@ -16,10 +16,11 @@ class SphereHead(nn.Module):
     S^{z_dim-1} plus a concentration scalar for the PowerSpherical distribution.
     """
 
-    def __init__(self, input_dim: int, z_dim: int) -> None:
+    def __init__(self, input_dim: int | list | tuple, z_dim: int) -> None:
         super().__init__()
-        self.fc_location = nn.Linear(input_dim, z_dim)
-        self.fc_scale = nn.Linear(input_dim, 1)
+        flat_dim = math.prod(input_dim) if isinstance(input_dim, (list, tuple)) else input_dim
+        self.fc_location = nn.Linear(flat_dim, z_dim)
+        self.fc_scale = nn.Linear(flat_dim, 1)
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = torch.flatten(x, 1)
@@ -51,7 +52,7 @@ class VariationalAutoencoder(pl.LightningModule):
         """
         super().__init__()
 
-        self.save_hyperparameters(ignore=["encoder", "decoder"])
+        self.save_hyperparameters(ignore=["encoder", "decoder", "reconstruction_loss"])
 
         self.encoder = encoder
         self.decoder = decoder

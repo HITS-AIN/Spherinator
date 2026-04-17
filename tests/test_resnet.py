@@ -3,7 +3,13 @@ import pytest
 import torch
 import torchvision.models
 
-from spherinator.models import ConvolutionalDecoder2D, GMRResNetDecoder, GMRResNetSpatialEncoder, VariationalAutoencoder
+from spherinator.models import (
+    ConvolutionalDecoder2D,
+    GMRResNetSpatialEncoder,
+    Sequential,
+    UpsamplingDecoder2D,
+    VariationalAutoencoder,
+)
 
 
 @pytest.mark.parametrize(
@@ -24,21 +30,27 @@ from spherinator.models import ConvolutionalDecoder2D, GMRResNetDecoder, GMRResN
             10,
         ),
         (
-            GMRResNetSpatialEncoder(
-                block=GMR_Conv.GMRBasicBlock,
-                layers=[2, 2, 2, 2],
-                input_dim=[3, 128, 128],
-                layer_stride=[2, 2, 2, 2],
-                latent_channels=3,
+            Sequential(
+                modules=[
+                    GMRResNetSpatialEncoder(
+                        block=GMR_Conv.GMRBasicBlock,
+                        layers=[2, 2, 2, 2],
+                        input_dim=[3, 128, 128],
+                        layer_stride=[2, 2, 2, 2],
+                        latent_channels=16,
+                    ),
+                    torch.nn.AdaptiveAvgPool2d(output_size=1),
+                ]
             ),
-            GMRResNetDecoder(
-                input_channels=3,
+            UpsamplingDecoder2D(
+                input_dim=3,
                 output_dim=[3, 128, 128],
-                layer_stride=[2, 2, 2, 2],
+                base_channels=256,
+                seed_size=4,
             ),
             (3, 128, 128),
-            48,
-            [3, 4, 4],
+            3,
+            16,
         ),
     ],
 )
@@ -49,11 +61,11 @@ def test_resnet(encoder, decoder, input_dim, z_dim, encoder_out_dim):
         encoder_out_dim=encoder_out_dim,
         z_dim=z_dim,
     )
-    input = torch.randn(2, *input_dim)
-    batch_size = input.shape[0]
+    bs = 2
+    x = torch.randn(bs, *input_dim)
 
-    (z_mean, z_var), (_, _), _, recon = model(input)
+    (z_mean, z_var), (_, _), _, recon = model(x)
 
-    assert z_mean.shape == (batch_size, z_dim)
-    assert z_var.shape == (batch_size, 1)
-    assert recon.shape == input.shape
+    assert z_mean.shape == (bs, z_dim)
+    assert z_var.shape == (bs, 1)
+    assert recon.shape == x.shape
