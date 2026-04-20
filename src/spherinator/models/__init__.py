@@ -16,6 +16,7 @@ from .embedding_reconstruction import EmbeddingReconstruction
 from .export_onnx import export_onnx
 from .gmr_resnet_decoder import GMRResNetDecoder
 from .gmr_resnet_spatial_encoder import GMRResNetSpatialEncoder
+from .huggingface_resnet_encoder import HuggingFaceResNetEncoder
 from .huggingface_vit_encoder import HuggingFaceViTEncoder
 from .mlp import MLP
 from .sequential import Sequential
@@ -46,6 +47,7 @@ __all__ = [
     "GMRResNetDecoder",
     "GMRResNetSpatialEncoder",
     "HuggingFaceViTEncoder",
+    "HuggingFaceResNetEncoder",
     "HuggingFaceViTEncoder",
     "MLP",
     "UNetWrapper",
