@@ -104,6 +104,7 @@ class VariationalAutoencoder(pl.LightningModule):
         if training_step:
             self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
             self.log("mean(z_scale)", torch.mean(z_scale))
+            self.log("beta", self.beta)
 
         return loss, loss_recon, loss_KL
 
