@@ -51,7 +51,14 @@ model:
         base_channels: 64
         seed_size: 7
     reconstruction_loss:
-      class_path: spherinator.losses.PerceptualLoss
+      class_path: spherinator.losses.CombinedLoss
+      init_args:
+        losses:
+          - class_path: torch.nn.L1Loss
+          - class_path: spherinator.losses.PerceptualLoss
+        factors:
+          - 1.0
+          - 0.1
     z_dim: 3
     beta: 1.0e-2
     encoder_out_dim: 16
@@ -82,19 +89,19 @@ trainer:
         - gmr-resnet
         - S2
         - z16-7-7
-        - perceptual-loss
+        - L1/Perceptual
         - avg-pool
 
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback
       init_args:
         samples: 6
-    - class_path: spherinator.callbacks.ParamManager
-      init_args:
-        configs:
-          - pattern: "sphere_head.fc_scale.bias"
-            value: 1.0e3
-            freeze: true
-          - pattern: "sphere_head.fc_scale.weight"
-            value: 0.0
-            freeze: true
+    # - class_path: spherinator.callbacks.ParamManager
+    #   init_args:
+    #     configs:
+    #       - pattern: "sphere_head.fc_scale.bias"
+    #         value: 1.0e3
+    #         freeze: true
+    #       - pattern: "sphere_head.fc_scale.weight"
+    #         value: 0.0
+    #         freeze: true
