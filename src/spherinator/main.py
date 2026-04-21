@@ -32,6 +32,7 @@ class WandbSaveConfigCallback(SaveConfigCallback):
         log_dir = trainer.logger.experiment.dir
         config_path = os.path.join(log_dir, self.config_filename)
         self.parser.save(self.config, config_path, skip_none=False, overwrite=True)
+        trainer.logger.experiment.save(config_path)
         self.already_saved = True
 
 
