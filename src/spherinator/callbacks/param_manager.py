@@ -10,6 +10,7 @@ import torch
 class ParamConfig:
     pattern: str
     value: Optional[float] = None
+    max_value: Optional[float] = None
     freeze: bool = False
 
 
@@ -20,6 +21,7 @@ class ParamManager(pl.Callback):
         configs (List[ParamConfig]): List of parameter configurations. Each configuration includes:
             - pattern: A regex pattern to match parameter names.
             - value: An optional float to set the parameter values to (if None, values are unchanged).
+            - max_value: An optional float to clamp the parameter values to a maximum after each batch.
             - freeze: A boolean indicating whether to freeze the parameter (if True, requires_grad is set to False).
     """
 
@@ -45,5 +47,26 @@ class ParamManager(pl.Callback):
                     # 2. Set Freeze State
                     param.requires_grad = not conf.freeze
 
+                    # 3. Log max_value constraint
+                    if conf.max_value is not None:
+                        print(f"INFO: {name} max_value: {conf.max_value}")
+
                     state = "FROZEN" if conf.freeze else "TRAINABLE"
                     print(f"INFO: {name} status: {state}")
+
+    def on_train_batch_end(
+        self,
+        trainer: pl.Trainer,
+        pl_module: pl.LightningModule,
+        outputs,
+        batch,
+        batch_idx: int,
+    ):
+        for conf in self.configs:
+            if conf.max_value is None:
+                continue
+            pattern = re.compile(conf.pattern)
+            for name, param in pl_module.named_parameters():
+                if pattern.search(name):
+                    with torch.no_grad():
+                        param.clamp_(max=conf.max_value)
