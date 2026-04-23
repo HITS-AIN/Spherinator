@@ -44,12 +44,14 @@ class ParamManager(pl.Callback):
                             param.fill_(conf.value)
                         print(f"INFO: {name} set to {conf.value}")
 
-                    # 2. Set Freeze State
-                    param.requires_grad = not conf.freeze
-
-                    # 3. Log max_value constraint
+                    # 2. Clamp to max_value
                     if conf.max_value is not None:
-                        print(f"INFO: {name} max_value: {conf.max_value}")
+                        with torch.no_grad():
+                            param.clamp_(max=conf.max_value)
+                        print(f"INFO: {name} clamped to max_value: {conf.max_value}")
+
+                    # 3. Set Freeze State
+                    param.requires_grad = not conf.freeze
 
                     state = "FROZEN" if conf.freeze else "TRAINABLE"
                     print(f"INFO: {name} status: {state}")

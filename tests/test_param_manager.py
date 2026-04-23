@@ -99,7 +99,7 @@ def test_pattern_does_not_match_other_params(model, trainer):
 def test_set_value_and_max_value_combined(model, trainer):
     callback = ParamManager(configs=[ParamConfig(pattern="weight", value=5.0, max_value=3.0)])
     callback.on_train_start(trainer, model)
-    assert model.weight.item() == pytest.approx(5.0)  # value set on start
+    assert model.weight.item() == pytest.approx(3.0)  # value set then clamped to max_value on start
 
     # after a batch, clamped to max
     callback.on_train_batch_end(trainer, model, outputs=None, batch=None, batch_idx=0)
