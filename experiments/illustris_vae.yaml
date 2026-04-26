@@ -1,0 +1,115 @@
+seed_everything: 42
+
+model:
+  class_path: spherinator.models.VariationalAutoencoder
+  init_args:
+    encoder:
+      class_path: spherinator.models.HuggingFaceResNetEncoder
+      init_args:
+        model_name: microsoft/resnet-18
+        output_dim: 65
+    decoder:
+      class_path: spherinator.models.UpsamplingDecoder2D
+      init_args:
+        input_dim: 65
+        output_dim: [3, 128, 128]
+        base_channels: 512
+        seed_size: 4
+    reconstruction_loss:
+      class_path: spherinator.losses.CombinedLoss
+      init_args:
+        losses:
+          - class_path: torch.nn.L1Loss
+          - class_path: spherinator.losses.PerceptualLoss
+        factors:
+          - 1.0
+          - 0.0
+    z_dim: 65
+    beta: 1.0e-2
+    encoder_out_dim: 65
+
+data:
+  class_path: spherinator.data.DataModule
+  init_args:
+    path: /home/bernd/data/SKIRT_synthetic_images/parquet-v4-128
+    columns:
+      - name: data
+        # transform:
+        #   class_path: torchvision.transforms.v2.Compose
+        #   init_args:
+        #     transforms:
+              # - class_path: torchvision.transforms.v2.Resize
+              #   init_args:
+              #     size: 224
+              # - class_path: torchvision.transforms.v2.RandomHorizontalFlip
+              # - class_path: torchvision.transforms.v2.RandomRotation
+              #   init_args:
+              #     degrees: 180
+    return_dict: False
+    batch_size: 64
+    shuffle: True
+    num_workers: 4
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.001
+
+lr_scheduler:
+  class_path: lightning.pytorch.cli.ReduceLROnPlateau
+  init_args:
+    mode: min
+    factor: 0.5
+    patience: 50
+    min_lr: 1.e-6
+    monitor: train_loss
+
+trainer:
+  max_epochs: 500
+  accelerator: gpu
+  devices: auto
+  precision: bf16-mixed
+  # precision: 32-true
+  # log_every_n_steps: 1
+  enable_progress_bar: False
+  enable_model_summary: True
+  profiler: simple
+  gradient_clip_val: 1.0
+
+  callbacks:
+    - class_path: spherinator.callbacks.LogReconstructionCallback
+      init_args:
+        samples: 6
+    - class_path: spherinator.callbacks.KLAnnealing
+      init_args:
+        start: 0.0
+        end: 5.0e-3
+        n_epochs: 400
+        n_cycles: 8
+        ratio: 0.9
+    - class_path: spherinator.callbacks.ParamManager
+      init_args:
+        configs:
+          - pattern: "sphere_head.fc_scale"
+            # value: 1.0
+            max_value: 1.0e3
+            # freeze: true
+          # - pattern: "sphere_head.fc_scale.weight"
+          #   # value: 1.0
+          #   max_value: 1.0e3
+          #   # freeze: true
+
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: spherinator
+      log_model: True
+      entity: bernddoser
+      tags:
+        - illustris
+        - vae
+        - resnet18
+        - UpsamplingDecoder2D
+        - S64
+        - L1/perceptual-loss
+        - KLAnnealing

@@ -11,18 +11,19 @@ data:
           class_path: torchvision.transforms.v2.Compose
           init_args:
             transforms:
-              - class_path: torchvision.transforms.v2.RandomHorizontalFlip
-              - class_path: torchvision.transforms.v2.RandomRotation
+              - class_path: torchvision.transforms.v2.Grayscale
                 init_args:
-                  degrees: 180
-      - name: image
-        shape: [1,28,28]
+                  num_output_channels: 3
+      #         - class_path: torchvision.transforms.v2.RandomHorizontalFlip
+      #         - class_path: torchvision.transforms.v2.RandomRotation
+      #           init_args:
+      #             degrees: 180
+      # - name: image
+      #   shape: [1,28,28]
     return_dict: False
-    validation_size: 0.2
-    in_gpu_memory: True
     batch_size: 512
     shuffle: True
-    num_workers: 0
+    num_workers: 4
 
 model:
   class_path: spherinator.models.VariationalAutoencoder
@@ -35,8 +36,8 @@ model:
             init_args:
               block: GMR_Conv.GMRBasicBlock
               layers: [1, 1, 2, 2]
-              input_dim: [1, 28, 28]
-              latent_channels: 16
+              input_dim: [3, 28, 28]
+              latent_channels: 65
               inplanes: 16
               layer_stride: [1, 1, 2, 2]
               skip_first_maxpool: True
@@ -49,25 +50,27 @@ model:
         modules:
           - class_path: torch.nn.Linear
             init_args:
-              in_features: 3
-              out_features: 784
+              in_features: 65
+              out_features: 3185
           - class_path: torch.nn.Unflatten
             init_args:
               dim: 1
-              unflattened_size: [16, 7, 7]
+              unflattened_size: [65, 7, 7]
           - class_path: spherinator.models.GMRResNetDecoder
             init_args:
-              input_channels: 16
-              output_dim: [1, 28, 28]
+              input_channels: 65
+              output_dim: [3, 28, 28]
               inplanes: 16
               layers: [1, 1, 2, 2]
               layer_stride: [1, 1, 2, 2]
               skip_first_maxpool: True
     reconstruction_loss:
-      class_path: spherinator.losses.PerceptualLoss
-    z_dim: 3
-    beta: 1.0e-2
-    encoder_out_dim: 16
+      class_path: monai.losses.SSIMLoss
+      init_args:
+        spatial_dims: 2
+    z_dim: 65
+    beta: 0.0
+    encoder_out_dim: 65
 
 optimizer:
   class_path: torch.optim.Adam
@@ -90,24 +93,15 @@ trainer:
       log_model: True
       entity: bernddoser
       tags:
-        - mnist-aug
+        - mnist-gray
         - vae
         - gmr-resnet
-        - S2
+        - S65
         - z16-7-7
-        - perceptual-loss
+        - ssim-loss
         - avg-pool
 
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback
       init_args:
         samples: 6
-    - class_path: spherinator.callbacks.ParamManager
-      init_args:
-        configs:
-          - pattern: "sphere_head.fc_scale.bias"
-            value: 1.0e3
-            freeze: true
-          - pattern: "sphere_head.fc_scale.weight"
-            value: 0.0
-            freeze: true
