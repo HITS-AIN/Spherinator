@@ -19,11 +19,9 @@ model:
       class_path: spherinator.losses.CombinedLoss
       init_args:
         losses:
-          - class_path: torch.nn.L1Loss
           - class_path: spherinator.losses.PerceptualLoss
         factors:
           - 1.0
-          - 0.0
     z_dim: 65
     beta: 1.0e-2
     encoder_out_dim: 65
@@ -31,20 +29,9 @@ model:
 data:
   class_path: spherinator.data.DataModule
   init_args:
-    path: /home/bernd/data/SKIRT_synthetic_images/parquet-v4-128
+    path: data/SKIRT_synthetic_images/parquet-v4-128
     columns:
       - name: data
-        # transform:
-        #   class_path: torchvision.transforms.v2.Compose
-        #   init_args:
-        #     transforms:
-              # - class_path: torchvision.transforms.v2.Resize
-              #   init_args:
-              #     size: 224
-              # - class_path: torchvision.transforms.v2.RandomHorizontalFlip
-              # - class_path: torchvision.transforms.v2.RandomRotation
-              #   init_args:
-              #     degrees: 180
     return_dict: False
     batch_size: 64
     shuffle: True
@@ -71,7 +58,7 @@ trainer:
   precision: bf16-mixed
   # precision: 32-true
   # log_every_n_steps: 1
-  enable_progress_bar: False
+  enable_progress_bar: True
   enable_model_summary: True
   profiler: simple
   gradient_clip_val: 1.0
@@ -79,25 +66,8 @@ trainer:
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback
       init_args:
-        samples: 6
-    - class_path: spherinator.callbacks.KLAnnealing
-      init_args:
-        start: 0.0
-        end: 5.0e-3
-        n_epochs: 400
-        n_cycles: 8
-        ratio: 0.9
-    - class_path: spherinator.callbacks.ParamManager
-      init_args:
-        configs:
-          - pattern: "sphere_head.fc_scale"
-            # value: 1.0
-            max_value: 1.0e3
-            # freeze: true
-          # - pattern: "sphere_head.fc_scale.weight"
-          #   # value: 1.0
-          #   max_value: 1.0e3
-          #   # freeze: true
+        # samples: 6
+        samples: [644, 3244, 5083, 11682, 13635, 19467, 26909, 27130]
 
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger
@@ -111,5 +81,4 @@ trainer:
         - resnet18
         - UpsamplingDecoder2D
         - S64
-        - L1/perceptual-loss
-        - KLAnnealing
+        - perceptual-loss
