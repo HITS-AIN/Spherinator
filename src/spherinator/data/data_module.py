@@ -144,7 +144,7 @@ class DataModule(LightningDataModule):
     Args:
         path (str): Path to the dataset in Hugging Face Datasets format (e.g. "ylecun/mnist" or
             local path to parquet files)
-        columns (list[Column], optional): List of Column objects specifying which columns to load
+        columns (list[dict[str, Any] | str], optional): List of Column objects specifying which columns to load
             and how to transform them. Defaults to a single column named "data" with no transformation.
         return_dict (bool, optional): Whether to return samples as dictionaries (with column names
             as keys) or as lists. Defaults to True (return dict).
@@ -162,7 +162,7 @@ class DataModule(LightningDataModule):
     def __init__(
         self,
         path: str,
-        columns: Optional[list[dict[str, Any]]] = None,
+        columns: Optional[list[dict[str, Any] | str]] = None,
         return_dict: bool = True,
         validation_size: float = 0.2,
         test_size: float = 0.5,
@@ -176,7 +176,7 @@ class DataModule(LightningDataModule):
         if columns is None:
             columns = [Column(name="data")]
         else:
-            columns = [Column(**c) if isinstance(c, dict) else c for c in columns]
+            columns = [Column(**c) if isinstance(c, dict) else Column(name=c) for c in columns]
 
         self.path: str = path
         self.columns: list[Column] = columns
