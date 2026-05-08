@@ -20,16 +20,20 @@ class SphereHead(nn.Module):
         self,
         input_dim: int | list | tuple,
         z_dim: int,
+        max_scale: float | None = None,
     ) -> None:
         super().__init__()
         flat_dim = math.prod(input_dim) if isinstance(input_dim, (list, tuple)) else input_dim
         self.fc_location = nn.Linear(flat_dim, z_dim)
         self.fc_scale = nn.Linear(flat_dim, 1)
+        self.max_scale = max_scale
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = torch.flatten(x, 1)
         z_location = F.normalize(self.fc_location(x), p=2.0, dim=1)
         z_scale = F.softplus(self.fc_scale(x)) + 1
+        if self.max_scale is not None:
+            z_scale = z_scale.clamp(max=self.max_scale)
         return z_location, z_scale
 
 
@@ -44,6 +48,7 @@ class VariationalAutoencoder(pl.LightningModule):
         z_dim: int = 3,
         beta: float = 1.0,
         reconstruction_loss: nn.Module = nn.MSELoss(),
+        max_scale: float | None = None,
     ) -> None:
         """
         Args:
@@ -64,7 +69,7 @@ class VariationalAutoencoder(pl.LightningModule):
         self.z_dim = z_dim
         self.beta = beta
         self.reconstruction_loss = reconstruction_loss
-        self.sphere_head = SphereHead(self.encoder_output_dim, z_dim)
+        self.sphere_head = SphereHead(self.encoder_output_dim, z_dim, max_scale=max_scale)
 
         self.example_input_array = getattr(self.encoder, "example_input_array", None)
 
