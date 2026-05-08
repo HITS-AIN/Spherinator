@@ -24,7 +24,7 @@ def export_onnx(
     os.makedirs(export_path, exist_ok=False)
 
     onnx = torch.onnx.export(
-        model.variational_encoder,
+        model.encoder,
         torch.randn(input_shape, device="cpu"),
         dynamic_axes={"input": {0: "batch"}},
         dynamo=True,

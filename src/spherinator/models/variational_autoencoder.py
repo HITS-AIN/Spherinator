@@ -16,7 +16,11 @@ class SphereHead(nn.Module):
     S^{z_dim-1} plus a concentration scalar for the PowerSpherical distribution.
     """
 
-    def __init__(self, input_dim: int | list | tuple, z_dim: int) -> None:
+    def __init__(
+        self,
+        input_dim: int | list | tuple,
+        z_dim: int,
+    ) -> None:
         super().__init__()
         flat_dim = math.prod(input_dim) if isinstance(input_dim, (list, tuple)) else input_dim
         self.fc_location = nn.Linear(flat_dim, z_dim)
