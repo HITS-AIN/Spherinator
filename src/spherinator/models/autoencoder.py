@@ -20,7 +20,13 @@ class Autoencoder(pl.LightningModule):
         """
         super().__init__()
 
-        self.save_hyperparameters(ignore=["encoder", "decoder"])
+        self.save_hyperparameters(
+            ignore=[
+                "encoder",
+                "decoder",
+                "reconstruction_loss",
+            ]
+        )
 
         self.encoder = encoder
         self.decoder = decoder
