@@ -14,13 +14,10 @@ from .convolutional_encoder_2d import ConvolutionalEncoder2D
 from .dual_head_variational_autoencoder import DualHeadVariationalAutoencoder
 from .embedding_reconstruction import EmbeddingReconstruction
 from .export_onnx import export_onnx
-from .gmr_resnet_decoder import GMRResNetDecoder
-from .gmr_resnet_spatial_encoder import GMRResNetSpatialEncoder
 from .huggingface_resnet_encoder import HuggingFaceResNetEncoder
 from .huggingface_vit_encoder import HuggingFaceViTEncoder
 from .mlp import MLP
 from .sequential import Sequential
-from .unet_wrapper import UNetWrapper
 from .upsampling_decoder_2d import UpsamplingDecoder2D
 from .variational_autoencoder import VariationalAutoencoder
 from .weights_provider import WeightsProvider
@@ -44,13 +41,10 @@ __all__ = [
     "HuggingFaceViTEncoder",
     "UpsamplingDecoder2D",
     "export_onnx",
-    "GMRResNetDecoder",
-    "GMRResNetSpatialEncoder",
     "HuggingFaceViTEncoder",
     "HuggingFaceResNetEncoder",
     "HuggingFaceViTEncoder",
     "MLP",
-    "UNetWrapper",
     "UpsamplingDecoder2D",
     "VariationalAutoencoder",
     "WeightsProvider",

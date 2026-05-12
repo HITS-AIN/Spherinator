@@ -1116,18 +1116,6 @@ wheels = [
 ]
 
 [[package]]
-name = "gmr-conv"
-version = "1.0.3"
-source = { git = "https://github.com/BerndDoser/GMR-Conv.git?branch=union#82a7ff6d8bfbb67054d7a23b88a9dc1320541ca5" }
-dependencies = [
-    { name = "monai" },
-    { name = "numpy" },
-    { name = "pillow" },
-    { name = "scipy" },
-    { name = "torch" },
-]
-
-[[package]]
 name = "grpcio"
 version = "1.80.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3794,7 +3782,6 @@ dependencies = [
     { name = "anywidget" },
     { name = "datasets" },
     { name = "gaiaxpy" },
-    { name = "gmr-conv" },
     { name = "jsonargparse", extra = ["signatures"] },
     { name = "lightning" },
     { name = "matplotlib" },
@@ -3845,7 +3832,6 @@ requires-dist = [
     { name = "anywidget", specifier = ">=0.10.0" },
     { name = "datasets", specifier = ">=4.8.4" },
     { name = "gaiaxpy", specifier = ">=2.1" },
-    { name = "gmr-conv", git = "https://github.com/BerndDoser/GMR-Conv.git?branch=union" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29" },
     { name = "ipywidgets", marker = "extra == 'dev'", specifier = ">=8.1.8" },
     { name = "jsonargparse", extras = ["signatures"], specifier = ">=4.37" },

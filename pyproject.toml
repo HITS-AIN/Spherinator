@@ -16,7 +16,6 @@ dependencies = [
     "anywidget>=0.10.0",
     "datasets>=4.8.4",
     "gaiaxpy >=2.1",
-    "gmr-conv",
     "jsonargparse[signatures] >=4.37",
     "lightning >=2.1",
     "matplotlib >=3.10",
@@ -92,7 +91,6 @@ filterwarnings = [
 generated-members = 'numpy.*, torch.*'
 
 [tool.uv.sources]
-gmr-conv = { git = "https://github.com/BerndDoser/GMR-Conv.git", branch = "union" }
 # torch = { index = "pytorch-cu126" }
 # torchvision = { index = "pytorch-cu126" }
 
