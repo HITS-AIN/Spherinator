@@ -40,6 +40,9 @@ class SphereHead(nn.Module):
 class VariationalAutoencoder(pl.LightningModule):
     """Variational Autoencoder with a hyperspherical latent space."""
 
+    # Indicates to the export code that this model is a VAE and should be exported without scale parameters.
+    is_variational = True
+
     def __init__(
         self,
         encoder: nn.Module,
