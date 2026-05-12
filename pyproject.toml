@@ -13,24 +13,27 @@ readme = "README.md"
 
 requires-python = ">=3.12,<4.0"
 dependencies = [
+    "anywidget>=0.10.0",
+    "datasets>=4.8.4",
+    "gaiaxpy >=2.1",
     "jsonargparse[signatures] >=4.37",
     "lightning >=2.1",
     "matplotlib >=3.10",
+    "nbformat>=5.10.4",
     "numpy >=2.2, <3.0",
     "onnx >=1.15",
     "onnxscript >=0.3",
     "pandas >=3.0.1",
+    "plotly>=6.7.0",
     "power-spherical >=0.8",
+    "pyarrow >=19.0",
     "scikit-image >=0.25",
     "scipy >=1.11",
     "torch >=2.11",
+    "torchio>=1.0.2",
     "torchvision >=0.26",
-    "gaiaxpy >=2.1",
-    "pyarrow >=19.0",
     "transformers >=4.40",
     "wandb >=0.20",
-    "sphinxcontrib-bibtex>=2.6.3",
-    "datasets>=4.8.4",
 ]
 
 [project.optional-dependencies]
@@ -86,13 +89,9 @@ filterwarnings = [
 [tool.pylint.TYPECHECK]
 generated-members = 'numpy.*, torch.*'
 
-# [tool.uv.sources]
-# torch = [
-#     { index = "pytorch-cu126" },
-# ]
-# torchvision = [
-#     { index = "pytorch-cu126" },
-# ]
+[tool.uv.sources]
+# torch = { index = "pytorch-cu126" }
+# torchvision = { index = "pytorch-cu126" }
 
 [[tool.uv.index]]
 name = "pytorch-cu126"

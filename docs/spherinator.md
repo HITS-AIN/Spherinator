@@ -137,7 +137,6 @@ model:
     z_dim: 3            # latent space dimensionality
     beta: 1.0e-3        # KL weight (beta-VAE)
     loss: MSE           # MSE | NLL-normal | NLL-truncated | KL
-    fixed_scale: null   # fix concentration (null = learnable)
 ```
 
 | Parameter | Description |
@@ -146,7 +145,6 @@ model:
 | `z_dim` | Dimension of the spherical latent space; 3 maps to a sphere (S²) |
 | `beta` | Scales the KL divergence term relative to the reconstruction loss |
 | `loss` | Reconstruction loss: `MSE`, `NLL-normal`, `NLL-truncated`, or `KL` |
-| `fixed_scale` | If set to a float, the concentration is frozen at that value |
 
 
 ## Encoder architectures

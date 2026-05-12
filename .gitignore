@@ -8,9 +8,11 @@ __pycache__
 *.pt
 *.sarif
 config.yaml
+data
 dist/
 docs/_build/
 docs/html/
 fast_data/
 lightning_logs*/
+tea_debug.log
 wandb/

@@ -1,5 +1,3 @@
-import math
-
 import lightning.pytorch as pl
 import torch
 import torch.nn as nn
@@ -9,91 +7,84 @@ from torch.optim import Adam
 
 
 class SphereHead(nn.Module):
-    """Sphere head: Linear → L2-normalize for location,
-                    Linear → softplus for scale.
+    """Sphere head: GAP → Linear → L2-normalize for location, Linear → softplus for scale.
 
-    Reads a spatial feature map ``(B, input_dim)`` and produces a point on
+    Reads a spatial feature map ``(B, C, H, W)`` and produces a point on
     S^{z_dim-1} plus a concentration scalar for the PowerSpherical distribution.
     """
 
     def __init__(
         self,
-        input_dim: int | list | tuple,
+        latent_channels: int,
         z_dim: int,
-        max_scale: float | None = None,
     ) -> None:
         super().__init__()
-        flat_dim = math.prod(input_dim) if isinstance(input_dim, (list, tuple)) else input_dim
-        self.fc_location = nn.Linear(flat_dim, z_dim)
-        self.fc_scale = nn.Linear(flat_dim, 1)
-        self.max_scale = max_scale
+        self.gap = nn.AdaptiveAvgPool2d(1)
+        self.fc_location = nn.Linear(latent_channels, z_dim)
+        self.fc_scale = nn.Linear(latent_channels, 1)
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        x = torch.flatten(x, 1)
+        x = self.gap(x).flatten(1)  # (B, C)
         z_location = F.normalize(self.fc_location(x), p=2.0, dim=1)
         z_scale = F.softplus(self.fc_scale(x)) + 1
-        if self.max_scale is not None:
-            z_scale = z_scale.clamp(max=self.max_scale)
         return z_location, z_scale
 
 
-class VariationalAutoencoder(pl.LightningModule):
-    """Variational Autoencoder with a hyperspherical latent space."""
+class DualHeadVariationalAutoencoder(pl.LightningModule):
+    """VAE with a spatial reconstruction path and a separate sphere head.
 
-    # Indicates to the export code that this model is a VAE and should be exported without scale parameters.
-    is_variational = True
+    Architecture::
+
+        encoder (spatial)
+            ├── spatial latent (B, C, H, W) → decoder   [reconstruction]
+            └── sphere head: GAP → Linear → L2-norm → S²  [KL + visualization]
+
+    The decoder receives the full spatial latent — reconstruction never passes
+    through the sphere bottleneck.  The sphere head provides a PowerSpherical
+    embedding for the KL regularisation term and downstream visualization.
+    """
 
     def __init__(
         self,
         encoder: nn.Module,
         decoder: nn.Module,
-        encoder_out_dim: int,
+        latent_channels: int,
         z_dim: int = 3,
         beta: float = 1.0,
         reconstruction_loss: nn.Module = nn.MSELoss(),
-        max_scale: float | None = None,
     ) -> None:
         """
         Args:
-            encoder: Encoder module.
-            decoder: Decoder module.
-            encoder_out_dim: Dimensionality of the encoder output (must match decoder input).
+            encoder: Spatial encoder outputting ``(B, latent_channels, H, W)``.
+            decoder: Spatial decoder accepting ``(B, latent_channels, H, W)``.
+            latent_channels: Number of channels in the spatial latent tensor
+                (must match encoder output and decoder input).
             z_dim: Dimensionality of the sphere embedding.
             beta: Weight for the KL term (beta-VAE).
             reconstruction_loss: Loss function for reconstruction (default: MSE).
         """
         super().__init__()
 
-        self.save_hyperparameters(
-            ignore=[
-                "encoder",
-                "decoder",
-                "encoder_out_dim",
-                "z_dim",
-                "beta",
-                "reconstruction_loss",
-                "max_scale",
-            ]
-        )
+        self.save_hyperparameters(ignore=["encoder", "decoder"])
 
         self.encoder = encoder
         self.decoder = decoder
-        self.encoder_output_dim = encoder_out_dim
+        self.latent_channels = latent_channels
         self.z_dim = z_dim
         self.beta = beta
         self.reconstruction_loss = reconstruction_loss
-        self.sphere_head = SphereHead(self.encoder_output_dim, z_dim, max_scale=max_scale)
+        self.sphere_head = SphereHead(latent_channels, z_dim)
 
         self.example_input_array = getattr(self.encoder, "example_input_array", None)
 
-    def encode(self, x):
-        """Return sphere embedding ``(z_location, z_scale)``."""
-        z = self.encoder(x)
-        return self.sphere_head(z)
+    # def encode(self, x):
+    #     """Return sphere embedding ``(z_location, z_scale)``."""
+    #     spatial = self.encoder(x)
+    #     return self.sphere_head(spatial)
 
-    def decode(self, z):
-        """Decode from the latent space."""
-        return self.decoder(z)
+    def decode(self, x):
+        """Decode a spatial latent ``(B, C, H, W)``."""
+        return self.decoder(x)
 
     def reparameterize(self, z_location, z_scale):
         q_z = PowerSpherical(z_location, z_scale)
@@ -101,23 +92,19 @@ class VariationalAutoencoder(pl.LightningModule):
         return q_z, p_z
 
     def forward(self, x):
-        z_location, z_scale = self.encode(x)
+        spatial = self.encoder(x)
+        z_location, z_scale = self.sphere_head(spatial)
         q_z, p_z = self.reparameterize(z_location, z_scale.squeeze())
-        z = q_z.rsample()
-        recon = self.decode(z)
-        return (z_location, z_scale), (q_z, p_z), z, recon
+        recon = self.decoder(spatial)
+        return (z_location, z_scale), (q_z, p_z), spatial, recon
 
     def reconstruct(self, x):
-        z, _ = self.encode(x)
-        return self.decode(z)
+        spatial = self.encoder(x)
+        return self.decoder(spatial)
 
     def _compute_loss(self, batch, training_step: bool = False):
-        if isinstance(batch, (tuple, list)):
-            batch_augmented, batch_original = batch
-        else:
-            batch_augmented = batch_original = batch
-        (_, z_scale), (q_z, p_z), _, recon = self.forward(batch_augmented)
-        loss_recon = self.reconstruction_loss(batch_original, recon)
+        (z_location, z_scale), (q_z, p_z), _, recon = self.forward(batch)
+        loss_recon = self.reconstruction_loss(batch, recon)
         loss_KL = self.beta * torch.distributions.kl.kl_divergence(q_z, p_z)
         loss = (loss_recon + loss_KL).mean()
         loss_recon = loss_recon.mean()
@@ -125,9 +112,8 @@ class VariationalAutoencoder(pl.LightningModule):
 
         if training_step:
             self.log("learning_rate", self.optimizers().param_groups[0]["lr"])
+            self.log("mean(z_location)", torch.mean(z_location))
             self.log("mean(z_scale)", torch.mean(z_scale))
-            self.log("max(z_scale)", torch.max(z_scale))
-            self.log("beta", self.beta)
 
         return loss, loss_recon, loss_KL
 

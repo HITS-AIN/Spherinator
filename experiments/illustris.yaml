@@ -1,21 +1,89 @@
+seed_everything: 42
+
+model:
+  class_path: spherinator.models.VariationalAutoencoder
+  init_args:
+    encoder:
+      class_path: spherinator.models.HuggingFaceResNetEncoder
+      init_args:
+        model_name: microsoft/resnet-18
+        output_dim: 256
+    decoder:
+      class_path: spherinator.models.Sequential
+      init_args:
+        modules:
+          - class_path: torch.nn.Linear
+            init_args:
+              in_features: 3
+              out_features: 256
+          - class_path: spherinator.models.UpsamplingDecoder2D
+            init_args:
+              input_dim: 256
+              output_dim: [3, 128, 128]
+              base_channels: 512
+              seed_size: 4
+    reconstruction_loss:
+      class_path: spherinator.losses.CombinedLoss
+      init_args:
+        losses:
+          - class_path: spherinator.losses.PerceptualLoss
+          - class_path: torch.nn.L1Loss
+        factors:
+          - 1.0
+          - 0.1
+    z_dim: 3
+    beta: 1.0e-2
+    encoder_out_dim: 256
+
 data:
   class_path: spherinator.data.DataModule
   init_args:
-    path: data/SKIRT_synthetic_images/parquet-128
+    path: HITS-AIN/Illustris_TNG_SKIRT_SDSS
     columns:
-      - name: data
-        transform:
-          class_path: torchvision.transforms.v2.Compose
-          init_args:
-            transforms:
-              # - class_path: torchvision.transforms.v2.Resize
-              #   init_args:
-              #     size: 224
-              - class_path: torchvision.transforms.v2.RandomHorizontalFlip
-              - class_path: torchvision.transforms.v2.RandomRotation
-                init_args:
-                  degrees: 180
+      - image
     return_dict: False
-    batch_size: 512
+    batch_size: 64
     shuffle: True
     num_workers: 4
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.001
+
+lr_scheduler:
+  class_path: lightning.pytorch.cli.ReduceLROnPlateau
+  init_args:
+    mode: min
+    factor: 0.5
+    patience: 50
+    min_lr: 1.e-6
+    monitor: train_loss
+
+trainer:
+  max_epochs: 500
+  accelerator: gpu
+  devices: auto
+  precision: bf16-mixed
+  enable_progress_bar: True
+  enable_model_summary: True
+  gradient_clip_val: 1.0
+
+  callbacks:
+    - class_path: spherinator.callbacks.LogReconstructionCallback
+      init_args:
+        samples: 6
+
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: spherinator
+      log_model: True
+      entity: bernddoser
+      tags:
+        - illustris
+        - vae
+        - resnet18
+        - UpsamplingDecoder2D
+        - S2
+        - perceptual-loss

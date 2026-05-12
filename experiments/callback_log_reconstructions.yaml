@@ -1,5 +1,0 @@
-trainer:
-  callbacks:
-    - class_path: spherinator.callbacks.LogReconstructionCallback
-      init_args:
-        samples: 6

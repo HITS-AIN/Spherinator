@@ -9,17 +9,18 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 class LogReconstructionCallback(Callback):
+    """
+    Callback that logs the original samples and their reconstructions side by side
+
+    Args:
+        samples (Union[int, list[int]], optional): The number of samples or a list of indices to log.
+                                                    Defaults to 6.
+    """
+
     def __init__(
         self,
         samples: Union[int, list[int]] = 6,
     ):
-        """
-        Callback that logs the original samples and their reconstructions side by side
-
-        Args:
-            samples (Union[int, list[int]], optional): The number of samples or a list of indices to log.
-                                                       Defaults to 6.
-        """
         super().__init__()
 
         if isinstance(samples, int):
@@ -44,29 +45,39 @@ class LogReconstructionCallback(Callback):
             raise ValueError("The sample indices must be smaller than the dataset size")
 
         # Get the samples from the dataset
-        images = torch.unsqueeze(trainer.train_dataloader.dataset[self.samples[0]], 0)
-        for sample in self.samples[1:]:
-            images = torch.cat((images, torch.unsqueeze(trainer.train_dataloader.dataset[sample], 0)))
+        def _get_pair(item):
+            """Return (augmented, original). For plain tensors, both are the same."""
+            if isinstance(item, (list, tuple)):
+                return item[0], item[-1]
+            return item, item
+
+        pairs = [_get_pair(trainer.train_dataloader.dataset[s]) for s in self.samples]
+        images_aug = torch.stack([p[0] for p in pairs])
+        images_orig = torch.stack([p[1] for p in pairs])
 
         # Move the samples to the device used by the model
-        images = images.to(model.device)
+        images_aug = images_aug.to(model.device)
+        images_orig = images_orig.to(model.device)
 
-        # Generate reconstructions of the samples using the model
-        recon = model.reconstruct(images)
-        loss = torch.nn.MSELoss(reduction="none")(images, recon).flatten(1).mean(1)
+        # Generate reconstructions from augmented images
+        recon = model.reconstruct(images_aug)
+        loss = torch.nn.MSELoss(reduction="none")(images_orig, recon).flatten(1).mean(1)
 
-        # Plot the original samples and their reconstructions side by side
+        # Plot original, augmented, and reconstruction rows
         nb_samples = len(self.samples)
-        fig = figure.Figure(figsize=(2 * nb_samples, 6))
+        fig = figure.Figure(figsize=(2 * nb_samples, 9))
         FigureCanvasAgg(fig)
-        ax = fig.subplots(2, nb_samples).flatten()
+        ax = fig.subplots(3, nb_samples).flatten()
         for i in range(nb_samples):
-            ax[i].imshow(np.clip(images[i].cpu().detach().numpy().transpose(1, 2, 0), 0, 1))
+            ax[i].imshow(np.clip(images_orig[i].cpu().detach().numpy().transpose(1, 2, 0), 0, 1))
             ax[i].set_title(f"Original {self.samples[i]}")
             ax[i].axis("off")
-            ax[i + nb_samples].imshow(np.clip(recon[i].cpu().detach().numpy().transpose(1, 2, 0), 0, 1))
-            ax[i + nb_samples].set_title(f"Recon ({loss[i]:.4f})")
+            ax[i + nb_samples].imshow(np.clip(images_aug[i].cpu().detach().numpy().transpose(1, 2, 0), 0, 1))
+            ax[i + nb_samples].set_title(f"Augmented {self.samples[i]}")
             ax[i + nb_samples].axis("off")
+            ax[i + 2 * nb_samples].imshow(np.clip(recon[i].cpu().detach().numpy().transpose(1, 2, 0), 0, 1))
+            ax[i + 2 * nb_samples].set_title(f"Recon ({loss[i]:.4f})")
+            ax[i + 2 * nb_samples].axis("off")
         fig.tight_layout()
 
         # Log the figure at W&B
@@ -74,7 +85,7 @@ class LogReconstructionCallback(Callback):
 
         # Clear the figure and free memory
         # Memory leak issue: https://github.com/matplotlib/matplotlib/issues/27138
-        for i in range(2 * nb_samples):
+        for i in range(3 * nb_samples):
             ax[i].clear()
         fig.clear()
         gc.collect()
