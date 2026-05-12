@@ -120,6 +120,7 @@ model:
       class_path: ...
     decoder:
       class_path: ...
+    reconstruction_loss: torch.nn.MSELoss
 ```
 
 
@@ -136,7 +137,7 @@ model:
     encoder_out_dim: 64 # must match encoder output_dim
     z_dim: 3            # latent space dimensionality
     beta: 1.0e-3        # KL weight (beta-VAE)
-    loss: MSE           # MSE | NLL-normal | NLL-truncated | KL
+    reconstruction_loss: torch.nn.MSELoss
 ```
 
 | Parameter | Description |
@@ -144,7 +145,8 @@ model:
 | `encoder_out_dim` | Must match the `output_dim` of the encoder backbone |
 | `z_dim` | Dimension of the spherical latent space; 3 maps to a sphere (S²) |
 | `beta` | Scales the KL divergence term relative to the reconstruction loss |
-| `loss` | Reconstruction loss: `MSE`, `NLL-normal`, `NLL-truncated`, or `KL` |
+| `reconstruction_loss` | Reconstruction loss |
+| `max_scale` | Maximum concentration scale to prevent collapse |
 
 
 ## Encoder architectures
@@ -293,6 +295,63 @@ The default `seed_size: 7` with five upsampling steps reaches 224×224
 Mirror of `ConvolutionalDecoder2D` for 1D outputs using `ConsecutiveConvTranspose1DLayer`.
 
 
+## Loss functions
+
+The `reconstruction_loss` field of any model accepts any `nn.Module`. Spherinator ships
+two purpose-built losses in addition to the standard PyTorch losses.
+
+### PerceptualLoss
+
+`spherinator.losses.PerceptualLoss` computes a **VGG-16 feature-matching loss** for sharper,
+perceptually more faithful image reconstructions. A frozen VGG-16 backbone is used as a fixed
+feature extractor; the loss is the mean squared error between the activations of the chosen
+intermediate layers for the reconstruction and the target.
+
+Single-channel (grayscale) inputs are automatically broadcast to three channels before being
+passed through the network.
+
+```yaml
+reconstruction_loss:
+  class_path: spherinator.losses.PerceptualLoss
+  init_args:
+    layers: [3, 8, 15]   # VGG-16 layer indices to tap
+    weights: [1.0, 1.0, 1.0]  # per-layer loss weights
+```
+
+| Argument | Description |
+|----------|-------------|
+| `layers` | Indices into `vgg16.features` at which activations are extracted (default: `[3, 8, 15]`) |
+| `weights` | Scalar weight for each tapped layer's MSE contribution (default: all `1.0`) |
+
+The default layer indices correspond to the outputs of the first, second, and third ReLU blocks of
+VGG-16, capturing low-, mid-, and high-level features respectively.
+
+### CombinedLoss
+
+`spherinator.losses.CombinedLoss` forms a **weighted sum of multiple loss functions**, making it
+easy to blend pixel-level and perceptual objectives:
+
+$$\mathcal{L} = \sum_i w_i \cdot \mathcal{L}_i(\hat{x},\, x)$$
+
+```yaml
+reconstruction_loss:
+  class_path: spherinator.losses.CombinedLoss
+  init_args:
+    losses:
+      - class_path: torch.nn.MSELoss
+      - class_path: spherinator.losses.PerceptualLoss
+        init_args:
+          layers: [3, 8, 15]
+          weights: [1.0, 1.0, 1.0]
+    factors: [1.0, 0.1]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `losses` | List of `nn.Module` loss instances |
+| `factors` | Scalar weight for each corresponding loss (must be the same length as `losses`) |
+
+
 ## Optimizer
 
 Any PyTorch optimizer can be specified in the `optimizer` section:
@@ -357,6 +416,41 @@ trainer:
       init_args:
         samples: 6
 ```
+
+### KL annealing
+
+`spherinator.callbacks.KLAnnealing` gradually ramps the KL-divergence weight `beta` of a
+`VariationalAutoencoder` during training. Starting with a small (or zero) KL weight prevents
+posterior collapse in the early epochs and allows the encoder to first learn a good reconstruction
+before the regularisation pressure is increased.
+
+The schedule supports **cyclic annealing**: the ramp from `start` to `end` is repeated `n_cycles`
+times over the total number of epochs, which has been shown to improve latent-space utilisation.
+The `ratio` parameter controls what fraction of each cycle is spent ramping; the remainder of the
+cycle stays at `end`.
+
+```yaml
+trainer:
+  callbacks:
+    - class_path: spherinator.callbacks.KLAnnealing
+      init_args:
+        start: 0.0
+        end: 1.0e-2
+        n_epochs: 500
+        n_cycles: 4
+        ratio: 0.5
+```
+
+| Argument | Description |
+|----------|-------------|
+| `start` | Initial value of `beta` at the beginning of each cycle (default: `0.0`) |
+| `end` | Target value of `beta` at the end of the ramp (default: `1.0e-2`) |
+| `n_epochs` | Total training epochs; controls the overall period (default: `100`) |
+| `n_cycles` | Number of times the ramp is repeated (default: `1`, i.e. monotone schedule) |
+| `ratio` | Fraction of each cycle spent linearly ramping from `start` to `end` (default: `1.0`) |
+
+The current `beta` value is logged to the trainer as `"beta"` each epoch so it can be tracked
+in W&B or TensorBoard.
 
 ### Save the best model checkpoint
 
