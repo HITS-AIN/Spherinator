@@ -19,7 +19,6 @@ dependencies = [
     "jsonargparse[signatures] >=4.37",
     "lightning >=2.1",
     "matplotlib >=3.10",
-    "monai>=1.5.2",
     "nbformat>=5.10.4",
     "numpy >=2.2, <3.0",
     "onnx >=1.15",

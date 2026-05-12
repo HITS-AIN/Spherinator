@@ -1952,19 +1952,6 @@ wheels = [
 ]
 
 [[package]]
-name = "monai"
-version = "1.5.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-    { name = "torch" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/db/26/cb4a67d7ab99fa848cf9998d9159a2d368b2dacc6f94b983a4ab36cd9005/monai-1.5.2.tar.gz", hash = "sha256:11cba5bfaad85bbb7e95479071769a0e56f1d515646f6ee203f6d475889d3b25", size = 1687099, upload-time = "2026-01-27T13:14:42.616Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/11/36/0e1879b0c942f5f373e171656b4d22db4b50fad696a53e03828b6d00f5da/monai-1.5.2-py3-none-any.whl", hash = "sha256:6c4f75d47a88c1e37521bce4b7cb1540c6f4e5ca1d43910c60f61fc2ef4ddab2", size = 2674844, upload-time = "2026-01-27T13:14:41.049Z" },
-]
-
-[[package]]
 name = "more-itertools"
 version = "11.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3785,7 +3772,6 @@ dependencies = [
     { name = "jsonargparse", extra = ["signatures"] },
     { name = "lightning" },
     { name = "matplotlib" },
-    { name = "monai" },
     { name = "nbformat" },
     { name = "numpy" },
     { name = "onnx" },
@@ -3838,7 +3824,6 @@ requires-dist = [
     { name = "jupytext", marker = "extra == 'extra'", specifier = ">=1.15" },
     { name = "lightning", specifier = ">=2.1" },
     { name = "matplotlib", specifier = ">=3.10" },
-    { name = "monai", specifier = ">=1.5.2" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=5.0.0" },
     { name = "nbformat", specifier = ">=5.10.4" },
     { name = "numpy", specifier = ">=2.2,<3.0" },
