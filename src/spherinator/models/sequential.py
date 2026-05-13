@@ -13,11 +13,10 @@ class Sequential(nn.Sequential):
         class_path: spherinator.models.Sequential
         init_args:
           modules:
-            - class_path: spherinator.models.GMRResNetSpatialEncoder
+            - class_path: spherinator.models.HuggingFaceResNetEncoder
               init_args: ...
-            - class_path: torch.nn.AdaptiveAvgPool2d
-              init_args:
-                output_size: [1, 1]
+            - class_path: torch.nn.Linear
+              init_args: ...
     """
 
     def __init__(self, modules: List[nn.Module]) -> None:

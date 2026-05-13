@@ -5,7 +5,14 @@ import torch.nn as nn
 
 
 class MLP(nn.Module):
-    """A simple multi-layer perceptron (MLP) model."""
+    """A simple multi-layer perceptron (MLP) model.
+
+    Args:
+        input_size (int): The size of the input features.
+        hidden_sizes (list[int]): A list of hidden layer sizes.
+        output_size (int): The size of the output features.
+        activation (Optional[Callable[..., nn.Module]]): The activation function to use. Defaults to nn.ReLU.
+    """
 
     def __init__(
         self,
@@ -14,13 +21,6 @@ class MLP(nn.Module):
         output_size: int,
         activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
     ) -> None:
-        """
-        Args:
-            input_size (int): The size of the input features.
-            hidden_sizes (list[int]): A list of hidden layer sizes.
-            output_size (int): The size of the output features.
-            activation (Optional[Callable[..., nn.Module]]): The activation function to use. Defaults to nn.ReLU.
-        """
         super().__init__()
 
         self.input_size = input_size

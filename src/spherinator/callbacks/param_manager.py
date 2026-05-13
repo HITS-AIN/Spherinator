@@ -26,10 +26,6 @@ class ParamManager(pl.Callback):
     """
 
     def __init__(self, configs: List[ParamConfig]):
-        """
-        The CLI will now strictly enforce that 'configs' is a list of
-        objects with 'pattern', 'value', and 'freeze' fields.
-        """
         self.configs = configs
 
     def on_train_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
