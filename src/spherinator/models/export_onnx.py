@@ -49,6 +49,7 @@ def export_onnx(
     export_path: str,
     input_shape: tuple,
     latent_shape: tuple,
+    opset_version: int = 19,
 ):
     model = yaml2model(model_file)
     checkpoint = torch.load(ckpt_file, weights_only=True, map_location="cpu")
@@ -66,6 +67,7 @@ def export_onnx(
         torch.randn(input_shape, device="cpu"),
         dynamic_axes={"input": {0: "batch"}},
         dynamo=True,
+        opset_version=opset_version,
     )
     onnx.optimize()
     onnx.save(os.path.join(export_path, "encoder.onnx"))
@@ -75,6 +77,7 @@ def export_onnx(
         torch.randn(latent_shape, device="cpu"),
         dynamic_axes={"input": {0: "batch"}},
         dynamo=True,
+        opset_version=opset_version,
     )
     onnx.optimize()
     onnx.save(os.path.join(export_path, "decoder.onnx"))
@@ -84,6 +87,7 @@ def export_onnx(
         torch.randn(input_shape, device="cpu"),
         dynamic_axes={"input": {0: "batch"}},
         dynamo=True,
+        opset_version=opset_version,
     )
     onnx.optimize()
     onnx.save(os.path.join(export_path, "reconstruction.onnx"))
