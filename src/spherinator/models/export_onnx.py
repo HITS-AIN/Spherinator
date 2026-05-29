@@ -51,6 +51,16 @@ def export_onnx(
     latent_shape: tuple,
     opset_version: int = 19,
 ):
+    """Exports the encoder, decoder, and reconstruction graph of a Spherinator model to ONNX format.
+
+    Args:
+        ckpt_file (str): Path to the checkpoint file.
+        model_file (str): Path to the model YAML file.
+        export_path (str): Directory to save the ONNX files.
+        input_shape (tuple): Shape of the input tensor.
+        latent_shape (tuple): Shape of the latent tensor.
+        opset_version (int, optional): ONNX opset version. Defaults to 19.
+    """
     model = yaml2model(model_file)
     checkpoint = torch.load(ckpt_file, weights_only=True, map_location="cpu")
     model.load_state_dict(checkpoint["state_dict"])

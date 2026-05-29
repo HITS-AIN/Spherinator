@@ -1,6 +1,10 @@
 """Sphinx configuration."""
 
+import os
+import sys
 from datetime import datetime
+
+sys.path.insert(0, os.path.abspath("../src"))
 
 project = "Spherinator"
 copyright = f"{datetime.now().year}, HITS gGmbH"
@@ -13,11 +17,14 @@ extensions = [
     "myst_parser",
     "sphinxcontrib.bibtex",
     "sphinx_rtd_theme",
-    # "recommonmark",
-    # "sphinx.ext.autodoc",
-    # "sphinx.ext.napoleon",
-    # "sphinx_autodoc_typehints",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
 ]
+
+autodoc_typehints = "description"  # or "signature"
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
 
 html_theme = "sphinx_rtd_theme"
 bibtex_bibfiles = ["references.bib"]

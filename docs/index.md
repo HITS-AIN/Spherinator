@@ -41,6 +41,7 @@ align: center
 pest.md
 spherinator.md
 hipster.md
+api.md
 contributing.md
 workflow_orchestration.md
 references.md

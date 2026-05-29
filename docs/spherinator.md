@@ -494,7 +494,7 @@ spherinator fit \
 ## Exporting to ONNX
 
 A trained model can be exported to [ONNX](https://onnx.ai/) for deployment outside of PyTorch.
-The `export_onnx` function loads a checkpoint and its corresponding CLI config, and writes three
+The {py:func}`~spherinator.models.export_onnx` function loads a checkpoint and its corresponding CLI config, and writes three
 ONNX files to `export_path`:
 
 | File | Description |
@@ -502,27 +502,6 @@ ONNX files to `export_path`:
 | `encoder.onnx` | Backbone + sphere head → unit-normalised location vector |
 | `decoder.onnx` | Latent vector → reconstructed output |
 | `reconstruction.onnx` | End-to-end encode → decode pipeline |
-
-```python
-from spherinator.models import export_onnx
-
-export_onnx(
-    ckpt_file="YOUR_CHECKPOINT.ckpt",
-    model_file="YOUR_CLI_CONFIG.yaml",
-    export_path="onnx/models/",
-    input_shape=(2, 3, 128, 128),
-    latent_shape=(2, 3),
-)
-```
-
-| Argument | Description |
-|----------|-------------|
-| `ckpt_file` | Path to the Lightning checkpoint (`.ckpt`) |
-| `model_file` | Path to the CLI config YAML that was used for training |
-| `export_path` | Directory to write the exported ONNX files; must not already exist |
-| `input_shape` | Shape of a sample input batch, e.g. `(batch, channels, height, width)` |
-| `latent_shape` | Shape of a sample latent batch, e.g. `(batch, z_dim)` for a `VariationalAutoencoder` with concentration scalar |
-| `opset_version` | ONNX opset version to target (default: `19`) |
 
 All three exported graphs support a dynamic batch axis, so the exported models accept any batch
 size at inference time.
