@@ -522,6 +522,7 @@ export_onnx(
 | `export_path` | Directory to write the exported ONNX files; must not already exist |
 | `input_shape` | Shape of a sample input batch, e.g. `(batch, channels, height, width)` |
 | `latent_shape` | Shape of a sample latent batch, e.g. `(batch, z_dim)` for a `VariationalAutoencoder` with concentration scalar |
+| `opset_version` | ONNX opset version to target (default: `19`) |
 
 All three exported graphs support a dynamic batch axis, so the exported models accept any batch
 size at inference time.
