@@ -195,11 +195,17 @@ class DataModule(LightningDataModule):
         effective_num_workers = 0 if in_gpu_memory else num_workers
         self.dataloader_kwargs = {"batch_size": batch_size, "shuffle": shuffle, "num_workers": effective_num_workers}
 
+    def _load_dataset(self, **kwargs):
+        _p = Path(self.path)
+        if _p.suffix == ".parquet" or (_p.is_dir() and any(_p.glob("*.parquet"))):
+            return load_dataset("parquet", data_files=str(self.path), **kwargs)
+        return load_dataset(self.path, **kwargs)
+
     def prepare_data(self):
-        load_dataset(self.path)
+        self._load_dataset()
 
     def setup(self, stage: str = None):
-        full_ds = load_dataset(self.path, split="train")
+        full_ds = self._load_dataset(split="train")
 
         # Ensure the dataset returns PyTorch tensors
         device = "cpu"
