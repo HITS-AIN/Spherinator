@@ -11,15 +11,13 @@ class _EncoderWrapper(nn.Module):
 
     def __init__(self, model):
         super().__init__()
-        self.encoder = model.encoder
-        self.sphere_head = model.sphere_head
         self.model = model
 
     def forward(self, x):
         if getattr(self.model, "is_variational", True):
-            z_location, _ = self.sphere_head(self.encoder(x))
+            z_location, _ = self.model.sphere_head(self.model.encoder(x))
         else:
-            z_location = self.encoder(x)
+            z_location = self.model.encoder(x)
         return z_location
 
 

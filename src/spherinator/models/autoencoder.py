@@ -5,6 +5,17 @@ from torch.optim import Adam
 
 
 class Autoencoder(pl.LightningModule):
+    """Autoencoder initializer
+
+    Args:
+        encoder (nn.Module): encoder model
+        decoder (nn.Module): decoder model
+        reconstruction_loss (nn.Module, optional): loss function. Defaults to nn.MSELoss().
+    """
+
+    # Indicates to the export code that this model is not a VAE
+    is_variational = False
+
     def __init__(
         self,
         encoder: nn.Module,

@@ -38,7 +38,16 @@ class SphereHead(nn.Module):
 
 
 class VariationalAutoencoder(pl.LightningModule):
-    """Variational Autoencoder with a hyperspherical latent space."""
+    """Variational Autoencoder with a hyperspherical latent space.
+    Args:
+        encoder: Encoder module.
+        decoder: Decoder module.
+        encoder_out_dim: Dimensionality of the encoder output (must match decoder input).
+        z_dim: Dimensionality of the sphere embedding.
+        beta: Weight for the KL term (beta-VAE).
+        reconstruction_loss: Loss function for reconstruction (default: MSE).
+        max_scale: Optional maximum scale for the PowerSpherical distribution to prevent numerical issues.
+    """
 
     # Indicates to the export code that this model is a VAE and should be exported without scale parameters.
     is_variational = True
@@ -53,15 +62,6 @@ class VariationalAutoencoder(pl.LightningModule):
         reconstruction_loss: nn.Module = nn.MSELoss(),
         max_scale: float | None = None,
     ) -> None:
-        """
-        Args:
-            encoder: Encoder module.
-            decoder: Decoder module.
-            encoder_out_dim: Dimensionality of the encoder output (must match decoder input).
-            z_dim: Dimensionality of the sphere embedding.
-            beta: Weight for the KL term (beta-VAE).
-            reconstruction_loss: Loss function for reconstruction (default: MSE).
-        """
         super().__init__()
 
         self.save_hyperparameters(
