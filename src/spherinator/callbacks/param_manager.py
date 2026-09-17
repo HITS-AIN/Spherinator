@@ -1,6 +1,5 @@
 import re
 from dataclasses import dataclass
-from typing import List, Optional
 
 import lightning.pytorch as pl
 import torch
@@ -9,8 +8,8 @@ import torch
 @dataclass
 class ParamConfig:
     pattern: str
-    value: Optional[float] = None
-    max_value: Optional[float] = None
+    value: float | None = None
+    max_value: float | None = None
     freeze: bool = False
 
 
@@ -25,7 +24,7 @@ class ParamManager(pl.Callback):
             - freeze: A boolean indicating whether to freeze the parameter (if True, requires_grad is set to False).
     """
 
-    def __init__(self, configs: List[ParamConfig]):
+    def __init__(self, configs: list[ParamConfig]):
         self.configs = configs
 
     def on_train_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule):

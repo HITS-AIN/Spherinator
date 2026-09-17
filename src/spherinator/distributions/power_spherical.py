@@ -79,7 +79,7 @@ class HypersphericalUniform(torch.distributions.Distribution):
         return -self.log_prob(torch.empty(1))
 
     def __repr__(self):
-        return "HypersphericalUniform(dim={}, device={}, dtype={})".format(self.dim, self.device, self.dtype)
+        return f"HypersphericalUniform(dim={self.dim}, device={self.device}, dtype={self.dtype})"
 
 
 class MarginalTDistribution(torch.distributions.TransformedDistribution):

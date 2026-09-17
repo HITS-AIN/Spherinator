@@ -2,9 +2,9 @@ import math
 
 import lightning.pytorch as pl
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from power_spherical import HypersphericalUniform, PowerSpherical
+from torch import nn
 from torch.optim import Adam
 
 

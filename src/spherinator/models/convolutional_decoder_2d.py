@@ -1,8 +1,7 @@
 import math
-from typing import Optional
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from .consecutive_conv_transpose_2d_layers import ConsecutiveConvTranspose2DLayer
 from .weights_provider import WeightsProvider
@@ -14,8 +13,8 @@ class ConvolutionalDecoder2D(nn.Module):
         input_dim: int,
         output_dim: list[int],
         cnn_input_dim: list[int],
-        cnn_layers: list[ConsecutiveConvTranspose2DLayer] = [],
-        weights: Optional[WeightsProvider] = None,
+        cnn_layers: list[ConsecutiveConvTranspose2DLayer] | None = None,
+        weights: WeightsProvider | None = None,
         freeze: bool = False,
     ) -> None:
         """ConvolutionalDecoder2DGen initializer
@@ -27,6 +26,8 @@ class ConvolutionalDecoder2D(nn.Module):
             weights (Optional[WeightsProvider], optional): The weights to load. Defaults to None.
             freeze (bool, optional): Whether to freeze the model. Defaults to False.
         """
+        if cnn_layers is None:
+            cnn_layers = []
         super().__init__()
 
         self.input_dim = input_dim

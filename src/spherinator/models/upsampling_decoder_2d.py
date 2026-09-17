@@ -1,7 +1,5 @@
-from typing import Optional
-
 import torch
-import torch.nn as nn
+from torch import nn
 
 from .weights_provider import WeightsProvider
 
@@ -49,14 +47,14 @@ class UpsamplingDecoder2D(nn.Module):
         output_dim: list[int],
         base_channels: int = 512,
         seed_size: int = 7,
-        weights: Optional[WeightsProvider] = None,
+        weights: WeightsProvider | None = None,
         freeze: bool = False,
     ) -> None:
         super().__init__()
 
         self.input_dim = input_dim
         self.output_dim = output_dim
-        out_channels, out_h, out_w = output_dim
+        out_channels, out_h, _out_w = output_dim
 
         self.example_input_array = torch.randn(1, input_dim)
 

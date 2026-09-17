@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset, DataLoader, BatchSampler, RandomSampler
+from torch.utils.data import BatchSampler, DataLoader, Dataset, RandomSampler
 
 
 def test_MSELoss():

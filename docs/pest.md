@@ -44,9 +44,7 @@ gaia_converter.convert_all("data/gaia/csv", "data/gaia/parquet")
 ```python
 from pest import FitsConverter
 
-FitsConverter(image_size=128).convert_all(
-    "data/illustris/fits/TNG100/sdss/snapnum_099/data", "data/illustris/parquet"
-)
+FitsConverter(image_size=128).convert_all("data/illustris/fits/TNG100/sdss/snapnum_099/data", "data/illustris/parquet")
 ```
 
 ## Coming soon: Generators

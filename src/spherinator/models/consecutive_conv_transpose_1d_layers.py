@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from torch import nn
 
@@ -12,10 +12,10 @@ class ConsecutiveConvTranspose1DLayer:
         output_padding: int = 0,
         dilation: int = 1,
         bias: bool = True,
-        out_channels: list[int] = [1],
-        activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
-        norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm1d,
-        pooling: Optional[Callable[..., nn.Module]] = None,
+        out_channels: list[int] | None = None,
+        activation: Callable[..., nn.Module] | None = nn.ReLU,
+        norm: Callable[..., nn.Module] | None = nn.BatchNorm1d,
+        pooling: Callable[..., nn.Module] | None = None,
     ) -> None:
         """A class that defines a consecutive convolutional layer.
         Args:
@@ -34,6 +34,8 @@ class ConsecutiveConvTranspose1DLayer:
             Defaults to None.
             transpose (bool, optional): If the convolutional layer is a transpose convolutional layer.
         """
+        if out_channels is None:
+            out_channels = [1]
         super().__init__()
 
         self.kernel_size = kernel_size

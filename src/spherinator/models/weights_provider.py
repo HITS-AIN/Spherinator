@@ -1,4 +1,5 @@
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 import torch
 
@@ -11,7 +12,7 @@ class WeightsProvider:
         prefix (Optional[str], optional): The prefix to use when loading the weights. Defaults to None.
     """
 
-    def __init__(self, weight_path: str, prefix: Optional[str] = None) -> None:
+    def __init__(self, weight_path: str, prefix: str | None = None) -> None:
         self.weights = torch.load(weight_path)["state_dict"]
         if prefix is not None:
             self.weights = {k[len(prefix) + 1 :]: v for k, v in self.weights.items() if k.startswith(prefix)}

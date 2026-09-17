@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from torch import nn
 
@@ -9,10 +9,10 @@ class ConsecutiveConv2DLayer:
         kernel_size: int = 3,
         stride: int = 1,
         padding: int = 0,
-        out_channels: list[int] = [1],
-        activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
-        norm: Optional[Callable[..., nn.Module]] = nn.BatchNorm2d,
-        pooling: Optional[nn.Module] = None,
+        out_channels: list[int] | None = None,
+        activation: Callable[..., nn.Module] | None = nn.ReLU,
+        norm: Callable[..., nn.Module] | None = nn.BatchNorm2d,
+        pooling: nn.Module | None = None,
     ) -> None:
         """A class that defines a consecutive convolutional layer.
         Args:
@@ -27,6 +27,8 @@ class ConsecutiveConv2DLayer:
             pooling (Optional[Callable[..., nn.Module]], optional): The pooling layer.
             Defaults to None.
         """
+        if out_channels is None:
+            out_channels = [1]
         super().__init__()
 
         self.kernel_size = kernel_size

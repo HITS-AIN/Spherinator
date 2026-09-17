@@ -1,5 +1,4 @@
 import gc
-from typing import Union
 
 import numpy as np
 import torch
@@ -19,7 +18,7 @@ class LogReconstructionCallback(Callback):
 
     def __init__(
         self,
-        samples: Union[int, list[int]] = 6,
+        samples: int | list[int] = 6,
     ):
         super().__init__()
 

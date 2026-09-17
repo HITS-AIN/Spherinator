@@ -1,6 +1,6 @@
 import lightning.pytorch as pl
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.optim import Adam
 
 

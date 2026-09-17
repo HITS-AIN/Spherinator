@@ -1,7 +1,5 @@
-from typing import Optional
-
 import torch
-import torch.nn as nn
+from torch import nn
 
 from .consecutive_conv_transpose_1d_layers import ConsecutiveConvTranspose1DLayer
 from .weights_provider import WeightsProvider
@@ -13,8 +11,8 @@ class ConvolutionalDecoder1D(nn.Module):
         input_dim: int,
         output_dim: list[int],
         cnn_input_dim: list[int],
-        cnn_layers: list[ConsecutiveConvTranspose1DLayer] = [],
-        weights: Optional[WeightsProvider] = None,
+        cnn_layers: list[ConsecutiveConvTranspose1DLayer] | None = None,
+        weights: WeightsProvider | None = None,
         freeze: bool = False,
     ) -> None:
         """ConvolutionalDecoder1D initializer
@@ -26,6 +24,8 @@ class ConvolutionalDecoder1D(nn.Module):
             weights (Optional[WeightsProvider], optional): The weights to load. Defaults to None.
             freeze (bool, optional): Whether to freeze the model. Defaults to False.
         """
+        if cnn_layers is None:
+            cnn_layers = []
         super().__init__()
 
         self.input_dim = input_dim

@@ -1,7 +1,5 @@
-from typing import Optional
-
 import torch
-import torch.nn as nn
+from torch import nn
 from transformers import ViTModel
 
 from .weights_provider import WeightsProvider
@@ -25,9 +23,9 @@ class HuggingFaceViTEncoder(nn.Module):
     def __init__(
         self,
         model_name: str = "google/vit-base-patch16-224",
-        output_dim: Optional[int] = None,
+        output_dim: int | None = None,
         freeze: bool = False,
-        weights: Optional[WeightsProvider] = None,
+        weights: WeightsProvider | None = None,
     ) -> None:
         super().__init__()
 

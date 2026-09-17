@@ -2,9 +2,9 @@ import sys
 
 import pytest
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from power_spherical import PowerSpherical
+from torch import nn
 
 from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D
 
@@ -21,7 +21,7 @@ class Model1(nn.Module):
 
 class Model2(nn.Module):
     def __init__(self):
-        super(Model2, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(1, 6, 5)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)

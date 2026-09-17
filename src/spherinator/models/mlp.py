@@ -1,7 +1,7 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 class MLP(nn.Module):
@@ -19,7 +19,7 @@ class MLP(nn.Module):
         input_size: int,
         hidden_sizes: list[int],
         output_size: int,
-        activation: Optional[Callable[..., nn.Module]] = nn.ReLU,
+        activation: Callable[..., nn.Module] | None = nn.ReLU,
     ) -> None:
         super().__init__()
 

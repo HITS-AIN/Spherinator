@@ -1,7 +1,7 @@
 import lightning.pytorch as pl
 import pytest
 import torch
-import torch.nn as nn
+from torch import nn
 
 from spherinator.callbacks.param_manager import ParamConfig, ParamManager
 

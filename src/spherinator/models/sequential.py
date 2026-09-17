@@ -1,6 +1,4 @@
-from typing import List
-
-import torch.nn as nn
+from torch import nn
 
 
 class Sequential(nn.Sequential):
@@ -19,5 +17,5 @@ class Sequential(nn.Sequential):
               init_args: ...
     """
 
-    def __init__(self, modules: List[nn.Module]) -> None:
+    def __init__(self, modules: list[nn.Module]) -> None:
         super().__init__(*modules)
