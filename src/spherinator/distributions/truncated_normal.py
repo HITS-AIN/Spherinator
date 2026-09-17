@@ -1,4 +1,5 @@
 import math
+from typing import ClassVar
 
 import torch
 from torch.distributions.kl import register_kl
@@ -7,7 +8,7 @@ _EPS = 1e-7
 
 
 class TruncatedNormal(torch.distributions.Distribution):
-    arg_constraints = {
+    arg_constraints: ClassVar = {
         "loc": torch.distributions.constraints.real,
         "scale": torch.distributions.constraints.positive,
     }

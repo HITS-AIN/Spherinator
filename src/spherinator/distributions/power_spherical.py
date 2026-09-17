@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import math
+from typing import ClassVar
 
 import torch
 from torch.distributions.kl import register_kl
@@ -54,7 +55,7 @@ class _HouseholderRotationTransform(torch.distributions.Transform):
 
 
 class HypersphericalUniform(torch.distributions.Distribution):
-    arg_constraints = {
+    arg_constraints: ClassVar = {
         "dim": torch.distributions.constraints.positive_integer,
     }
 
@@ -83,7 +84,7 @@ class HypersphericalUniform(torch.distributions.Distribution):
 
 
 class MarginalTDistribution(torch.distributions.TransformedDistribution):
-    arg_constraints = {
+    arg_constraints: ClassVar = {
         "dim": torch.distributions.constraints.positive_integer,
         "scale": torch.distributions.constraints.positive,
     }
@@ -136,7 +137,7 @@ class _JointTSDistribution(torch.distributions.Distribution):
 
 
 class PowerSpherical(torch.distributions.TransformedDistribution):
-    arg_constraints = {
+    arg_constraints: ClassVar = {
         "loc": torch.distributions.constraints.real,
         "scale": torch.distributions.constraints.positive,
     }

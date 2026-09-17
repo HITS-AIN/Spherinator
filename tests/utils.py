@@ -1,7 +1,7 @@
 import io
 import random
 import string
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import numpy as np
 from PIL import Image
@@ -51,8 +51,8 @@ def random_date(start, end):
     This function will return a random datetime between two datetime
     objects.
     """
-    start = datetime.strptime(start, "%m/%d/%Y %I:%M %p")
-    end = datetime.strptime(end, "%m/%d/%Y %I:%M %p")
+    start = datetime.strptime(start, "%m/%d/%Y %I:%M %p").replace(tzinfo=UTC)
+    end = datetime.strptime(end, "%m/%d/%Y %I:%M %p").replace(tzinfo=UTC)
     delta = end - start
     int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
     random_second = random.randrange(int_delta)

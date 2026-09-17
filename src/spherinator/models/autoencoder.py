@@ -20,7 +20,7 @@ class Autoencoder(pl.LightningModule):
         self,
         encoder: nn.Module,
         decoder: nn.Module,
-        reconstruction_loss: nn.Module = nn.MSELoss(),
+        reconstruction_loss: nn.Module | None = None,
     ):
         """Autoencoder initializer
 
@@ -30,6 +30,8 @@ class Autoencoder(pl.LightningModule):
             reconstruction_loss (nn.Module, optional): loss function. Defaults to nn.MSELoss().
         """
         super().__init__()
+
+        reconstruction_loss = reconstruction_loss if reconstruction_loss is not None else nn.MSELoss()
 
         self.save_hyperparameters(
             ignore=[

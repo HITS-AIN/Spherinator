@@ -2,12 +2,12 @@
 
 import os
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 
 sys.path.insert(0, os.path.abspath("../src"))
 
 project = "Spherinator"
-copyright = f"{datetime.now().year}, HITS gGmbH"
+copyright = f"{datetime.now(UTC).year}, HITS gGmbH"
 author = """Kai Polsterer <kai.polsterer@h-its.org>,
             Bernd Doser <bernd.doser@h-its.org>,
             Andreas Fehlner <andreas.fehlner@h-its.org>,

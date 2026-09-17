@@ -29,5 +29,6 @@ def initialize_class(class_config):
 
 def yaml2model(yaml_path: str) -> torch.nn.Module:
     """Initialize a PyTorch model from a YAML file"""
-    config = yaml.load(open(yaml_path), Loader=yaml.FullLoader)
+    with open(yaml_path) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
     return initialize_class(config["model"])
