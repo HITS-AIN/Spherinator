@@ -82,6 +82,7 @@ filterwarnings = [
     "ignore:GPU available but not used.",
     "ignore:You requested to overfit but enabled train dataloader shuffling.",
     "ignore::FutureWarning",
+    "ignore:You defined a `validation_step` but have no `val_dataloader`. Skipping val loop.",
 ]
 
 [tool.pylint.TYPECHECK]
