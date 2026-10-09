@@ -31,6 +31,8 @@ Spherinator can be installed via `pip`:
 pip install spherinator
 ```
 
+See the [installation guide](install.md) for more options, including `uv` and the developer setup.
+
 ## Training the model
 
 Training requires a YAML configuration file that specifies the data, model architecture, and

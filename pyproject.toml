@@ -37,6 +37,7 @@ dev = [
     "ipykernel >=6.29",
     "ipywidgets>=8.1.8",
     "nbformat>=5.10.4",
+    "pre-commit>=4.6",
     "pytest >=8.3",
     "pytest-timeout >=2.0",
     "ruff >=0.11",
