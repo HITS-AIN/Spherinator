@@ -1,7 +1,5 @@
 """Dataset reading parquet files."""
 
-from typing import Union
-
 import pyarrow.dataset as ds
 import torch
 from torch.utils.data import Dataset
@@ -52,12 +50,12 @@ class ParquetDatasetSampling(Dataset):
                 shape_string = table.schema.metadata[metadata_shape].decode("utf8")
                 shape = shape_string.replace("(", "").replace(")", "").split(",")
                 shape = tuple(map(int, shape))
-                self.data[column] = self.data[column].apply(lambda x: x.reshape(shape))
+                self.data[column] = self.data[column].apply(lambda x, shape=shape: x.reshape(shape))
 
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, index: int) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
+    def __getitem__(self, index: int) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         batch = torch.normal(
             mean=torch.tensor(self.data[self.data_column][index], dtype=torch.float32),
             std=torch.tensor(self.data[self.error_column][index], dtype=torch.float32),

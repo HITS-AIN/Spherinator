@@ -1,5 +1,3 @@
-from typing import Optional, Union
-
 import torch
 import torchvision.transforms.v2 as transforms
 from lightning.pytorch import LightningDataModule
@@ -15,9 +13,9 @@ class ParquetDataModule(LightningDataModule):
     def __init__(
         self,
         data_directory: str,
-        data_column: Union[str, list[str]],
-        error_column: Optional[str] = None,
-        normalize: Optional[str] = None,
+        data_column: str | list[str],
+        error_column: str | None = None,
+        normalize: str | None = None,
         shuffle: bool = True,
         batch_size: int = 32,
         num_workers: int = 1,

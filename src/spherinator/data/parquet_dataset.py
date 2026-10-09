@@ -1,7 +1,5 @@
 """Dataset reading parquet files."""
 
-from typing import Union
-
 import numpy as np
 import pyarrow.dataset as ds
 import torch
@@ -14,7 +12,7 @@ class ParquetDataset(Dataset):
     def __init__(
         self,
         data_directory: str,
-        data_column: Union[str, list[str]],
+        data_column: str | list[str],
         transform=None,
         with_index: bool = False,
     ):
@@ -60,7 +58,7 @@ class ParquetDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, index: int) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
+    def __getitem__(self, index: int) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         batch = torch.tensor(self.data[index], dtype=torch.float32)
         if self.transform is not None:
             batch = self.transform(batch)

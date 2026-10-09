@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 import pyarrow.parquet as pq
 import torch
@@ -21,8 +22,8 @@ class Column:
     def __init__(
         self,
         name: str,
-        transform: Optional[Callable[[Any], Any]] = None,
-        shape: Optional[tuple[int, ...]] = None,
+        transform: Callable[[Any], Any] | None = None,
+        shape: tuple[int, ...] | None = None,
     ):
         self.name = name
         self.transform = transform
@@ -93,7 +94,7 @@ class Column:
         metadata_str = ""
         metadata = self.get_metadata()
         if metadata:
-            metadata_items = [f"{k}={repr(v)}" for k, v in list(metadata.items())[:2]]  # Show first 2 metadata items
+            metadata_items = [f"{k}={v!r}" for k, v in list(metadata.items())[:2]]  # Show first 2 metadata items
             if len(metadata) > 2:
                 metadata_items.append(f"... +{len(metadata) - 2} more")
             metadata_str = f", {', '.join(metadata_items)}"
@@ -162,7 +163,7 @@ class DataModule(LightningDataModule):
     def __init__(
         self,
         path: str,
-        columns: Optional[list[dict[str, Any] | str]] = None,
+        columns: list[dict[str, Any] | str] | None = None,
         return_dict: bool = True,
         validation_size: float = 0.2,
         test_size: float = 0.5,
@@ -183,9 +184,9 @@ class DataModule(LightningDataModule):
         self.return_dict: bool = return_dict
         self.validation_size: float = validation_size
         self.test_size: float = test_size
-        self._train_ds: Optional[TransformedDataset] = None
-        self._val_ds: Optional[TransformedDataset] = None
-        self._test_ds: Optional[TransformedDataset] = None
+        self._train_ds: TransformedDataset | None = None
+        self._val_ds: TransformedDataset | None = None
+        self._test_ds: TransformedDataset | None = None
         self.in_gpu_memory: bool = in_gpu_memory
 
         # Store DataLoader kwargs for forwarding
@@ -204,7 +205,7 @@ class DataModule(LightningDataModule):
     def prepare_data(self):
         self._load_dataset()
 
-    def setup(self, stage: str = None):
+    def setup(self, stage: str | None = None):
         full_ds = self._load_dataset(split="train")
 
         # Ensure the dataset returns PyTorch tensors
@@ -228,7 +229,7 @@ class DataModule(LightningDataModule):
             key = column.name.encode() + b"_shape"
             if key in schema_meta:
                 parts = schema_meta[key].decode().strip("()").split(",")
-                setattr(column, "shape", tuple(int(p) for p in parts if p.strip()))
+                column.shape = tuple(int(p) for p in parts if p.strip())
 
         if self.validation_size > 0.0:
             split_ds = full_ds.train_test_split(test_size=self.validation_size, seed=42)

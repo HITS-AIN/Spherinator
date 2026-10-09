@@ -62,5 +62,4 @@ class ParquetIterableDataset(IterableDataset):
                 if self.transform is not None:
                     batch = self.transform(batch)
 
-                for item in batch:
-                    yield item
+                yield from batch

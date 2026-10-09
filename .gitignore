@@ -7,8 +7,8 @@ __pycache__
 *.parquet
 *.pt
 *.sarif
+/data
 config.yaml
-data
 dist/
 docs/_build/
 docs/html/
