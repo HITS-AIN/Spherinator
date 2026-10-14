@@ -1,3 +1,5 @@
+import hashlib
+import json
 import sys
 
 import onnx
@@ -117,3 +119,46 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
         expected = model.reconstruct(inputs).detach().numpy()
         assert actual.shape == expected.shape
         assert torch.allclose(torch.from_numpy(actual), torch.from_numpy(expected), atol=1e-5, rtol=1e-4)
+
+
+def test_export_onnx_aibom(tmp_path):
+    model = Autoencoder(ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]))
+    model(torch.randn(2, 1, 12))
+    ckpt_file = tmp_path / "model.ckpt"
+    torch.save({"state_dict": model.state_dict()}, ckpt_file)
+
+    model_file = tmp_path / "model.yaml"
+    model_file.write_text(
+        """
+model:
+  class_path: spherinator.models.Autoencoder
+  init_args:
+    encoder:
+      class_path: spherinator.models.ConvolutionalEncoder1D
+      init_args:
+        input_dim: [1, 12]
+        output_dim: 3
+    decoder:
+      class_path: spherinator.models.ConvolutionalDecoder1D
+      init_args:
+        input_dim: 3
+        output_dim: [1, 12]
+        cnn_input_dim: [1, 12]
+"""
+    )
+
+    export_path = tmp_path / "export"
+    export_onnx(str(ckpt_file), str(model_file), str(export_path), (2, 1, 12), (2, 3))
+
+    aibom = json.loads((export_path / "aibom.spdx.json").read_text())
+    packages = {p["name"]: p for p in aibom["@graph"] if p["type"] == "ai_AIPackage"}
+    assert len(packages) == 3
+
+    for name in ["encoder", "decoder", "reconstruction"]:
+        onnx_file = export_path / f"{name}.onnx"
+        package = packages[f"Spherinator {name}"]
+        assert package["verifiedUsing"][0]["hashValue"] == hashlib.sha256(onnx_file.read_bytes()).hexdigest()
+        assert package["software_downloadLocation"] == f"{name}.onnx"
+
+        props = {p.key: p.value for p in onnx.load(onnx_file, load_external_data=False).metadata_props}
+        assert props["aibom.uri"] == "aibom.spdx.json"

@@ -481,16 +481,33 @@ spherinator fit \
 
 A trained model can be exported to [ONNX](https://onnx.ai/) for deployment outside of PyTorch.
 The {py:func}`~spherinator.models.export_onnx` function loads a checkpoint and its corresponding CLI config, and writes three
-ONNX files to `export_path`:
+ONNX files and an AI bill of materials (AI-BOM) to `export_path`:
 
 | File | Description |
 |------|-------------|
 | `encoder.onnx` | Backbone + sphere head → unit-normalised location vector |
 | `decoder.onnx` | Latent vector → reconstructed output |
 | `reconstruction.onnx` | End-to-end encode → decode pipeline |
+| `aibom.spdx.json` | [SPDX 3.0.1](https://spdx.dev/use/specifications/) AI-BOM of the three ONNX files |
 
 All three exported graphs support a dynamic batch axis, so the exported models accept any batch
 size at inference time.
+
+The AI-BOM lists every ONNX file as an AI package, including its SHA-256 hash. The ONNX files don't
+embed the AI-BOM itself. Instead, each one stores a link to it in the `aibom.uri` metadata property,
+along with `aibom.format`. By default the link is the relative file name `aibom.spdx.json`. Pass
+`aibom_uri` to use an absolute URL instead, for example the file's location in a Hugging Face
+repository. To read the link:
+
+```python
+import onnx
+
+model = onnx.load("encoder.onnx", load_external_data=False)
+props = {p.key: p.value for p in model.metadata_props}
+print(props["aibom.uri"])
+```
+
+With ONNX Runtime, use `session.get_modelmeta().custom_metadata_map["aibom.uri"]`.
 
 Both model YAML files and PyTorch checkpoints must be treated as trusted inputs. YAML model files
 select Python classes to import and construct; checkpoints are loaded in weights-only mode.
