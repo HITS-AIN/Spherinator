@@ -70,10 +70,14 @@ def export_onnx(
 
     os.makedirs(export_path, exist_ok=False)
 
+    batch = torch.export.Dim("batch")
+
     onnx = torch.onnx.export(
-        _EncoderWrapper(model),
+        _EncoderWrapper(model).eval(),
         torch.randn(input_shape, device="cpu"),
-        dynamic_axes={"input": {0: "batch"}},
+        input_names=["input"],
+        output_names=["embedding"],
+        dynamic_shapes={"x": {0: batch}},
         dynamo=True,
         opset_version=opset_version,
     )
@@ -81,9 +85,11 @@ def export_onnx(
     onnx.save(os.path.join(export_path, "encoder.onnx"))
 
     onnx = torch.onnx.export(
-        _DecoderWrapper(model),
+        _DecoderWrapper(model).eval(),
         torch.randn(latent_shape, device="cpu"),
-        dynamic_axes={"input": {0: "batch"}},
+        input_names=["input"],
+        output_names=["reconstruction"],
+        dynamic_shapes={"z": {0: batch}},
         dynamo=True,
         opset_version=opset_version,
     )
@@ -91,9 +97,11 @@ def export_onnx(
     onnx.save(os.path.join(export_path, "decoder.onnx"))
 
     onnx = torch.onnx.export(
-        _ReconstructionWrapper(model),
+        _ReconstructionWrapper(model).eval(),
         torch.randn(input_shape, device="cpu"),
-        dynamic_axes={"input": {0: "batch"}},
+        input_names=["input"],
+        output_names=["reconstruction"],
+        dynamic_shapes={"x": {0: batch}},
         dynamo=True,
         opset_version=opset_version,
     )
