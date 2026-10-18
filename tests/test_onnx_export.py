@@ -1,12 +1,15 @@
 import sys
 
+import onnx
+import onnxruntime as ort
 import pytest
 import torch
 import torch.nn.functional as F
+import yaml
 from power_spherical import PowerSpherical
 from torch import nn
 
-from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D
+from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D, export_onnx
 
 
 class Model1(nn.Module):
@@ -75,3 +78,42 @@ def test_onnx_dynamo_export(module, input):
     module.eval()
     module(input)
     torch.onnx.export(module, (input,), dynamo=True)
+
+
+def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
+    config = {
+        "model": {
+            "class_path": "spherinator.models.Autoencoder",
+            "init_args": {
+                "encoder": {
+                    "class_path": "spherinator.models.ConvolutionalEncoder1D",
+                    "init_args": {"input_dim": [1, 12], "output_dim": 3},
+                },
+                "decoder": {
+                    "class_path": "spherinator.models.ConvolutionalDecoder1D",
+                    "init_args": {"input_dim": 3, "output_dim": [1, 12], "cnn_input_dim": [1, 12]},
+                },
+            },
+        }
+    }
+    model = Autoencoder(ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]))
+    model.eval()
+    model(torch.randn(2, 1, 12))
+    checkpoint = tmp_path / "model.ckpt"
+    config_path = tmp_path / "model.yaml"
+    export_path = tmp_path / "onnx"
+    torch.save({"state_dict": model.state_dict()}, checkpoint)
+    config_path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    export_onnx(str(checkpoint), str(config_path), str(export_path), (2, 1, 12), (2, 3))
+
+    for name in ("encoder", "decoder", "reconstruction"):
+        onnx.checker.check_model(onnx.load(export_path / f"{name}.onnx"))
+
+    session = ort.InferenceSession(export_path / "reconstruction.onnx", providers=["CPUExecutionProvider"])
+    for batch_size in (1, 3):
+        inputs = torch.randn(batch_size, 1, 12)
+        actual = session.run(None, {"input": inputs.numpy()})[0]
+        expected = model.reconstruct(inputs).detach().numpy()
+        assert actual.shape == expected.shape
+        assert torch.allclose(torch.from_numpy(actual), torch.from_numpy(expected), atol=1e-5, rtol=1e-4)

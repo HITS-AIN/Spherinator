@@ -23,7 +23,7 @@ class LogReconstructionCallback(Callback):
         super().__init__()
 
         if isinstance(samples, int):
-            if samples < 0:
+            if samples <= 0:
                 raise ValueError("The number of samples must be positive")
             self.samples = range(samples)
         elif isinstance(samples, list):
@@ -59,7 +59,13 @@ class LogReconstructionCallback(Callback):
         images_orig = images_orig.to(model.device)
 
         # Generate reconstructions from augmented images
-        recon = model.reconstruct(images_aug)
+        was_training = model.training
+        model.eval()
+        try:
+            with torch.inference_mode():
+                recon = model.reconstruct(images_aug)
+        finally:
+            model.train(was_training)
         loss = torch.nn.MSELoss(reduction="none")(images_orig, recon).flatten(1).mean(1)
 
         # Plot original, augmented, and reconstruction rows

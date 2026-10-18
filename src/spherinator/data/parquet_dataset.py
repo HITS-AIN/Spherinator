@@ -52,7 +52,7 @@ class ParquetDataset(Dataset):
                 self.data = self.data.apply(lambda x: x.reshape(shape))
         else:
             data = table.to_pandas()
-            data["concat"] = data.apply(lambda x: np.concatenate((x[data_column[0]], x[data_column[1]])), axis=1)
+            data["concat"] = data.apply(lambda row: np.concatenate([row[column] for column in data_column]), axis=1)
             self.data = data["concat"]
 
     def __len__(self):

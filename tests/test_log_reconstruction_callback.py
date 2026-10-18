@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pytest
+import torch
 from lightning.pytorch.loggers import Logger
 from lightning.pytorch.trainer import Trainer
 from lightning.pytorch.utilities import rank_zero_only
@@ -107,6 +108,8 @@ def test_on_train_epoch_end(samples, exception, parquet_2d_metadata):
     callback = LogReconstructionCallback(samples=samples)
 
     # Call the callback
+    model.train()
+    running_means = [module.running_mean.clone() for module in model.modules() if hasattr(module, "running_mean")]
     with exception:
         callback.on_train_epoch_end(trainer=trainer, model=model)
 
@@ -117,5 +120,10 @@ def test_on_train_epoch_end(samples, exception, parquet_2d_metadata):
 
     # Check that the figure was logged
     assert logger.calls == 1
+    assert model.training
+    assert all(
+        torch.equal(before, module.running_mean)
+        for before, module in zip(running_means, (m for m in model.modules() if hasattr(m, "running_mean")))
+    )
     assert "Reconstructions" in logger.logged_items[0][0]
     assert isinstance(logger.logged_items[0][1][0], plt.Figure)

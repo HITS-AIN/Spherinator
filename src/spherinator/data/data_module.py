@@ -148,7 +148,7 @@ class DataModule(LightningDataModule):
         columns (list[dict[str, Any] | str], optional): List of Column objects specifying which columns to load
             and how to transform them. Defaults to a single column named "data" with no transformation.
         return_dict (bool, optional): Whether to return samples as dictionaries (with column names
-            as keys) or as lists. Defaults to True (return dict).
+            as keys) or as tensors/lists. Defaults to False.
         validation_size (float, optional): Proportion of the dataset to use for validation. Defaults
             to 0.2 (20%).
         test_size (float, optional): Proportion of the validation set to use for testing (if
@@ -164,7 +164,7 @@ class DataModule(LightningDataModule):
         self,
         path: str,
         columns: list[dict[str, Any] | str] | None = None,
-        return_dict: bool = True,
+        return_dict: bool = False,
         validation_size: float = 0.2,
         test_size: float = 0.5,
         in_gpu_memory: bool = False,
@@ -173,6 +173,11 @@ class DataModule(LightningDataModule):
         num_workers: int = 0,
     ):
         super().__init__()
+
+        if not 0.0 <= validation_size < 1.0:
+            raise ValueError("validation_size must be in the range [0, 1)")
+        if not 0.0 <= test_size < 1.0:
+            raise ValueError("test_size must be in the range [0, 1)")
 
         if columns is None:
             columns = [Column(name="data")]
@@ -194,7 +199,12 @@ class DataModule(LightningDataModule):
         # CUDA (the default 'fork' start method on Linux is incompatible with CUDA).
         # GPU-resident data loads instantly, so workers provide no benefit.
         effective_num_workers = 0 if in_gpu_memory else num_workers
-        self.dataloader_kwargs = {"batch_size": batch_size, "shuffle": shuffle, "num_workers": effective_num_workers}
+        self.dataloader_kwargs = {
+            "batch_size": batch_size,
+            "shuffle": shuffle,
+            "num_workers": effective_num_workers,
+            "persistent_workers": effective_num_workers > 0,
+        }
 
     def _load_dataset(self, **kwargs):
         _p = Path(self.path)
@@ -235,17 +245,23 @@ class DataModule(LightningDataModule):
             split_ds = full_ds.train_test_split(test_size=self.validation_size, seed=42)
             train_ds = split_ds["train"]
             val_test_ds = split_ds["test"]
-        else:
-            train_ds = full_ds
-            val_test_ds = full_ds
 
-        if self.test_size > 0.0:
-            split_ds = val_test_ds.train_test_split(test_size=self.test_size, seed=42)
-            val_ds = split_ds["train"]
-            test_ds = split_ds["test"]
+            if self.test_size > 0.0:
+                split_ds = val_test_ds.train_test_split(test_size=self.test_size, seed=42)
+                val_ds = split_ds["train"]
+                test_ds = split_ds["test"]
+            else:
+                val_ds = val_test_ds
+                test_ds = None
         else:
-            val_ds = val_test_ds
-            test_ds = val_test_ds
+            val_ds = None
+            if self.test_size > 0.0:
+                split_ds = full_ds.train_test_split(test_size=self.test_size, seed=42)
+                train_ds = split_ds["train"]
+                test_ds = split_ds["test"]
+            else:
+                train_ds = full_ds
+                test_ds = None
 
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
@@ -254,18 +270,14 @@ class DataModule(LightningDataModule):
                 self.columns,
                 return_dict=self.return_dict,
             )
-            self._val_ds = TransformedDataset(
-                val_ds,
-                self.columns,
-                return_dict=self.return_dict,
+            self._val_ds = (
+                TransformedDataset(val_ds, self.columns, return_dict=self.return_dict) if val_ds is not None else None
             )
 
         # Assign train/val datasets for use in dataloaders
         if stage == "test" or stage is None:
-            self._test_ds = TransformedDataset(
-                test_ds,
-                self.columns,
-                return_dict=self.return_dict,
+            self._test_ds = (
+                TransformedDataset(test_ds, self.columns, return_dict=self.return_dict) if test_ds is not None else None
             )
 
     def train_dataloader(self):

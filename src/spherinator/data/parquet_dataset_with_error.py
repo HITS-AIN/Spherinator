@@ -64,8 +64,9 @@ class ParquetDatasetWithError(Dataset):
         data_min = data.min()
         data_max = data.max()
 
-        data = (data - data_min) / (data_max - data_min)
-        error = error / (data_max - data_min)
+        scale = (data_max - data_min).clamp_min(torch.finfo(data.dtype).eps)
+        data = (data - data_min) / scale
+        error = error / scale
 
         if self.transform is not None:
             data = self.transform(data)
