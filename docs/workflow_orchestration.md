@@ -1,7 +1,6 @@
 # Workflow Orchestration
 
-For the workflow orchestration we provide two frameworks: [Flyte](#flyte) and
-[StreamFlow](#streamflow).
+For workflow orchestration we provide two frameworks: Flyte and StreamFlow.
 Please visit the [Machine Learning Workflow Orchestration
 Seminar](https://bernddoser.github.io/ML-workflow-orchestration/) for more information.
 

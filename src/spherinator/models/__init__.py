@@ -2,6 +2,8 @@
 PyTorch Spherinator Models
 """
 
+from importlib import import_module
+
 from .autoencoder import Autoencoder
 from .consecutive_conv_1d_layers import ConsecutiveConv1DLayer
 from .consecutive_conv_2d_layers import ConsecutiveConv2DLayer
@@ -12,16 +14,29 @@ from .convolutional_decoder_2d import ConvolutionalDecoder2D
 from .convolutional_encoder_1d import ConvolutionalEncoder1D
 from .convolutional_encoder_2d import ConvolutionalEncoder2D
 from .embedding_reconstruction import EmbeddingReconstruction
-from .export_onnx import export_onnx
-from .huggingface_resnet_encoder import HuggingFaceResNetEncoder
-from .huggingface_vit_encoder import HuggingFaceViTEncoder
 from .mlp import MLP
 from .sequential import Sequential
-from .upload_to_huggingface import upload_to_huggingface
 from .upsampling_decoder_2d import UpsamplingDecoder2D
 from .variational_autoencoder import VariationalAutoencoder
 from .weights_provider import WeightsProvider
 from .yaml2model import yaml2model
+
+_LAZY_IMPORTS = {
+    "HuggingFaceResNetEncoder": (".huggingface_resnet_encoder", "HuggingFaceResNetEncoder"),
+    "HuggingFaceViTEncoder": (".huggingface_vit_encoder", "HuggingFaceViTEncoder"),
+    "export_onnx": (".export_onnx", "export_onnx"),
+    "upload_to_huggingface": (".upload_to_huggingface", "upload_to_huggingface"),
+}
+
+
+def __getattr__(name: str):
+    if name not in _LAZY_IMPORTS:
+        raise AttributeError(name)
+    module_name, attribute = _LAZY_IMPORTS[name]
+    value = getattr(import_module(module_name, __name__), attribute)
+    globals()[name] = value
+    return value
+
 
 __all__ = [
     "MLP",

@@ -1,4 +1,4 @@
-## API Reference
+# API Reference
 
 ```{eval-rst}
 .. automodule:: spherinator.models

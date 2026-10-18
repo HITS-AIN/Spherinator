@@ -52,13 +52,12 @@ spherinator fit -c config.yaml \
   --trainer.max_epochs 100
 ```
 
-Configs can be **composed** by chaining multiple `-c` flags:
+Configs can be **composed** by chaining multiple existing `-c` files. The committed
+`experiments/illustris.yaml` is a complete example:
 
 ```bash
 spherinator fit \
-  -c experiments/illustris.yaml \
-  -c experiments/vae_vit.yaml \
-  -c experiments/wandb.yaml
+  -c experiments/illustris.yaml
 ```
 
 Training can be resumed from a checkpoint:
@@ -94,7 +93,7 @@ data:
 |-----------|-------------|
 | `path` | Path to the directory containing Parquet files |
 | `columns` | List of columns to load; each entry may carry a `transform` |
-| `return_dict` | If `True`, batches are dicts keyed by column name; if `False`, the first column tensor is returned directly |
+| `return_dict` | If `True`, batches are dicts keyed by column name; defaults to `False`, returning the first column tensor directly |
 | `batch_size` | Number of samples per mini-batch |
 | `shuffle` | Shuffle the dataset each epoch |
 | `num_workers` | Number of parallel data-loading workers |
@@ -269,7 +268,8 @@ z → Linear → reshape (base_channels, seed_size, seed_size)
   → 1×1 Conv → Sigmoid → output
 ```
 
-The number of upsampling steps is inferred automatically to reach `output_dim[1]` from `seed_size`.
+The number of upsampling steps is inferred automatically and the final feature map is resized to
+the exact `output_dim[1:]`, including non-square output sizes.
 
 ```yaml
 decoder:
@@ -309,8 +309,8 @@ perceptually more faithful image reconstructions. A frozen VGG-16 backbone is us
 feature extractor; the loss is the mean squared error between the activations of the chosen
 intermediate layers for the reconstruction and the target.
 
-Single-channel (grayscale) inputs are automatically broadcast to three channels before being
-passed through the network.
+Single-channel (grayscale) inputs are automatically broadcast to three channels. Inputs are
+expected in `[0, 1]` and are normalized with the ImageNet statistics used to train VGG-16.
 
 ```yaml
 reconstruction_loss:
@@ -384,11 +384,10 @@ Common precision options: `32`, `16-mixed`, `bf16-mixed`.
 
 ## Weights & Biases integration
 
-Append `experiments/wandb.yaml` to enable [W&B](https://wandb.ai) logging. Edit `entity` and
-`tags` as needed:
+Configure [W&B](https://wandb.ai) under `trainer.logger`. The complete
+`experiments/illustris.yaml` example includes this configuration; edit `entity` and `tags` as needed:
 
 ```yaml
-# experiments/wandb.yaml
 trainer:
   logger:
     class_path: lightning.pytorch.loggers.WandbLogger
@@ -407,11 +406,10 @@ Callbacks are appended as additional YAML files or inline under `trainer.callbac
 
 ### Log reconstructions during training
 
-`experiments/callback_log_reconstructions.yaml` logs a fixed set of sample reconstructions to W&B
-after every validation epoch. Requires W&B to be configured.
+`LogReconstructionCallback` logs a fixed set of sample reconstructions to W&B after every training
+epoch. It requires W&B to be configured.
 
 ```yaml
-# experiments/callback_log_reconstructions.yaml
 trainer:
   callbacks:
     - class_path: spherinator.callbacks.LogReconstructionCallback
@@ -456,10 +454,9 @@ in W&B or TensorBoard.
 
 ### Save the best model checkpoint
 
-`experiments/callback_best_model.yaml` saves the checkpoint with the lowest `train_loss`:
+The following callback configuration saves the checkpoint with the lowest `train_loss`:
 
 ```yaml
-# experiments/callback_best_model.yaml
 trainer:
   callbacks:
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
@@ -473,24 +470,11 @@ trainer:
 
 ## Complete example configurations
 
-### VAE with CNN encoder (128×128 images)
+### Complete 128×128 image example
 
 ```bash
 spherinator fit \
-  -c experiments/vae_cnn3.yaml \
-  -c experiments/illustris_small.yaml \
-  -c experiments/wandb.yaml \
-  -c experiments/callback_best_model.yaml
-```
-
-### VAE with Vision Transformer encoder (224×224 images)
-
-```bash
-spherinator fit \
-  -c experiments/vae_vit.yaml \
-  -c experiments/illustris_small.yaml \
-  -c experiments/wandb.yaml \
-  -c experiments/callback_log_reconstructions.yaml
+  -c experiments/illustris.yaml
 ```
 
 ## Exporting to ONNX
@@ -507,3 +491,6 @@ ONNX files to `export_path`:
 
 All three exported graphs support a dynamic batch axis, so the exported models accept any batch
 size at inference time.
+
+Both model YAML files and PyTorch checkpoints must be treated as trusted inputs. YAML model files
+select Python classes to import and construct; checkpoints are loaded in weights-only mode.
