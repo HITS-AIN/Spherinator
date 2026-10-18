@@ -20,6 +20,16 @@ def test_forward():
     assert recon.shape == input.shape
 
 
+def test_single_column_dictionary_batch():
+    encoder = ConvolutionalEncoder1D([1, 12], 3)
+    decoder = ConvolutionalDecoder1D(3, [1, 12], [1, 12])
+    model = Autoencoder(encoder=encoder, decoder=decoder)
+
+    loss = model._compute_loss({"data": torch.randn(2, 1, 12)})
+
+    assert loss.ndim == 0
+
+
 def test_training(parquet_1d_metadata):
     """Test training of Autoencoder"""
     encoder = ConvolutionalEncoder1D([1, 12], 3)

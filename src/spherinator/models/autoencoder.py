@@ -3,6 +3,8 @@ import torch
 from torch import nn
 from torch.optim import Adam
 
+from ._batch import split_reconstruction_batch
+
 
 class Autoencoder(pl.LightningModule):
     """Autoencoder initializer
@@ -61,12 +63,9 @@ class Autoencoder(pl.LightningModule):
         return self.forward(x)
 
     def _compute_loss(self, batch):
-        if isinstance(batch, (tuple, list)):
-            batch_augmented, batch_original = batch
-        else:
-            batch_augmented = batch_original = batch
+        batch_augmented, batch_original = split_reconstruction_batch(batch)
         recon = self.forward(batch_augmented)
-        return self.reconstruction_loss(batch_original, recon).mean()
+        return self.reconstruction_loss(recon, batch_original).mean()
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         loss = self._compute_loss(batch)

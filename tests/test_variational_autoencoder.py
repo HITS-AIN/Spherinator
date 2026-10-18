@@ -33,7 +33,19 @@ def test_forward(encoder, decoder):
     assert z_mean.shape == (batch_size, 3)
     assert z_var.shape == (batch_size, 1)
     assert recon.shape == input.shape
-    assert recon.shape == input.shape
+
+
+def test_unreduced_reconstruction_loss(encoder, decoder):
+    model = VariationalAutoencoder(
+        encoder=encoder,
+        decoder=decoder,
+        encoder_out_dim=3,
+        reconstruction_loss=torch.nn.MSELoss(reduction="none"),
+    )
+
+    loss, reconstruction, kl = model._compute_loss(torch.randn(4, 1, 12))
+
+    assert loss.ndim == reconstruction.ndim == kl.ndim == 0
 
 
 def test_training(parquet_1d_metadata, encoder, decoder):
