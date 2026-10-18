@@ -26,22 +26,25 @@ class ParquetIterableDataset(IterableDataset):
                 transformations to modify the data. Defaults to None.
         """
         super().__init__()
+        self.data_directory = data_directory
         self.data_column = data_column
         dataset = ds.dataset(data_directory, format="parquet")
-        self.scanner = dataset.scanner(columns=[data_column], batch_size=batch_size)
+        self.batch_size = batch_size
         self.transform = transform
 
         self.shape = None
         metadata_shape = bytes(data_column, "utf8") + b"_shape"
-        if metadata_shape in dataset.schema.metadata:
-            shape_string = dataset.schema.metadata[metadata_shape].decode("utf8")
+        metadata = dataset.schema.metadata or {}
+        if metadata_shape in metadata:
+            shape_string = metadata[metadata_shape].decode("utf8")
             shape = shape_string.replace("(", "").replace(")", "").split(",")
             self.shape = tuple(map(int, shape))
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
 
-        iterator = self.scanner.to_batches()
+        dataset = ds.dataset(self.data_directory, format="parquet")
+        iterator = dataset.scanner(columns=[self.data_column], batch_size=self.batch_size).to_batches()
 
         # Special treatment for the multi-worker case
         # Idea adapted from itertools.islice

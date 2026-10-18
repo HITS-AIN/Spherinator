@@ -1,3 +1,5 @@
+import numpy as np
+import pyarrow as pa
 import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 import pytest
@@ -153,6 +155,22 @@ def test_parquet_merge(parquet_test_merge):
     assert (batch == torch.tensor([1.0, 2.0, 3.0, 4.0])).all()
 
 
+def test_parquet_merge_all_columns(tmp_path):
+    table = pa.table(
+        {
+            "a": [np.array([1.0], dtype=np.float32)],
+            "b": [np.array([2.0], dtype=np.float32)],
+            "c": [np.array([3.0], dtype=np.float32)],
+        }
+    )
+    path = tmp_path / "three-columns.parquet"
+    pq.write_table(table, path)
+
+    dataset = ParquetDataset(path, data_column=["a", "b", "c"])
+
+    assert torch.equal(dataset[0], torch.tensor([1.0, 2.0, 3.0]))
+
+
 def test_absmax_norm(parquet_test_norm):
     """Test the ParquetDataModule normalization absmax."""
     data = ParquetDataModule(
@@ -174,6 +192,19 @@ def test_absmax_norm(parquet_test_norm):
         torch.tensor([[-0.3077, 1.0000, -0.1282], [0.2073, -1.0000, -0.0488]]),
         atol=1e-3,
     ).all()
+
+
+@pytest.mark.parametrize("normalize", ["minmax", "absmax"])
+def test_normalization_of_constant_sample_is_finite(tmp_path, normalize):
+    table = pa.table({"data": [np.ones(3, dtype=np.float32)]})
+    path = tmp_path / "constant.parquet"
+    pq.write_table(table, path)
+    data = ParquetDataModule(path, data_column="data", normalize=normalize, num_workers=0)
+    data.setup("fit")
+
+    batch = next(iter(data.train_dataloader()))
+
+    assert torch.isfinite(batch).all()
 
 
 def test_parquet_dataset_with_index(parquet_numpy_file):
