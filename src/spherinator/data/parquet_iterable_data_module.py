@@ -1,8 +1,7 @@
-import torch
-import torchvision.transforms.v2 as transforms
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader
 
+from spherinator.data.parquet_data_module import MinMaxNormalize
 from spherinator.data.parquet_iterable_dataset import ParquetIterableDataset
 
 
@@ -36,13 +35,7 @@ class ParquetIterableDataModule(LightningDataModule):
         self.data_train = None
         self.dataloader_train = None
 
-        self.transform_train = transforms.Compose(
-            [
-                transforms.Lambda(  # Normalize
-                    lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
-                )
-            ]
-        )
+        self.transform_train = MinMaxNormalize()
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
@@ -65,6 +58,7 @@ class ParquetIterableDataModule(LightningDataModule):
                 self.data_train,
                 batch_size=self.batch_size,
                 num_workers=self.num_workers,
+                persistent_workers=self.num_workers > 0,
             )
 
     def train_dataloader(self):

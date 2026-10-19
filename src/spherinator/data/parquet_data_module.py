@@ -1,10 +1,25 @@
 import torch
-import torchvision.transforms.v2 as transforms
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader
 
 from spherinator.data.parquet_dataset import ParquetDataset
 from spherinator.data.parquet_dataset_with_error import ParquetDatasetWithError
+
+
+class MinMaxNormalize:
+    """Normalize a tensor to [0, 1], treating constant tensors as zero."""
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        denominator = (tensor.max() - tensor.min()).clamp_min(torch.finfo(tensor.dtype).eps)
+        return (tensor - tensor.min()) / denominator
+
+
+class AbsMaxNormalize:
+    """Normalize a tensor by its largest absolute value."""
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        denominator = tensor.abs().max().clamp_min(torch.finfo(tensor.dtype).eps)
+        return tensor / denominator
 
 
 class ParquetDataModule(LightningDataModule):
@@ -51,9 +66,11 @@ class ParquetDataModule(LightningDataModule):
 
         self.transform_train = None
         if normalize == "minmax":
-            self.transform_train = transforms.Lambda(lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x)))
+            self.transform_train = MinMaxNormalize()
         elif normalize == "absmax":
-            self.transform_train = transforms.Lambda(lambda x: x / torch.max(torch.abs(x)))
+            self.transform_train = AbsMaxNormalize()
+        elif normalize not in (None, "none"):
+            raise ValueError("normalize must be one of: None, 'none', 'minmax', or 'absmax'")
 
     def setup(self, stage: str):
         """Sets up the data set and data loaders.
@@ -86,6 +103,7 @@ class ParquetDataModule(LightningDataModule):
                 batch_size=self.batch_size,
                 shuffle=self.shuffle,
                 num_workers=self.num_workers,
+                persistent_workers=self.num_workers > 0,
             )
 
     def train_dataloader(self):
