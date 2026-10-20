@@ -17,7 +17,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
       - uses: astral-sh/setup-uv@v8.1.0
       - name: Verify tag matches package version
         run: python -c "import os, tomllib; expected='v' + tomllib.load(open('pyproject.toml', 'rb'))['project']['version']; actual=os.environ['GITHUB_REF_NAME']; assert actual == expected, f'{actual} does not match {expected}'"
