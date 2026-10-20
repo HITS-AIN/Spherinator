@@ -27,19 +27,19 @@ The code is tested using [pytest](https://docs.pytest.org). All tests are locate
 
 ## Continuous Integration
 
-GitHub Actions is used for continuous integration. The CI workflow is defined in [.github/workflows/python-package.yml](.github/workflows/python-package.yml). The CI workflow runs the tests and checks the code style and the code formatting on every push to the repository.
+GitHub Actions is used for continuous integration. The CI workflow is defined in
+`.github/workflows/python-package.yml`. It runs tests, documentation builds, linting, and formatting
+checks on every push to the repository.
 
 ## Code Formatting
 
-The Python code must be formatted with [black](https://black.readthedocs.io/en/stable/).
-This can be done manually by running `black .` in the project directory or by installing the vscode extension `ms-python.black-formatter`. The format on save option is enabled for `vscode` in the `.vscode/settings.json` file.
-The CI workflow will check the code formatting and fail if the code is not formatted correctly.
+The Python code is formatted with [Ruff](https://docs.astral.sh/ruff/). Run
+`uv run --extra dev ruff format --check .` before opening a pull request.
 
 ## Static code analysis
 
-The code will be analyzed using [flake8](https://flake8.pycqa.org/en/latest/).
-The linting rules are defined in the `.flake8` file. The linter can be run manually by running `flake8` in the project directory.
-The CI workflow will check the code for any issues reported by flake8 and fail if any issues are found.
+The code is analyzed with Ruff. Run `uv run --extra dev ruff check .`; the rules are configured in
+`pyproject.toml`, and CI runs the same check.
 
 ## Pull requests
 

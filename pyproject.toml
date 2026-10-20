@@ -11,33 +11,42 @@ authors = [
 license = "Apache-2.0"
 readme = "README.md"
 
-requires-python = ">=3.12,<4.0"
+requires-python = ">=3.12,<3.14"
 dependencies = [
-    "datasets>=4.8.4",
     "jsonargparse[signatures] >=4.37",
     "lightning >=2.1",
-    "matplotlib >=3.10",
     "numpy >=1.26, <3.0",
-    "onnx >=1.15",
-    "onnxscript >=0.7",
-    "pandas >=2.2.3",
     "power-spherical >=0.8",
-    "pyarrow >=19.0",
-    "scikit-image >=0.25",
-    "scipy >=1.11",
+    "pyyaml>=6.0",
     "torch >=2.11",
-    "torchvision >=0.26",
-    "transformers >=4.40",
-    "wandb >=0.20",
 ]
 
 [project.optional-dependencies]
+data = [
+    "datasets>=4.8.4",
+    "pandas>=2.2.3",
+    "pyarrow>=19.0",
+]
+huggingface = [
+    "huggingface-hub>=0.34",
+    "transformers>=4.40,<6",
+]
+onnx = [
+    "onnx>=1.15",
+    "onnxruntime>=1.20",
+    "onnxscript>=0.7",
+]
+tracking = ["wandb>=0.20"]
+vision = [
+    "matplotlib>=3.10",
+    "torchvision>=0.26",
+]
 dev = [
+    "spherinator[data,huggingface,onnx,tracking,vision]",
     "anywidget>=0.10.0",
     "ipykernel >=6.29",
     "ipywidgets>=8.1.8",
     "nbformat>=5.10.4",
-    "onnxruntime>=1.20",
     "pre-commit>=4.6",
     "pytest >=8.3",
     "pytest-timeout >=2.0",

@@ -62,8 +62,8 @@ uv run --extra dev pytest
 Run a single test file or test:
 
 ```bash
-uv run --extra dev pytest tests/test_fits_converter.py
-uv run --extra dev pytest tests/test_fits_converter.py::test_some_case
+uv run --extra dev pytest tests/test_parquet_dataset.py
+uv run --extra dev pytest tests/test_parquet_dataset.py::test_parquet_merge
 ```
 
 ### Lint and format
@@ -108,4 +108,16 @@ Open `docs/_build/html/index.html` in a browser to preview it. For live-reloadin
 
 ```bash
 uv run --extra docs sphinx-autobuild docs docs/_build/html
+```
+
+## Optional features
+
+The base installation contains the model-training core. Install only the integrations you use:
+
+```bash
+pip install "spherinator[data]"         # Parquet and Hugging Face datasets
+pip install "spherinator[vision]"       # plotting, image models, perceptual loss
+pip install "spherinator[huggingface]"  # pretrained Hugging Face encoders and uploads
+pip install "spherinator[onnx]"         # ONNX export and runtime validation
+pip install "spherinator[tracking]"     # Weights & Biases
 ```
