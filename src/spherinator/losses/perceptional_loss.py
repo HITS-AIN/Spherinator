@@ -23,8 +23,9 @@ class PerceptualLoss(nn.Module):
             self.blocks.append(vgg[prev : layer + 1])
             prev = layer + 1
         self.weights = weights
-        self.register_buffer("mean", torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1))
-        self.register_buffer("std", torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1))
+        # Non-persistent to keep checkpoints compatible with versions without these buffers
+        self.register_buffer("mean", torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1), persistent=False)
+        self.register_buffer("std", torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1), persistent=False)
 
     def forward(self, x, target):
         # Expand 1-channel tensors to 3 channels (by repeating the channel)

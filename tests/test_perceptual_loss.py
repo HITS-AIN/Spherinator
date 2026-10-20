@@ -31,6 +31,14 @@ def test_perceptual_loss_applies_imagenet_normalization(monkeypatch):
     assert torch.allclose(capture.value, expected)
 
 
+def test_perceptual_loss_normalization_not_in_state_dict(monkeypatch):
+    monkeypatch.setattr(perceptual_module, "vgg16", lambda **_kwargs: TinyVGG(Capture()))
+    loss = perceptual_module.PerceptualLoss(layers=(0,), weights=(1.0,))
+
+    assert "mean" not in loss.state_dict()
+    assert "std" not in loss.state_dict()
+
+
 def test_perceptual_loss_validates_configuration(monkeypatch):
     monkeypatch.setattr(perceptual_module, "vgg16", lambda **_kwargs: TinyVGG(Capture()))
 

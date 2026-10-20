@@ -109,6 +109,7 @@ def test_on_train_epoch_end(samples, exception, parquet_2d_metadata):
 
     # Call the callback
     model.train()
+    model.sphere_head.eval()
     running_means = [module.running_mean.clone() for module in model.modules() if hasattr(module, "running_mean")]
     with exception:
         callback.on_train_epoch_end(trainer=trainer, model=model)
@@ -121,6 +122,7 @@ def test_on_train_epoch_end(samples, exception, parquet_2d_metadata):
     # Check that the figure was logged
     assert logger.calls == 1
     assert model.training
+    assert not model.sphere_head.training
     assert all(
         torch.equal(before, module.running_mean)
         for before, module in zip(running_means, (m for m in model.modules() if hasattr(m, "running_mean")))
