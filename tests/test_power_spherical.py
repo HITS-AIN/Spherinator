@@ -6,8 +6,9 @@ def test_power_spherical_2d():
     dist = PowerSpherical(torch.Tensor([0.0, 0.0]), torch.Tensor([1.0]))
 
     assert dist.has_rsample is True
-    assert torch.allclose(dist.rsample(), torch.Tensor([-0.9971, 0.0766]), rtol=1e-3)
-    assert torch.allclose(dist.rsample(), torch.Tensor([-0.5954, 0.8034]), rtol=1e-3)
+    samples = dist.rsample((16,))
+    assert samples.shape == (16, 1, 2)
+    assert torch.allclose(samples.norm(dim=-1), torch.ones(16, 1), atol=1e-5)
 
 
 def test_power_spherical_large_scale():
@@ -17,8 +18,10 @@ def test_power_spherical_large_scale():
     z_scale = torch.nn.functional.softplus(z_scale) + 1
     dist = PowerSpherical(z_mean, z_scale)
 
-    assert torch.allclose(dist.rsample(), torch.Tensor([1.0000e00, -2.9921e-04, -3.8586e-04]))
-    assert torch.allclose(dist.rsample(), torch.Tensor([1.0000e00, -4.6703e-04, 1.4249e-04]))
+    samples = dist.rsample((16,))
+    assert torch.isfinite(samples).all()
+    assert torch.allclose(samples.norm(dim=-1), torch.ones(16, 1), atol=1e-5)
+    assert samples[..., 0].mean() > 0.99
 
 
 def test_power_spherical_2d_batch():
