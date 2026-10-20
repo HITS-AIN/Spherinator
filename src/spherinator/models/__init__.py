@@ -24,6 +24,7 @@ from .yaml2model import yaml2model
 _LAZY_IMPORTS = {
     "HuggingFaceResNetEncoder": (".huggingface_resnet_encoder", "HuggingFaceResNetEncoder"),
     "HuggingFaceViTEncoder": (".huggingface_vit_encoder", "HuggingFaceViTEncoder"),
+    "create_model_card": (".create_model_card", "create_model_card"),
     "export_onnx": (".export_onnx", "export_onnx"),
     "upload_to_huggingface": (".upload_to_huggingface", "upload_to_huggingface"),
 }
@@ -56,6 +57,7 @@ __all__ = [
     "UpsamplingDecoder2D",
     "VariationalAutoencoder",
     "WeightsProvider",
+    "create_model_card",
     "export_onnx",
     "upload_to_huggingface",
     "yaml2model",

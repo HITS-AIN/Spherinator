@@ -511,3 +511,30 @@ With ONNX Runtime, use `session.get_modelmeta().custom_metadata_map["aibom.uri"]
 
 Both model YAML files and PyTorch checkpoints must be treated as trusted inputs. YAML model files
 select Python classes to import and construct; checkpoints are loaded in weights-only mode.
+
+### Uploading to Hugging Face
+
+With the `huggingface` extra installed, an export directory can be published as a Hugging Face
+model repository. {py:func}`~spherinator.models.create_model_card` builds a model card from the
+AI-BOM, listing every file with its SHA-256 hash, the hyperparameters and a usage example.
+{py:func}`~spherinator.models.upload_to_huggingface` uploads the directory and stores the card as
+`README.md` in the repository root:
+
+```python
+from spherinator.models import create_model_card, export_onnx, upload_to_huggingface
+
+repo_id = "HITS-AIN/spherinator-illustris"
+export_onnx(
+    "model.ckpt",
+    "model.yaml",
+    "export",
+    input_shape=(1, 3, 128, 128),
+    latent_shape=(1, 3),
+    aibom_uri=f"https://huggingface.co/{repo_id}/resolve/main/aibom.spdx.json",
+)
+card = create_model_card("export", repo_id=repo_id)
+upload_to_huggingface("export", repo_id, model_card=card)
+```
+
+The absolute `aibom_uri` lets the ONNX files point to their AI-BOM after they've been downloaded
+from the Hub.
