@@ -13,7 +13,7 @@ class WeightsProvider:
     """
 
     def __init__(self, weight_path: str, prefix: str | None = None) -> None:
-        self.weights = torch.load(weight_path)["state_dict"]
+        self.weights = torch.load(weight_path, weights_only=True, map_location="cpu")["state_dict"]
         if prefix is not None:
             self.weights = {k[len(prefix) + 1 :]: v for k, v in self.weights.items() if k.startswith(prefix)}
 

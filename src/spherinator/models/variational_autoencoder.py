@@ -7,6 +7,8 @@ from power_spherical import HypersphericalUniform, PowerSpherical
 from torch import nn
 from torch.optim import Adam
 
+from ._batch import split_reconstruction_batch
+
 
 class SphereHead(nn.Module):
     """Sphere head: Linear → L2-normalize for location,
@@ -104,7 +106,7 @@ class VariationalAutoencoder(pl.LightningModule):
 
     def forward(self, x):
         z_location, z_scale = self.encode(x)
-        q_z, p_z = self.reparameterize(z_location, z_scale.squeeze())
+        q_z, p_z = self.reparameterize(z_location, z_scale.squeeze(-1))
         z = q_z.rsample()
         recon = self.decode(z)
         return (z_location, z_scale), (q_z, p_z), z, recon
@@ -114,12 +116,11 @@ class VariationalAutoencoder(pl.LightningModule):
         return self.decode(z)
 
     def _compute_loss(self, batch, training_step: bool = False):
-        if isinstance(batch, (tuple, list)):
-            batch_augmented, batch_original = batch
-        else:
-            batch_augmented = batch_original = batch
+        batch_augmented, batch_original = split_reconstruction_batch(batch)
         (_, z_scale), (q_z, p_z), _, recon = self.forward(batch_augmented)
-        loss_recon = self.reconstruction_loss(batch_original, recon)
+        loss_recon = self.reconstruction_loss(recon, batch_original)
+        if loss_recon.ndim > 1:
+            loss_recon = loss_recon.flatten(1).mean(1)
         loss_KL = self.beta * torch.distributions.kl.kl_divergence(q_z, p_z)
         loss = (loss_recon + loss_KL).mean()
         loss_recon = loss_recon.mean()

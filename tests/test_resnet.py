@@ -2,10 +2,15 @@ import pytest
 import torch
 import torchvision.models
 
-from spherinator.models import (
-    ConvolutionalDecoder2D,
-    VariationalAutoencoder,
-)
+from spherinator.models import ConvolutionalDecoder2D, UpsamplingDecoder2D, VariationalAutoencoder
+
+
+def test_upsampling_decoder_supports_non_square_output():
+    decoder = UpsamplingDecoder2D(input_dim=3, output_dim=[2, 13, 17], base_channels=16, seed_size=4)
+
+    output = decoder(torch.randn(2, 3))
+
+    assert output.shape == (2, 2, 13, 17)
 
 
 @pytest.mark.parametrize(

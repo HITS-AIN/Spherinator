@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from torch import nn
 
 from .weights_provider import WeightsProvider
@@ -27,10 +28,9 @@ class UpsamplingDecoder2D(nn.Module):
     Designed to decode a low-dimensional latent vector back to a
     full-resolution image matching the ViT input (224×224 by default).
 
-    Architecture:
-        z  →  Linear  →  reshape (base_channels, seed_size, seed_size)
-           →  5× UpsampleBlock (each 2×)  →  final 1×1 conv  →  output
-        Spatial path: seed_size × 2^n_upsample = output_size
+    The architecture projects the latent vector to a square seed feature map, applies
+    repeated 2× upsampling blocks, resizes to the exact requested height and width,
+    and projects to the output channels with a 1×1 convolution.
 
     Args:
         input_dim (int): Latent vector size.
@@ -54,7 +54,9 @@ class UpsamplingDecoder2D(nn.Module):
 
         self.input_dim = input_dim
         self.output_dim = output_dim
-        out_channels, out_h, _out_w = output_dim
+        out_channels, out_h, out_w = output_dim
+        if min(out_h, out_w, seed_size) <= 0:
+            raise ValueError("output dimensions and seed_size must be positive")
 
         self.example_input_array = torch.randn(1, input_dim)
 
@@ -69,14 +71,11 @@ class UpsamplingDecoder2D(nn.Module):
         blocks = []
         in_ch = base_channels
         current_size = seed_size
-        while current_size < out_h // 2:
+        while current_size < max(out_h, out_w):
             out_ch = max(in_ch // 2, 32)
             blocks.append(_UpsampleBlock(in_ch, out_ch))
             in_ch = out_ch
             current_size *= 2
-        # Final upsample to reach out_h
-        blocks.append(_UpsampleBlock(in_ch, max(in_ch // 2, 32)))
-        in_ch = max(in_ch // 2, 32)
         self.upsample_blocks = nn.Sequential(*blocks)
 
         # 1×1 projection to output channels + Sigmoid to keep values in [0,1]
@@ -94,5 +93,6 @@ class UpsamplingDecoder2D(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.fc(x)
         x = self.upsample_blocks(x)
+        x = F.interpolate(x, size=self.output_dim[1:], mode="bilinear", align_corners=False)
         x = self.head(x)
         return x

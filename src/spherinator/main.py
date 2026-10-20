@@ -24,9 +24,13 @@ class WandbSaveConfigCallback(SaveConfigCallback):
     """Custom SaveConfigCallback that saves the config to the wandb run's files directory."""
 
     def setup(self, trainer, pl_module, stage):
-        pass  # Prevent saving to default log_dir before wandb is ready
+        if trainer.logger is not None and trainer.logger.__class__.__name__ == "WandbLogger":
+            return  # Prevent saving to default log_dir before wandb is ready
+        return super().setup(trainer, pl_module, stage)
 
     def on_train_start(self, trainer, pl_module):
+        if trainer.logger is None or trainer.logger.__class__.__name__ != "WandbLogger":
+            return
         if self.already_saved:
             return
         log_dir = trainer.logger.experiment.dir
