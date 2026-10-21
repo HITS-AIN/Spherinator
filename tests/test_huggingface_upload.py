@@ -68,7 +68,10 @@ def test_create_model_card(export_path):
 
 
 def test_upload_to_huggingface_with_model_card(export_path, hub_calls):
-    card = create_model_card(str(export_path), repo_id=REPO_ID)
+    card = create_model_card(str(export_path), repo_id=REPO_ID, path_in_repo="v1")
+
+    assert f'hf_hub_download("{REPO_ID}", "v1/encoder.onnx")' in card.text
+    assert "[`v1/aibom.spdx.json`](v1/aibom.spdx.json)" in card.text
 
     upload_to_huggingface(str(export_path), REPO_ID, path_in_repo="v1", token="secret", model_card=card)
 

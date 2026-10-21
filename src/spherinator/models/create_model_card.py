@@ -13,6 +13,7 @@ def create_model_card(
     license: str = "apache-2.0",
     tags: list[str] | None = None,
     description: str = "",
+    path_in_repo: str = "",
 ) -> ModelCard:
     """Creates a Hugging Face model card for a directory written by :func:`~spherinator.models.export_onnx`.
 
@@ -25,6 +26,9 @@ def create_model_card(
         license (str, optional): License identifier of the models. Defaults to "apache-2.0".
         tags (list[str], optional): Tags added to "spherinator" and "onnx". Defaults to None.
         description (str, optional): Text shown below the title. Defaults to "".
+        path_in_repo (str, optional): Repository subfolder the export is uploaded to, i.e. the ``path_in_repo``
+            of :func:`~spherinator.models.upload_to_huggingface`. The card itself stays in the repository root.
+            Defaults to "".
 
     Returns:
         ModelCard: Model card to pass to :func:`~spherinator.models.upload_to_huggingface`.
@@ -40,6 +44,7 @@ def create_model_card(
     ]
     hyperparameters = {entry["key"]: entry["value"] for entry in packages[0]["ai_hyperparameter"]}
     model_name = repo_id.split("/")[-1]
+    prefix = f"{path_in_repo.strip('/')}/" if path_in_repo.strip("/") else ""
 
     card_data = ModelCardData(
         license=license,
@@ -82,14 +87,14 @@ import numpy as np
 import onnxruntime as ort
 from huggingface_hub import hf_hub_download
 
-session = ort.InferenceSession(hf_hub_download("{repo_id}", "{files[0]}"))
+session = ort.InferenceSession(hf_hub_download("{repo_id}", "{prefix}{files[0]}"))
 x = np.zeros({hyperparameters["input_shape"]}, dtype=np.float32)
 (output,) = session.run(None, {{"input": x}})
 ```
 
 ## AI-BOM
 
-[`{AIBOM_FILENAME}`]({AIBOM_FILENAME}) is an [SPDX {SPDX_VERSION}](https://spdx.dev/use/specifications/) AI bill
+[`{prefix}{AIBOM_FILENAME}`]({prefix}{AIBOM_FILENAME}) is an [SPDX {SPDX_VERSION}](https://spdx.dev/use/specifications/) AI bill
 of materials listing every ONNX file with its SHA-256 hash. Each ONNX file links to it via the `aibom.uri` and
 `aibom.format` metadata properties.
 """
