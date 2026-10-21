@@ -2,6 +2,7 @@ import hashlib
 import json
 import sys
 
+import onnx
 import onnxruntime as ort
 import pytest
 import torch
@@ -10,7 +11,6 @@ import yaml
 from power_spherical import PowerSpherical
 from torch import nn
 
-import onnx
 from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D, export_onnx
 
 
