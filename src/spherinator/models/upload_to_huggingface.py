@@ -8,6 +8,7 @@ def upload_to_huggingface(
     repo_type: str = "model",
     token: str | None = None,
     model_card: ModelCard | str | None = None,
+    private: bool = False,
 ):
     """Upload a folder to a HuggingFace repository.
 
@@ -20,9 +21,11 @@ def upload_to_huggingface(
         model_card (ModelCard | str, optional): Model card uploaded as ``README.md`` to the repository root,
             independent of ``path_in_repo``, e.g. from :func:`~spherinator.models.create_model_card`.
             Defaults to None.
+        private (bool): Create the repository as private if it does not exist yet. An existing repository keeps
+            its current visibility. Defaults to False.
     """
     api = HfApi(token=token)
-    api.create_repo(repo_id=repo_id, repo_type=repo_type, exist_ok=True)
+    api.create_repo(repo_id=repo_id, repo_type=repo_type, private=private, exist_ok=True)
     api.upload_folder(
         folder_path=local_path,
         repo_id=repo_id,

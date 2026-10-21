@@ -89,6 +89,13 @@ def test_upload_to_huggingface_without_model_card(export_path, hub_calls):
     upload_to_huggingface(str(export_path), REPO_ID)
 
     assert [name for name, _ in hub_calls] == ["init", "create_repo", "upload_folder"]
+    assert hub_calls[1][1]["private"] is False
+
+
+def test_upload_to_huggingface_private(export_path, hub_calls):
+    upload_to_huggingface(str(export_path), REPO_ID, private=True)
+
+    assert hub_calls[1][1]["private"] is True
 
 
 def test_lazy_imports_are_functions():
