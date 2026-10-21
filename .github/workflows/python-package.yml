@@ -26,10 +26,10 @@ jobs:
 
       # Keep the ruff version in sync with .pre-commit-config.yaml
       - name: Check code linting
-        run: uvx ruff@0.16.10 check --no-fix
+        run: uvx ruff@0.17.1 check --no-fix
 
       - name: Check code formatting
-        run: uvx ruff@0.16.10 format --check
+        run: uvx ruff@0.17.1 format --check
 
   test:
 
