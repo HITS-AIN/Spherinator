@@ -509,6 +509,12 @@ print(props["aibom.uri"])
 
 With ONNX Runtime, use `session.get_modelmeta().custom_metadata_map["aibom.uri"]`.
 
+If the config has a `data` section, the AI-BOM also lists its training dataset (`path` or
+`data_directory`) as a dataset package, which each ONNX file links to with a `trainedOn`
+relationship. A Hugging Face Hub dataset such as `HITS-AIN/Illustris_TNG_SKIRT_SDSS` gets
+its `huggingface.co/datasets/…` URL as download location. A local path is recorded by its
+directory name only.
+
 Both model YAML files and PyTorch checkpoints must be treated as trusted inputs. YAML model files
 select Python classes to import and construct; checkpoints are loaded in weights-only mode.
 
@@ -516,7 +522,9 @@ select Python classes to import and construct; checkpoints are loaded in weights
 
 With the `huggingface` extra installed, an export directory can be published as a Hugging Face
 model repository. {py:func}`~spherinator.models.create_model_card` builds a model card from the
-AI-BOM, listing every file with its SHA-256 hash, the hyperparameters and a usage example.
+AI-BOM, listing every file with its SHA-256 hash, the hyperparameters, the training dataset and a
+usage example. A Hub dataset is also added to the card's `datasets` metadata, so the Hub links the
+model to the dataset page.
 {py:func}`~spherinator.models.upload_to_huggingface` uploads the directory and stores the card as
 `README.md` in the repository root:
 

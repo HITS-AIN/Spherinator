@@ -9,25 +9,31 @@ from spherinator.models import create_model_card, upload_to_huggingface
 from spherinator.models.aibom import write_spdx_aibom
 
 REPO_ID = "HITS-AIN/spherinator-test"
+DATASET_ID = "HITS-AIN/test-dataset"
 
 
-@pytest.fixture
-def export_path(tmp_path):
+def _write_export(path, dataset):
     exported = []
     for name in ("encoder", "decoder", "reconstruction"):
-        path = tmp_path / f"{name}.onnx"
-        path.write_bytes(name.encode())
-        exported.append((name, str(path), f"{name} description"))
+        onnx_file = path / f"{name}.onnx"
+        onnx_file.write_bytes(name.encode())
+        exported.append((name, str(onnx_file), f"{name} description"))
     write_spdx_aibom(
-        aibom_path=str(tmp_path / "aibom.spdx.json"),
+        aibom_path=str(path / "aibom.spdx.json"),
         aibom_uri=f"https://huggingface.co/{REPO_ID}/resolve/main/aibom.spdx.json",
         exported=exported,
         model_type="Autoencoder",
         hyperparameters={"input_shape": (2, 1, 12), "latent_shape": (2, 3), "opset_version": 19},
         model_version="1.2.3",
         supplier="HITS",
+        dataset=dataset,
     )
-    return tmp_path
+    return path
+
+
+@pytest.fixture
+def export_path(tmp_path):
+    return _write_export(tmp_path, (DATASET_ID, f"https://huggingface.co/datasets/{DATASET_ID}"))
 
 
 @pytest.fixture
@@ -54,6 +60,7 @@ def test_create_model_card(export_path):
     assert card.data.license == "apache-2.0"
     assert card.data.tags == ["spherinator", "onnx", "astronomy"]
     assert card.data.model_name == "spherinator-test"
+    assert card.data.datasets == [DATASET_ID]
 
     for name in ("encoder", "decoder", "reconstruction"):
         sha256 = hashlib.sha256((export_path / f"{name}.onnx").read_bytes()).hexdigest()
@@ -63,8 +70,23 @@ def test_create_model_card(export_path):
     assert "version 1.2.3, supplied by HITS" in card.text
     assert f'hf_hub_download("{REPO_ID}", "encoder.onnx")' in card.text
     assert "np.zeros((2, 1, 12), dtype=np.float32)" in card.text
+    assert f"## Training data\n\n- [{DATASET_ID}](https://huggingface.co/datasets/{DATASET_ID})\n" in card.text
 
     assert ModelCard(str(card)).data.to_dict() == card.data.to_dict()
+
+
+def test_create_model_card_local_dataset(tmp_path):
+    card = create_model_card(str(_write_export(tmp_path, ("illustris", None))), repo_id=REPO_ID)
+
+    assert card.data.datasets is None
+    assert "## Training data\n\n- `illustris`\n" in card.text
+
+
+def test_create_model_card_without_dataset(tmp_path):
+    card = create_model_card(str(_write_export(tmp_path, None)), repo_id=REPO_ID)
+
+    assert card.data.datasets is None
+    assert "Training data" not in card.text
 
 
 def test_upload_to_huggingface_with_model_card(export_path, hub_calls):

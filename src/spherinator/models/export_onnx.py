@@ -1,10 +1,29 @@
 import os
+import re
 
 import torch
+import yaml
 from torch import nn
 
-from .aibom import AIBOM_FILENAME, SPDX_VERSION, write_spdx_aibom
+from .aibom import AIBOM_FILENAME, HF_DATASETS_URL, SPDX_VERSION, write_spdx_aibom
 from .yaml2model import yaml2model
+
+
+def _dataset(model_file: str) -> tuple[str, str | None] | None:
+    """Returns name and download location of the training dataset in the ``data`` section of a CLI config.
+
+    A ``path`` that doesn't exist locally and looks like ``owner/name`` is a Hugging Face Hub dataset, as in
+    :class:`~spherinator.data.DataModule`. Local paths are reduced to their directory name.
+    """
+    with open(model_file) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    init_args = (config.get("data") or {}).get("init_args") or {}
+    path = init_args.get("path") or init_args.get("data_directory")
+    if path is None:
+        return None
+    if "path" in init_args and not os.path.exists(path) and re.fullmatch(r"[\w.-]+/[\w.-]+", path):
+        return path, HF_DATASETS_URL + path
+    return os.path.basename(os.path.normpath(path)), None
 
 
 class _EncoderWrapper(nn.Module):
@@ -57,10 +76,12 @@ def export_onnx(
 
     Next to the ONNX files, an SPDX 3.0.1 AI-BOM (``aibom.spdx.json``) is written, which contains the
     SHA-256 of each ONNX file. Each ONNX file links to the AI-BOM via the ``aibom.uri`` metadata property.
+    The training dataset (``path`` or ``data_directory``) of the ``data`` section in ``model_file`` is added
+    to the AI-BOM as well.
 
     Args:
         ckpt_file (str): Path to the checkpoint file.
-        model_file (str): Path to the model YAML file.
+        model_file (str): Path to the model YAML file, e.g. the CLI config of the training run.
         export_path (str): Directory to save the ONNX files.
         input_shape (tuple): Shape of the input tensor.
         latent_shape (tuple): Shape of the latent tensor.
@@ -138,4 +159,5 @@ def export_onnx(
         hyperparameters={"input_shape": input_shape, "latent_shape": latent_shape, "opset_version": opset_version},
         model_version=model_version,
         supplier=supplier,
+        dataset=_dataset(model_file),
     )

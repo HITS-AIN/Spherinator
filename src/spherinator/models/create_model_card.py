@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from huggingface_hub import ModelCard, ModelCardData
 
-from .aibom import AIBOM_FILENAME, SPDX_VERSION
+from .aibom import AIBOM_FILENAME, HF_DATASETS_URL, SPDX_VERSION
 
 
 def create_model_card(
@@ -17,8 +17,9 @@ def create_model_card(
 ) -> ModelCard:
     """Creates a Hugging Face model card for a directory written by :func:`~spherinator.models.export_onnx`.
 
-    The files, SHA-256 hashes, version, supplier, and hyperparameters are read from the AI-BOM
-    (``aibom.spdx.json``) in ``export_path``, so the card always matches the exported ONNX files.
+    The files, SHA-256 hashes, version, supplier, hyperparameters, and training dataset are read from the AI-BOM
+    (``aibom.spdx.json``) in ``export_path``, so the card always matches the exported ONNX files. Hugging Face Hub
+    datasets are also added to the ``datasets`` metadata.
 
     Args:
         export_path (str): Directory containing the ONNX files and the AI-BOM.
@@ -43,6 +44,12 @@ def create_model_card(
         next(h["hashValue"] for h in package["verifiedUsing"] if h["algorithm"] == "sha256") for package in packages
     ]
     hyperparameters = {entry["key"]: entry["value"] for entry in packages[0]["ai_hyperparameter"]}
+    datasets = [element for element in graph if element["type"] == "dataset_DatasetPackage"]
+    hub_datasets = [
+        dataset["name"]
+        for dataset in datasets
+        if dataset.get("software_downloadLocation", "").startswith(HF_DATASETS_URL)
+    ]
     model_name = repo_id.split("/")[-1]
     prefix = f"{path_in_repo.strip('/')}/" if path_in_repo.strip("/") else ""
 
@@ -51,9 +58,17 @@ def create_model_card(
         library_name="onnx",
         tags=["spherinator", "onnx", *(tags or [])],
         model_name=model_name,
+        datasets=hub_datasets or None,
     )
 
     intro = f"{description}\n\n" if description else ""
+    dataset_rows = "\n".join(
+        f"- [{dataset['name']}]({dataset['software_downloadLocation']})"
+        if dataset["name"] in hub_datasets
+        else f"- `{dataset['name']}`"
+        for dataset in datasets
+    )
+    training_data = f"## Training data\n\n{dataset_rows}\n\n" if datasets else ""
     file_rows = "\n".join(
         f"| `{file}` | {package['description']} | `{sha256}` |"
         for file, package, sha256 in zip(files, packages, hashes, strict=True)
@@ -65,7 +80,7 @@ def create_model_card(
 {intro}ONNX export of a [Spherinator](https://github.com/HITS-AIN/Spherinator) `{packages[0]["ai_typeOfModel"][0]}`,
 version {packages[0]["software_packageVersion"]}, supplied by {supplier}.
 
-## Files
+{training_data}## Files
 
 | File | Description | SHA-256 |
 |------|-------------|---------|

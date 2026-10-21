@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 
 AIBOM_FILENAME = "aibom.spdx.json"
 SPDX_VERSION = "3.0.1"
+HF_DATASETS_URL = "https://huggingface.co/datasets/"
 
 
 def _sha256(path: str) -> str:
@@ -26,6 +27,7 @@ def write_spdx_aibom(
     hyperparameters: dict,
     model_version: str,
     supplier: str,
+    dataset: tuple[str, str | None] | None = None,
 ):
     """Writes an SPDX 3.0.1 AI-BOM (JSON-LD) describing the exported ONNX files.
 
@@ -37,6 +39,8 @@ def write_spdx_aibom(
         hyperparameters (dict): Key-value pairs listed as hyperparameters of each model.
         model_version (str): Version of the exported models.
         supplier (str): Name of the organization supplying the models.
+        dataset (tuple, optional): Name and download location (or None) of the training dataset, added as
+            dataset package with a ``trainedOn`` relationship from each model. Defaults to None.
     """
     namespace = f"https://spdx.org/spdxdocs/spherinator-{uuid.uuid4()}"
     now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -67,6 +71,35 @@ def write_spdx_aibom(
     ]
     package_ids = [package["spdxId"] for package in packages]
 
+    dataset_elements = []
+    profiles = ["core", "software", "ai"]
+    if dataset is not None:
+        dataset_name, dataset_location = dataset
+        dataset_id = f"{namespace}#dataset"
+        dataset_elements = [
+            {
+                "type": "dataset_DatasetPackage",
+                "spdxId": dataset_id,
+                "creationInfo": creation_info,
+                "name": dataset_name,
+                **({"software_downloadLocation": dataset_location} if dataset_location else {}),
+                "software_primaryPurpose": "data",
+                "dataset_datasetType": ["noAssertion"],
+            },
+            *(
+                {
+                    "type": "Relationship",
+                    "spdxId": f"{package_id}-trainedOn",
+                    "creationInfo": creation_info,
+                    "from": package_id,
+                    "relationshipType": "trainedOn",
+                    "to": [dataset_id],
+                }
+                for package_id in package_ids
+            ),
+        ]
+        profiles.append("dataset")
+
     aibom = {
         "@context": f"https://spdx.org/rdf/{SPDX_VERSION}/spdx-context.jsonld",
         "@graph": [
@@ -91,14 +124,15 @@ def write_spdx_aibom(
                 "name": f"spherinator {version('spherinator')}",
             },
             *packages,
+            *dataset_elements,
             {
                 "type": "SpdxDocument",
                 "spdxId": f"{namespace}#document",
                 "creationInfo": creation_info,
                 "name": "Spherinator ONNX AI-BOM",
-                "profileConformance": ["core", "software", "ai"],
+                "profileConformance": profiles,
                 "rootElement": package_ids,
-                "element": [supplier_id, tool_id, *package_ids],
+                "element": [supplier_id, tool_id, *package_ids, *(e["spdxId"] for e in dataset_elements)],
             },
         ],
     }
