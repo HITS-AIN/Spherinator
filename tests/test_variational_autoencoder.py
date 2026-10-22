@@ -1,7 +1,6 @@
 import pytest
 import torch
 from lightning.pytorch.trainer import Trainer
-
 from spherinator.data import ParquetDataModule
 from spherinator.models import ConvolutionalDecoder1D, ConvolutionalEncoder1D, VariationalAutoencoder
 

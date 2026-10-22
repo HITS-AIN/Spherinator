@@ -1,7 +1,6 @@
 import pytest
 import torch
 import torchvision.models
-
 from spherinator.models import ConvolutionalDecoder2D, UpsamplingDecoder2D, VariationalAutoencoder
 
 

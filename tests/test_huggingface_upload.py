@@ -4,7 +4,6 @@ import sys
 
 import pytest
 from huggingface_hub import ModelCard
-
 from spherinator.models import create_model_card, upload_to_huggingface
 from spherinator.models.aibom import write_spdx_aibom
 

@@ -9,9 +9,8 @@ import torch
 import torch.nn.functional as F
 import yaml
 from power_spherical import PowerSpherical
-from torch import nn
-
 from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D, export_onnx
+from torch import nn
 
 
 class Model1(nn.Module):

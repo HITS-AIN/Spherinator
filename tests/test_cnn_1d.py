@@ -1,12 +1,11 @@
 import torch
-from torch import nn
-
 from spherinator.models import (
     ConsecutiveConv1DLayer,
     ConsecutiveConvTranspose1DLayer,
     ConvolutionalDecoder1D,
     ConvolutionalEncoder1D,
 )
+from torch import nn
 
 
 def test_convolutional_encoder_1d():

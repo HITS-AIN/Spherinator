@@ -1,8 +1,7 @@
 import pytest
 import torch
-from transformers import ResNetConfig, ResNetModel, ViTConfig, ViTModel
-
 from spherinator.models import HuggingFaceResNetEncoder, HuggingFaceViTEncoder
+from transformers import ResNetConfig, ResNetModel, ViTConfig, ViTModel
 
 
 @pytest.fixture(autouse=True)
