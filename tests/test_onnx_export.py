@@ -131,7 +131,17 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
         assert torch.allclose(torch.from_numpy(actual), torch.from_numpy(expected), atol=1e-5, rtol=1e-4)
 
 
-def test_export_onnx_aibom(tmp_path):
+@pytest.mark.parametrize(
+    "path, dataset_name, location",
+    [
+        ("HITS-AIN/test-dataset", "HITS-AIN/test-dataset", "https://huggingface.co/datasets/HITS-AIN/test-dataset"),
+        # Missing local paths that look like owner/name must not be taken for Hub datasets
+        ("data/train.parquet", "train.parquet", None),
+        ("../training-data", "training-data", None),
+    ],
+)
+def test_export_onnx_aibom(tmp_path, monkeypatch, path, dataset_name, location):
+    monkeypatch.chdir(tmp_path)
     model = Autoencoder(ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]))
     model(torch.randn(2, 1, 12))
     ckpt_file = tmp_path / "model.ckpt"
@@ -139,7 +149,7 @@ def test_export_onnx_aibom(tmp_path):
 
     model_file = tmp_path / "model.yaml"
     model_file.write_text(
-        """
+        f"""
 model:
   class_path: spherinator.models.Autoencoder
   init_args:
@@ -157,7 +167,7 @@ model:
 data:
   class_path: spherinator.data.DataModule
   init_args:
-    path: HITS-AIN/test-dataset
+    path: {path}
 """
     )
 
@@ -170,8 +180,8 @@ data:
     assert len(packages) == 3
 
     (dataset,) = (e for e in aibom["@graph"] if e["type"] == "dataset_DatasetPackage")
-    assert dataset["name"] == "HITS-AIN/test-dataset"
-    assert dataset["software_downloadLocation"] == "https://huggingface.co/datasets/HITS-AIN/test-dataset"
+    assert dataset["name"] == dataset_name
+    assert dataset.get("software_downloadLocation") == location
     trained_on = {e["from"]: e["to"] for e in aibom["@graph"] if e["type"] == "Relationship"}
     assert trained_on == {p["spdxId"]: [dataset["spdxId"]] for p in packages.values()}
 

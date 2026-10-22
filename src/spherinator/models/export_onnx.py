@@ -13,7 +13,8 @@ def _dataset(model_file: str) -> tuple[str, str | None] | None:
     """Returns name and download location of the training dataset in the ``data`` section of a CLI config.
 
     A ``path`` that doesn't exist locally and looks like ``owner/name`` is a Hugging Face Hub dataset, as in
-    :class:`~spherinator.data.DataModule`. Local paths are reduced to their directory name.
+    :class:`~spherinator.data.DataModule`. Parquet files and explicit relative paths (``./``, ``../``) are
+    always local, even if they don't exist on the export machine. Local paths are reduced to their last component.
     """
     with open(model_file) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
@@ -21,7 +22,13 @@ def _dataset(model_file: str) -> tuple[str, str | None] | None:
     path = init_args.get("path") or init_args.get("data_directory")
     if path is None:
         return None
-    if "path" in init_args and not os.path.exists(path) and re.fullmatch(r"[\w.-]+/[\w.-]+", path):
+    if (
+        "path" in init_args
+        and not os.path.exists(path)
+        and not path.endswith(".parquet")
+        and not path.startswith(("./", "../"))
+        and re.fullmatch(r"[\w.-]+/[\w.-]+", path)
+    ):
         return path, HF_DATASETS_URL + path
     return os.path.basename(os.path.normpath(path)), None
 
