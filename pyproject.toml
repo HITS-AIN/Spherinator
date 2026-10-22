@@ -51,6 +51,7 @@ dev = [
     "pytest >=8.3",
     "pytest-timeout >=2.0",
     "ruff >=0.11",
+    "spdx3-validate>=0.0.7",
 ]
 docs = [
     "myst-parser >=5.0.0",

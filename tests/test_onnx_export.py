@@ -9,8 +9,15 @@ import torch
 import torch.nn.functional as F
 import yaml
 from power_spherical import PowerSpherical
+from spdx3_validate import validate
 from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D, export_onnx
 from torch import nn
+
+
+def assert_valid_spdx(path):
+    """Validates an SPDX 3 document against the SPDX JSON Schema and SHACL model."""
+    result = validate(str(path))
+    assert result, str(result)
 
 
 class Model1(nn.Module):
@@ -111,6 +118,7 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
     for name in ("encoder", "decoder", "reconstruction"):
         onnx.checker.check_model(onnx.load(export_path / f"{name}.onnx"))
 
+    assert_valid_spdx(export_path / "aibom.spdx.json")
     aibom = json.loads((export_path / "aibom.spdx.json").read_text())
     assert not any(e["type"] in ("dataset_DatasetPackage", "Relationship") for e in aibom["@graph"])
 
@@ -156,6 +164,7 @@ data:
     export_path = tmp_path / "export"
     export_onnx(str(ckpt_file), str(model_file), str(export_path), (2, 1, 12), (2, 3))
 
+    assert_valid_spdx(export_path / "aibom.spdx.json")
     aibom = json.loads((export_path / "aibom.spdx.json").read_text())
     packages = {p["name"]: p for p in aibom["@graph"] if p["type"] == "ai_AIPackage"}
     assert len(packages) == 3
@@ -213,6 +222,7 @@ data:
     export_path = tmp_path / "export"
     export_onnx(str(ckpt_file), str(model_file), str(export_path), (2, 1, 12), (2, 3))
 
+    assert_valid_spdx(export_path / "aibom.spdx.json")
     aibom = json.loads((export_path / "aibom.spdx.json").read_text())
     (dataset,) = (e for e in aibom["@graph"] if e["type"] == "dataset_DatasetPackage")
     assert dataset["name"] == "parquet"
