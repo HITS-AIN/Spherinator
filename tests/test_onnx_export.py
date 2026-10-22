@@ -1,3 +1,5 @@
+import hashlib
+import json
 import sys
 
 import onnx
@@ -7,9 +9,15 @@ import torch
 import torch.nn.functional as F
 import yaml
 from power_spherical import PowerSpherical
+from spdx3_validate import validate
+from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D, export_onnx
 from torch import nn
 
-from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D, export_onnx
+
+def assert_valid_spdx(path):
+    """Validates an SPDX 3 document against the SPDX JSON Schema and SHACL model."""
+    result = validate(str(path))
+    assert result, str(result)
 
 
 class Model1(nn.Module):
@@ -110,6 +118,10 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
     for name in ("encoder", "decoder", "reconstruction"):
         onnx.checker.check_model(onnx.load(export_path / f"{name}.onnx"))
 
+    assert_valid_spdx(export_path / "aibom.spdx.json")
+    aibom = json.loads((export_path / "aibom.spdx.json").read_text())
+    assert not any(e["type"] in ("dataset_DatasetPackage", "Relationship") for e in aibom["@graph"])
+
     session = ort.InferenceSession(export_path / "reconstruction.onnx", providers=["CPUExecutionProvider"])
     for batch_size in (1, 3):
         inputs = torch.randn(batch_size, 1, 12)
@@ -117,3 +129,111 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
         expected = model.reconstruct(inputs).detach().numpy()
         assert actual.shape == expected.shape
         assert torch.allclose(torch.from_numpy(actual), torch.from_numpy(expected), atol=1e-5, rtol=1e-4)
+
+
+@pytest.mark.parametrize(
+    "path, dataset_name, location",
+    [
+        ("HITS-AIN/test-dataset", "HITS-AIN/test-dataset", "https://huggingface.co/datasets/HITS-AIN/test-dataset"),
+        # Missing local paths that look like owner/name must not be taken for Hub datasets
+        ("data/train.parquet", "train.parquet", None),
+        ("../training-data", "training-data", None),
+    ],
+)
+def test_export_onnx_aibom(tmp_path, monkeypatch, path, dataset_name, location):
+    monkeypatch.chdir(tmp_path)
+    model = Autoencoder(ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]))
+    model(torch.randn(2, 1, 12))
+    ckpt_file = tmp_path / "model.ckpt"
+    torch.save({"state_dict": model.state_dict()}, ckpt_file)
+
+    model_file = tmp_path / "model.yaml"
+    model_file.write_text(
+        f"""
+model:
+  class_path: spherinator.models.Autoencoder
+  init_args:
+    encoder:
+      class_path: spherinator.models.ConvolutionalEncoder1D
+      init_args:
+        input_dim: [1, 12]
+        output_dim: 3
+    decoder:
+      class_path: spherinator.models.ConvolutionalDecoder1D
+      init_args:
+        input_dim: 3
+        output_dim: [1, 12]
+        cnn_input_dim: [1, 12]
+data:
+  class_path: spherinator.data.DataModule
+  init_args:
+    path: {path}
+"""
+    )
+
+    export_path = tmp_path / "export"
+    export_onnx(str(ckpt_file), str(model_file), str(export_path), (2, 1, 12), (2, 3))
+
+    assert_valid_spdx(export_path / "aibom.spdx.json")
+    aibom = json.loads((export_path / "aibom.spdx.json").read_text())
+    packages = {p["name"]: p for p in aibom["@graph"] if p["type"] == "ai_AIPackage"}
+    assert len(packages) == 3
+
+    (dataset,) = (e for e in aibom["@graph"] if e["type"] == "dataset_DatasetPackage")
+    assert dataset["name"] == dataset_name
+    assert dataset.get("software_downloadLocation") == location
+    trained_on = {e["from"]: e["to"] for e in aibom["@graph"] if e["type"] == "Relationship"}
+    assert trained_on == {p["spdxId"]: [dataset["spdxId"]] for p in packages.values()}
+
+    (document,) = (e for e in aibom["@graph"] if e["type"] == "SpdxDocument")
+    assert "dataset" in document["profileConformance"]
+    assert dataset["spdxId"] in document["element"]
+
+    for name in ["encoder", "decoder", "reconstruction"]:
+        onnx_file = export_path / f"{name}.onnx"
+        package = packages[f"Spherinator {name}"]
+        assert package["verifiedUsing"][0]["hashValue"] == hashlib.sha256(onnx_file.read_bytes()).hexdigest()
+        assert package["software_downloadLocation"] == f"{name}.onnx"
+
+        props = {p.key: p.value for p in onnx.load(onnx_file, load_external_data=False).metadata_props}
+        assert props["aibom.uri"] == "aibom.spdx.json"
+
+
+def test_export_onnx_aibom_local_dataset(tmp_path):
+    model = Autoencoder(ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]))
+    model(torch.randn(2, 1, 12))
+    ckpt_file = tmp_path / "model.ckpt"
+    torch.save({"state_dict": model.state_dict()}, ckpt_file)
+
+    model_file = tmp_path / "model.yaml"
+    model_file.write_text(
+        f"""
+model:
+  class_path: spherinator.models.Autoencoder
+  init_args:
+    encoder:
+      class_path: spherinator.models.ConvolutionalEncoder1D
+      init_args:
+        input_dim: [1, 12]
+        output_dim: 3
+    decoder:
+      class_path: spherinator.models.ConvolutionalDecoder1D
+      init_args:
+        input_dim: 3
+        output_dim: [1, 12]
+        cnn_input_dim: [1, 12]
+data:
+  class_path: spherinator.data.ParquetDataModule
+  init_args:
+    data_directory: {tmp_path / "parquet"}/
+"""
+    )
+
+    export_path = tmp_path / "export"
+    export_onnx(str(ckpt_file), str(model_file), str(export_path), (2, 1, 12), (2, 3))
+
+    assert_valid_spdx(export_path / "aibom.spdx.json")
+    aibom = json.loads((export_path / "aibom.spdx.json").read_text())
+    (dataset,) = (e for e in aibom["@graph"] if e["type"] == "dataset_DatasetPackage")
+    assert dataset["name"] == "parquet"
+    assert "software_downloadLocation" not in dataset

@@ -1,6 +1,5 @@
 import pytest
 import torch
-
 from spherinator.distributions import truncated_normal_distribution
 
 

@@ -1,8 +1,7 @@
 import pytest
 import torch
-from torch.utils.data import DataLoader
-
 from spherinator.data import ParquetIterableDataModule, ParquetIterableDataset
+from torch.utils.data import DataLoader
 
 
 @pytest.mark.parametrize(("num_workers"), [1, 2])

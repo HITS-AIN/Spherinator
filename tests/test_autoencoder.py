@@ -1,6 +1,5 @@
 import torch
 from lightning.pytorch.trainer import Trainer
-
 from spherinator.data import ParquetDataModule
 from spherinator.models import (
     Autoencoder,

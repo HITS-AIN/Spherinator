@@ -1,8 +1,7 @@
 import pytest
+import spherinator.losses.perceptional_loss as perceptual_module
 import torch
 from torch import nn
-
-import spherinator.losses.perceptional_loss as perceptual_module
 
 
 class Capture(nn.Module):

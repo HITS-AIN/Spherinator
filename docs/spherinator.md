@@ -481,16 +481,68 @@ spherinator fit \
 
 A trained model can be exported to [ONNX](https://onnx.ai/) for deployment outside of PyTorch.
 The {py:func}`~spherinator.models.export_onnx` function loads a checkpoint and its corresponding CLI config, and writes three
-ONNX files to `export_path`:
+ONNX files and an AI bill of materials (AI-BOM) to `export_path`:
 
 | File | Description |
 |------|-------------|
 | `encoder.onnx` | Backbone + sphere head → unit-normalised location vector |
 | `decoder.onnx` | Latent vector → reconstructed output |
 | `reconstruction.onnx` | End-to-end encode → decode pipeline |
+| `aibom.spdx.json` | [SPDX 3.0.1](https://spdx.dev/use/specifications/) AI-BOM of the three ONNX files |
 
 All three exported graphs support a dynamic batch axis, so the exported models accept any batch
 size at inference time.
 
+The AI-BOM lists every ONNX file as an AI package, including its SHA-256 hash. The ONNX files don't
+embed the AI-BOM itself. Instead, each one stores a link to it in the `aibom.uri` metadata property,
+along with `aibom.format`. By default the link is the relative file name `aibom.spdx.json`. Pass
+`aibom_uri` to use an absolute URL instead, for example the file's location in a Hugging Face
+repository. To read the link:
+
+```python
+import onnx
+
+model = onnx.load("encoder.onnx", load_external_data=False)
+props = {p.key: p.value for p in model.metadata_props}
+print(props["aibom.uri"])
+```
+
+With ONNX Runtime, use `session.get_modelmeta().custom_metadata_map["aibom.uri"]`.
+
+If the config has a `data` section, the AI-BOM also lists its training dataset (`path` or
+`data_directory`) as a dataset package, which each ONNX file links to with a `trainedOn`
+relationship. A Hugging Face Hub dataset such as `HITS-AIN/Illustris_TNG_SKIRT_SDSS` gets
+its `huggingface.co/datasets/…` URL as download location. A local path is recorded by its
+directory name only.
+
 Both model YAML files and PyTorch checkpoints must be treated as trusted inputs. YAML model files
 select Python classes to import and construct; checkpoints are loaded in weights-only mode.
+
+### Uploading to Hugging Face
+
+With the `huggingface` extra installed, an export directory can be published as a Hugging Face
+model repository. {py:func}`~spherinator.models.create_model_card` builds a model card from the
+AI-BOM, listing every file with its SHA-256 hash, the hyperparameters, the training dataset and a
+usage example. A Hub dataset is also added to the card's `datasets` metadata, so the Hub links the
+model to the dataset page.
+{py:func}`~spherinator.models.upload_to_huggingface` uploads the directory and stores the card as
+`README.md` in the repository root:
+
+```python
+from spherinator.models import create_model_card, export_onnx, upload_to_huggingface
+
+repo_id = "HITS-AIN/spherinator-illustris"
+export_onnx(
+    "model.ckpt",
+    "model.yaml",
+    "export",
+    input_shape=(1, 3, 128, 128),
+    latent_shape=(1, 3),
+    aibom_uri=f"https://huggingface.co/{repo_id}/resolve/main/aibom.spdx.json",
+)
+card = create_model_card("export", repo_id=repo_id)
+upload_to_huggingface("export", repo_id, model_card=card)
+```
+
+The absolute `aibom_uri` lets the ONNX files point to their AI-BOM after they've been downloaded
+from the Hub.
