@@ -3,7 +3,6 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 import torch
-
 from spherinator.data import DataModule
 
 

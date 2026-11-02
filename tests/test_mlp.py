@@ -1,6 +1,5 @@
 import pytest
 import torch
-
 from spherinator.models import MLP
 
 

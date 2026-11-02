@@ -4,14 +4,13 @@ import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 import pytest
 import torch
-from torch.utils.data import DataLoader
-
 from spherinator.data import (
     ParquetDataModule,
     ParquetDataset,
     ParquetDatasetSampling,
     ParquetDatasetWithError,
 )
+from torch.utils.data import DataLoader
 
 
 def test_pyarray_dataset_scanner(parquet_file):

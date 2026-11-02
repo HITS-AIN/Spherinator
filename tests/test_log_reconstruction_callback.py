@@ -4,7 +4,6 @@ import torch
 from lightning.pytorch.loggers import Logger
 from lightning.pytorch.trainer import Trainer
 from lightning.pytorch.utilities import rank_zero_only
-
 from spherinator.callbacks import LogReconstructionCallback
 from spherinator.data import ParquetDataModule
 from spherinator.models import (
