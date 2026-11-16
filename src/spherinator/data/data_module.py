@@ -304,6 +304,8 @@ class DataModule(LightningDataModule):
 
     def val_dataloader(self):
         if self._val_ds is None:
+            if self.validation_size == 0.0:
+                return []  # No validation split: Lightning skips the validation loop
             raise ValueError("Validation dataset not set up. Call setup('fit') first.")
         return torch.utils.data.DataLoader(
             self._val_ds,

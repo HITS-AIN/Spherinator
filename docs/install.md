@@ -62,8 +62,8 @@ uv run --extra dev pytest
 Run a single test file or test:
 
 ```bash
-uv run --extra dev pytest tests/test_parquet_dataset.py
-uv run --extra dev pytest tests/test_parquet_dataset.py::test_parquet_merge
+uv run --extra dev pytest tests/test_data_module.py
+uv run --extra dev pytest tests/test_transforms.py::test_absmax_norm
 ```
 
 ### Lint and format

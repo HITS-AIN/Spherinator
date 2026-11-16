@@ -200,6 +200,7 @@ data:
 
 
 def test_export_onnx_aibom_local_dataset(tmp_path):
+    """Configs of models trained with the removed ParquetDataModule name the dataset in ``data_directory``."""
     model = Autoencoder(ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]))
     model(torch.randn(2, 1, 12))
     ckpt_file = tmp_path / "model.ckpt"
