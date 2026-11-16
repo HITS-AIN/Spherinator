@@ -23,7 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 data = [
-    "datasets>=4.8.4",
+    "datasets[vision]>=4.8.4",
     "pandas>=2.2.3",
     "pyarrow>=19.0",
 ]

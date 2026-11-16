@@ -3,11 +3,22 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import pyarrow as pa
 import pyarrow.parquet as pq
 import torch
-from datasets import load_dataset
+from datasets import Features, Image, Value, load_dataset
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import Dataset
+
+
+def _is_image_struct(feature: Any) -> bool:
+    """Whether ``feature`` is an undecoded ``{bytes, path}`` struct, the storage layout of a Hugging Face ``Image``."""
+    return (
+        isinstance(feature, dict)
+        and set(feature) == {"bytes", "path"}
+        and isinstance(feature["bytes"], Value)
+        and feature["bytes"].dtype in ("binary", "large_binary")
+    )
 
 
 class Column:
@@ -147,7 +158,8 @@ class DataModule(LightningDataModule):
         path (str): Hugging Face Hub dataset name (e.g. "ylecun/mnist"), a parquet file, a directory of
             parquet files, or a glob pattern (e.g. "data/*.parquet"). For local parquet data, a
             ``<column>_shape`` entry in the schema metadata (e.g. ``data_shape: "(1,12)"``) reshapes
-            each sample of that column.
+            each sample of that column, and image columns stored as ``{bytes, path}`` structs (the
+            Hugging Face ``Image`` layout) are decoded to ``(C, H, W)`` tensors scaled to [0, 1].
         columns (list[dict[str, Any] | str], optional): List of Column objects specifying which columns to load
             and how to transform them. Defaults to a single column named "data" with no transformation.
         return_dict (bool, optional): Whether to return samples as dictionaries (with column names
@@ -216,7 +228,39 @@ class DataModule(LightningDataModule):
             return str(path / "*.parquet") if any(path.glob("*.parquet")) else None
         return self.path if path.suffix == ".parquet" else None
 
+    def _local_parquet_files(self) -> list[str]:
+        """Local parquet files behind ``path``; empty for Hub or remote datasets."""
+        data_files = self._parquet_data_files()
+        if data_files is not None:
+            # datasets resolves data_files with fsspec glob, which matches Python's glob.glob
+            return [data_files] if Path(data_files).is_file() else sorted(glob.glob(data_files, recursive=True))
+        if Path(self.path).is_dir():
+            # Directory with nested parquet files only; loaded by load_dataset(path)
+            return sorted(str(f) for f in Path(self.path).rglob("*.parquet"))
+        return []
+
+    def _local_schema(self) -> pa.Schema | None:
+        """Schema of the first local parquet file behind ``path``; ``None`` for Hub or remote datasets."""
+        files = self._local_parquet_files()
+        return pq.read_schema(files[0]) if files else None
+
+    def _features(self) -> Features | None:
+        """Features decoding requested ``{bytes, path}`` struct columns as images; ``None`` if there are none."""
+        schema = self._local_schema()
+        if schema is None:
+            return None
+        features = Features.from_arrow_schema(schema)
+        image_columns = [c.name for c in self.columns if _is_image_struct(features.get(c.name))]
+        if not image_columns:
+            return None
+        for name in image_columns:
+            features[name] = Image()
+        return features
+
     def _load_dataset(self, **kwargs):
+        features = self._features()
+        if features is not None:
+            kwargs["features"] = features
         data_files = self._parquet_data_files()
         if data_files is not None:
             return load_dataset("parquet", data_files=data_files, **kwargs)
@@ -224,16 +268,8 @@ class DataModule(LightningDataModule):
 
     def _schema_metadata(self) -> dict[bytes, bytes]:
         """Schema metadata of the first local parquet file behind ``path``; empty for Hub or remote datasets."""
-        data_files = self._parquet_data_files()
-        if data_files is not None:
-            # datasets resolves data_files with fsspec glob, which matches Python's glob.glob
-            files = [data_files] if Path(data_files).is_file() else sorted(glob.glob(data_files, recursive=True))
-        elif Path(self.path).is_dir():
-            # Directory with nested parquet files only; loaded by load_dataset(path)
-            files = sorted(str(f) for f in Path(self.path).rglob("*.parquet"))
-        else:
-            files = []
-        return (pq.read_schema(files[0]).metadata or {}) if files else {}
+        schema = self._local_schema()
+        return (schema.metadata or {}) if schema is not None else {}
 
     def prepare_data(self):
         self._load_dataset()
