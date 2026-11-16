@@ -1,7 +1,7 @@
 import pytest
 import torch
 from lightning.pytorch.trainer import Trainer
-from spherinator.data import ParquetDataModule
+from spherinator.data import DataModule
 from spherinator.models import ConvolutionalDecoder1D, ConvolutionalEncoder1D, VariationalAutoencoder
 
 
@@ -55,9 +55,10 @@ def test_training(parquet_1d_metadata, encoder, decoder):
         encoder_out_dim=3,
     )
 
-    datamodule = ParquetDataModule(
-        parquet_1d_metadata,
-        data_column="data",
+    datamodule = DataModule(
+        str(parquet_1d_metadata),
+        validation_size=0.0,
+        test_size=0.0,
         batch_size=5,
         num_workers=1,
         shuffle=True,

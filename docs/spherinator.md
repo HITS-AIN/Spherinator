@@ -101,6 +101,17 @@ data:
 For local Parquet data, a `<column>_shape` entry in the schema metadata (e.g. `data_shape: "(1,12)"`)
 reshapes each sample of that column before its transform is applied.
 
+A `transform` is any callable applied to a single sample. Besides `torchvision` transforms, Spherinator
+provides `spherinator.data.MinMaxNormalize` (scale each sample to [0, 1]) and
+`spherinator.data.AbsMaxNormalize` (divide each sample by its largest absolute value):
+
+```yaml
+    columns:
+      - name: data
+        transform:
+          class_path: spherinator.data.MinMaxNormalize
+```
+
 ## Model architecture
 
 The top-level model is defined in the `model` section of the YAML file.

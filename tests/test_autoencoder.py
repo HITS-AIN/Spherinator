@@ -1,6 +1,6 @@
 import torch
 from lightning.pytorch.trainer import Trainer
-from spherinator.data import ParquetDataModule
+from spherinator.data import DataModule
 from spherinator.models import (
     Autoencoder,
     ConvolutionalDecoder1D,
@@ -35,9 +35,10 @@ def test_training(parquet_1d_metadata):
     decoder = ConvolutionalDecoder1D(3, [1, 12], [1, 12])
     model = Autoencoder(encoder=encoder, decoder=decoder)
 
-    datamodule = ParquetDataModule(
-        parquet_1d_metadata,
-        data_column="data",
+    datamodule = DataModule(
+        str(parquet_1d_metadata),
+        validation_size=0.0,
+        test_size=0.0,
         batch_size=5,
         num_workers=1,
         shuffle=True,

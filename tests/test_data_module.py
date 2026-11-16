@@ -24,6 +24,13 @@ def test_no_validation_split_keeps_test_disjoint_from_training(tmp_path):
     assert train.isdisjoint(test)
 
 
+def test_no_validation_split_skips_validation_loop(tmp_path):
+    data = DataModule(str(_parquet_file(tmp_path)), validation_size=0.0, test_size=0.0)
+    data.setup("fit")
+
+    assert data.val_dataloader() == []
+
+
 def test_default_single_column_batch_is_tensor(tmp_path):
     data = DataModule(str(_parquet_file(tmp_path)), validation_size=0.2, test_size=0.0)
     data.setup("fit")

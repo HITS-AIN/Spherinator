@@ -61,24 +61,6 @@ def parquet_numpy_file(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def parquet_test_metadata(tmp_path_factory):
-    """Mock parquet data with 1d array and metadata."""
-
-    table = pa.table(
-        {
-            "id": range(10),
-            "data": [np.array([i], dtype=np.float32) for i in range(10)],
-        },
-        metadata={"data_shape": "(1)"},
-    )
-
-    file = tmp_path_factory.mktemp("data") / "test.parquet"
-    pq.write_table(table, file)
-
-    return file
-
-
-@pytest.fixture(scope="session")
 def parquet_1d_metadata(tmp_path_factory):
     """Mock parquet data with 1d array and metadata."""
 
@@ -115,24 +97,6 @@ def parquet_2d_metadata(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def parquet_test_merge(tmp_path_factory):
-    """Mock parquet file with two arrays."""
-
-    table = pa.table(
-        {
-            "id": [0],
-            "data1": [np.array([1.0, 2.0], dtype=np.float32)],
-            "data2": [np.array([3.0, 4.0], dtype=np.float32)],
-        }
-    )
-
-    file = tmp_path_factory.mktemp("data") / "test.parquet"
-    pq.write_table(table, file)
-
-    return file
-
-
-@pytest.fixture(scope="session")
 def parquet_test_norm(tmp_path_factory):
     """Mock parquet file for testing normalization."""
 
@@ -143,24 +107,6 @@ def parquet_test_norm(tmp_path_factory):
                 np.array([1.7, -8.2, -0.4], dtype=np.float32),
             ],
         }
-    )
-
-    file = tmp_path_factory.mktemp("data") / "test.parquet"
-    pq.write_table(table, file)
-
-    return file
-
-
-@pytest.fixture(scope="session")
-def parquet_test_sampling(tmp_path_factory):
-    """Mock parquet file for testing error sampling."""
-
-    table = pa.table(
-        {
-            "flux": [np.random.rand(12).astype(np.float32) for _ in range(10)],
-            "flux_error": [np.random.rand(12).astype(np.float32) for _ in range(10)],
-        },
-        metadata={"flux_shape": "(1,12)", "flux_error_shape": "(1,12)"},
     )
 
     file = tmp_path_factory.mktemp("data") / "test.parquet"
