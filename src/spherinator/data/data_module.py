@@ -1,3 +1,4 @@
+import glob
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -143,8 +144,10 @@ class DataModule(LightningDataModule):
 
 
     Args:
-        path (str): Path to the dataset in Hugging Face Datasets format (e.g. "ylecun/mnist" or
-            local path to parquet files)
+        path (str): Hugging Face Hub dataset name (e.g. "ylecun/mnist"), a parquet file, a directory of
+            parquet files, or a glob pattern (e.g. "data/*.parquet"). For local parquet data, a
+            ``<column>_shape`` entry in the schema metadata (e.g. ``data_shape: "(1,12)"``) reshapes
+            each sample of that column.
         columns (list[dict[str, Any] | str], optional): List of Column objects specifying which columns to load
             and how to transform them. Defaults to a single column named "data" with no transformation.
         return_dict (bool, optional): Whether to return samples as dictionaries (with column names
@@ -206,11 +209,31 @@ class DataModule(LightningDataModule):
             "persistent_workers": effective_num_workers > 0,
         }
 
+    def _parquet_data_files(self) -> str | None:
+        """``data_files`` pattern for a parquet file, a glob pattern, or a directory with top-level parquet files."""
+        path = Path(self.path)
+        if path.is_dir():
+            return str(path / "*.parquet") if any(path.glob("*.parquet")) else None
+        return self.path if path.suffix == ".parquet" else None
+
     def _load_dataset(self, **kwargs):
-        _p = Path(self.path)
-        if _p.suffix == ".parquet" or (_p.is_dir() and any(_p.glob("*.parquet"))):
-            return load_dataset("parquet", data_files=str(self.path), **kwargs)
+        data_files = self._parquet_data_files()
+        if data_files is not None:
+            return load_dataset("parquet", data_files=data_files, **kwargs)
         return load_dataset(self.path, **kwargs)
+
+    def _schema_metadata(self) -> dict[bytes, bytes]:
+        """Schema metadata of the first local parquet file behind ``path``; empty for Hub or remote datasets."""
+        data_files = self._parquet_data_files()
+        if data_files is not None:
+            # datasets resolves data_files with fsspec glob, which matches Python's glob.glob
+            files = [data_files] if Path(data_files).is_file() else sorted(glob.glob(data_files, recursive=True))
+        elif Path(self.path).is_dir():
+            # Directory with nested parquet files only; loaded by load_dataset(path)
+            files = sorted(str(f) for f in Path(self.path).rglob("*.parquet"))
+        else:
+            files = []
+        return (pq.read_schema(files[0]).metadata or {}) if files else {}
 
     def prepare_data(self):
         self._load_dataset()
@@ -225,16 +248,7 @@ class DataModule(LightningDataModule):
         full_ds.set_format("torch", device=device)
 
         # Read parquet schema metadata and attach shape info to columns
-        schema_meta = {}
-        _path = Path(self.path)
-        if _path.is_file() and _path.suffix == ".parquet":
-            _parquet_file = _path
-        elif _path.is_dir():
-            _parquet_file = next(_path.rglob("*.parquet"), None)
-        else:
-            _parquet_file = None
-        if _parquet_file is not None:
-            schema_meta = pq.read_schema(_parquet_file).metadata or {}
+        schema_meta = self._schema_metadata()
         for column in self.columns:
             key = column.name.encode() + b"_shape"
             if key in schema_meta:

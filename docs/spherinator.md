@@ -91,12 +91,15 @@ data:
 
 | Parameter | Description |
 |-----------|-------------|
-| `path` | Path to the directory containing Parquet files |
+| `path` | A Parquet file, a directory of Parquet files, a glob pattern (e.g. `data/*.parquet`), or a Hugging Face Hub dataset name |
 | `columns` | List of columns to load; each entry may carry a `transform` |
 | `return_dict` | If `True`, batches are dicts keyed by column name; defaults to `False`, returning the first column tensor directly |
 | `batch_size` | Number of samples per mini-batch |
 | `shuffle` | Shuffle the dataset each epoch |
 | `num_workers` | Number of parallel data-loading workers |
+
+For local Parquet data, a `<column>_shape` entry in the schema metadata (e.g. `data_shape: "(1,12)"`)
+reshapes each sample of that column before its transform is applied.
 
 ## Model architecture
 

@@ -31,6 +31,38 @@ def test_default_single_column_batch_is_tensor(tmp_path):
     assert isinstance(next(iter(data.train_dataloader())), torch.Tensor)
 
 
+def _shaped_parquet_dir(tmp_path, files=2, rows=10):
+    """Directory of parquet files with a flat 12-element ``data`` column and ``data_shape: (1,12)`` metadata."""
+    directory = tmp_path / "ds"
+    directory.mkdir()
+    for i in range(files):
+        table = pa.table(
+            {"data": [np.random.rand(12).astype(np.float32) for _ in range(rows)]},
+            metadata={"data_shape": "(1,12)"},
+        )
+        pq.write_table(table, directory / f"part-{i}.parquet")
+    return directory
+
+
+@pytest.mark.parametrize(
+    ("path", "rows"),
+    [
+        ("ds/part-0.parquet", 10),
+        ("ds", 20),
+        ("ds/*.parquet", 20),
+        ("ds/**/*.parquet", 20),
+    ],
+    ids=["file", "dir", "glob", "recursive-glob"],
+)
+def test_shape_metadata_is_applied_for_every_path_form(tmp_path, path, rows):
+    _shaped_parquet_dir(tmp_path)
+    data = DataModule(str(tmp_path / path), validation_size=0.0, test_size=0.0, batch_size=5)
+    data.setup("fit")
+
+    assert len(data._train_ds) == rows
+    assert next(iter(data.train_dataloader())).shape == (5, 1, 12)
+
+
 @pytest.mark.parametrize(
     ("validation_size", "test_size"),
     [(-0.1, 0.0), (1.0, 0.0), (0.2, -0.1), (0.2, 1.0)],
