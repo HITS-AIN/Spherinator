@@ -3,10 +3,10 @@ revision = 5
 requires-python = ">=3.12, <3.14"
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'win32'",
-    "python_full_version < '3.13' and sys_platform == 'win32'",
     "python_full_version >= '3.13' and sys_platform == 'emscripten'",
-    "python_full_version < '3.13' and sys_platform == 'emscripten'",
     "python_full_version >= '3.13' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.13' and sys_platform == 'win32'",
+    "python_full_version < '3.13' and sys_platform == 'emscripten'",
     "python_full_version < '3.13' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 
@@ -484,6 +484,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2b/fd/7d76cc5023b7cdb01e9ca026675392d2385df9f0b836a50c81123b84c514/datasets-5.2.0.tar.gz", hash = "sha256:f4290d4704dfbc99631a578b56912d66b22def53d3f61d246f6ccc129675490e", size = 695308, upload-time = "2026-11-09T21:37:47.386Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ae/22/c92c96de701dd7441f553adaaa480801ff3d37575486ef82df651a45f0ec/datasets-5.2.0-py3-none-any.whl", hash = "sha256:4be9e2882caaf5db13eadc39e93f3da2a995187b99acebac1595bf6c58dfa927", size = 608276, upload-time = "2026-11-09T21:37:45.527Z" },
+]
+
+[package.optional-dependencies]
+vision = [
+    { name = "pillow" },
 ]
 
 [[package]]
@@ -2666,13 +2671,13 @@ dependencies = [
 
 [package.optional-dependencies]
 data = [
-    { name = "datasets" },
+    { name = "datasets", extra = ["vision"] },
     { name = "pandas" },
     { name = "pyarrow" },
 ]
 dev = [
     { name = "anywidget" },
-    { name = "datasets" },
+    { name = "datasets", extra = ["vision"] },
     { name = "huggingface-hub" },
     { name = "ipykernel" },
     { name = "ipywidgets" },
@@ -2722,7 +2727,7 @@ vision = [
 [package.metadata]
 requires-dist = [
     { name = "anywidget", marker = "extra == 'dev'", specifier = ">=0.10.0" },
-    { name = "datasets", marker = "extra == 'data'", specifier = ">=4.8.4" },
+    { name = "datasets", extras = ["vision"], marker = "extra == 'data'", specifier = ">=4.8.4" },
     { name = "huggingface-hub", marker = "extra == 'huggingface'", specifier = ">=0.34" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29" },
     { name = "ipywidgets", marker = "extra == 'dev'", specifier = ">=8.1.8" },

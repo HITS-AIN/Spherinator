@@ -1,8 +1,12 @@
+import io
+
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 import torch
+from datasets import Image
+from PIL import Image as PILImage
 from spherinator.data import DataModule
 
 
@@ -68,6 +72,70 @@ def test_shape_metadata_is_applied_for_every_path_form(tmp_path, path, rows):
 
     assert len(data._train_ds) == rows
     assert next(iter(data.train_dataloader())).shape == (5, 1, 12)
+
+
+def _image_parquet(path, shape=(8, 6), large=False, rows=4):
+    """Parquet file without HF metadata: PNG images as ``{bytes, path}`` structs in ``image`` and ``other``."""
+    if large:
+        struct_type = pa.struct([("bytes", pa.large_binary()), ("path", pa.large_string())])
+    else:
+        struct_type = pa.struct([("bytes", pa.binary()), ("path", pa.string())])
+    images = [np.random.randint(0, 256, size=shape, dtype=np.uint8) for _ in range(rows)]
+
+    def png(array):
+        buffer = io.BytesIO()
+        PILImage.fromarray(array).save(buffer, format="PNG")
+        return {"bytes": buffer.getvalue(), "path": None}
+
+    table = pa.table(
+        {
+            "image": pa.array([png(image) for image in images], type=struct_type),
+            "other": pa.array([png(image) for image in images], type=struct_type),
+        }
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(table, path)
+    return images
+
+
+def _image_data_module(path):
+    data = DataModule(str(path), columns=["image"], validation_size=0.0, test_size=0.0, shuffle=False, batch_size=2)
+    data.setup("fit")
+    return data
+
+
+@pytest.mark.parametrize(
+    ("shape", "channels"),
+    [((8, 6), 1), ((8, 6, 3), 3)],
+    ids=["grayscale", "rgb"],
+)
+@pytest.mark.parametrize("large", [False, True], ids=["binary", "large_binary"])
+def test_image_struct_column_is_decoded(tmp_path, shape, channels, large):
+    images = _image_parquet(tmp_path / "images.parquet", shape, large)
+    data = _image_data_module(tmp_path / "images.parquet")
+
+    batch = next(iter(data.train_dataloader()))
+    assert batch.shape == (2, channels, 8, 6)
+    assert batch.dtype == torch.float32
+
+    expected = torch.from_numpy(images[0]).reshape(8, 6, channels).permute(2, 0, 1).float() / 255.0
+    torch.testing.assert_close(data._train_ds[0], expected)
+
+
+def test_image_struct_is_decoded_for_nested_directory(tmp_path):
+    _image_parquet(tmp_path / "ds" / "sub" / "part-0.parquet")
+    data = _image_data_module(tmp_path / "ds")
+
+    assert next(iter(data.train_dataloader())).shape == (2, 1, 8, 6)
+
+
+def test_unrequested_struct_column_is_not_decoded(tmp_path):
+    _image_parquet(tmp_path / "images.parquet")
+    data = _image_data_module(tmp_path / "images.parquet")
+
+    features = data._train_ds.dataset.features
+    assert isinstance(features["image"], Image)
+    assert isinstance(features["other"], dict)
 
 
 @pytest.mark.parametrize(

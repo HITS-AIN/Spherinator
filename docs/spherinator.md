@@ -101,6 +101,11 @@ data:
 For local Parquet data, a `<column>_shape` entry in the schema metadata (e.g. `data_shape: "(1,12)"`)
 reshapes each sample of that column before its transform is applied.
 
+Image columns stored as `{bytes, path}` structs (the Hugging Face `Image` layout, e.g. Parquet written
+with pandas, polars or pyarrow without Hugging Face feature metadata) are decoded automatically for
+local Parquet data. Each sample becomes a `(C, H, W)` float tensor scaled to [0, 1] before its shape
+metadata and transform are applied.
+
 A `transform` is any callable applied to a single sample. Besides `torchvision` transforms, Spherinator
 provides `spherinator.data.MinMaxNormalize` (scale each sample to [0, 1]) and
 `spherinator.data.AbsMaxNormalize` (divide each sample by its largest absolute value):
