@@ -504,13 +504,23 @@ ONNX files and an AI bill of materials (AI-BOM) to `export_path`:
 
 | File | Description |
 |------|-------------|
-| `encoder.onnx` | Backbone + sphere head → unit-normalised location vector |
+| `encoder.onnx` | Backbone + sphere head → unit-normalised location vector and concentration |
 | `decoder.onnx` | Latent vector → reconstructed output |
-| `reconstruction.onnx` | End-to-end encode → decode pipeline |
+| `reconstruction.onnx` | End-to-end encode → decode pipeline and concentration |
 | `aibom.spdx.json` | [SPDX 3.0.1](https://spdx.dev/use/specifications/) AI-BOM of the three ONNX files |
 
 All three exported graphs support a dynamic batch axis, so the exported models accept any batch
-size at inference time.
+size at inference time. The graphs have the following outputs, in this order:
+
+| Graph | Outputs |
+|-------|---------|
+| `encoder.onnx` | `embedding` `(batch, z_dim)`, `concentration` `(batch,)` |
+| `decoder.onnx` | `reconstruction` |
+| `reconstruction.onnx` | `reconstruction`, `concentration` `(batch,)` |
+
+The `concentration` is the scale κ ≥ 1 of the Power Spherical distribution around the embedding;
+a higher value means a more confident embedding. Only a `VariationalAutoencoder` has a
+concentration, so an exported `Autoencoder` has just the first output of each graph.
 
 The AI-BOM lists every ONNX file as an AI package, including its SHA-256 hash. The ONNX files don't
 embed the AI-BOM itself. Instead, each one stores a link to it in the `aibom.uri` metadata property,

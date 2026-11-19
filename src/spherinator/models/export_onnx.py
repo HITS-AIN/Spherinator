@@ -34,18 +34,19 @@ def _dataset(model_file: str) -> tuple[str, str | None] | None:
 
 
 class _EncoderWrapper(nn.Module):
-    """Exports backbone + sphere_head → z_location (deterministic mean)."""
+    """Exports backbone + sphere_head → (z_location, concentration) for variational models, otherwise the
+    encoder output."""
 
-    def __init__(self, model):
+    def __init__(self, model, variational: bool):
         super().__init__()
         self.model = model
+        self.variational = variational
 
     def forward(self, x):
-        if getattr(self.model, "is_variational", True):
-            z_location, _ = self.model.sphere_head(self.model.encoder(x))
-        else:
-            z_location = self.model.encoder(x)
-        return z_location
+        if self.variational:
+            z_location, z_scale = self.model.sphere_head(self.model.encoder(x))
+            return z_location, z_scale.squeeze(-1)
+        return self.model.encoder(x)
 
 
 class _DecoderWrapper(nn.Module):
@@ -58,13 +59,18 @@ class _DecoderWrapper(nn.Module):
 
 
 class _ReconstructionWrapper(nn.Module):
-    """Wraps a model's reconstruct() method as a plain nn.Module for ONNX export."""
+    """Exports the end-to-end encode → decode pipeline. Variational models decode the location vector and
+    additionally return the concentration."""
 
-    def __init__(self, model):
+    def __init__(self, model, variational: bool):
         super().__init__()
         self._model = model
+        self.variational = variational
 
     def forward(self, x):
+        if self.variational:
+            z_location, z_scale = self._model.encode(x)
+            return self._model.decode(z_location), z_scale.squeeze(-1)
         return self._model.reconstruct(x)
 
 
@@ -85,6 +91,15 @@ def export_onnx(
     SHA-256 of each ONNX file. Each ONNX file links to the AI-BOM via the ``aibom.uri`` metadata property.
     The training dataset (``path`` or ``data_directory``) of the ``data`` section in ``model_file`` is added
     to the AI-BOM as well.
+
+    Outputs of the exported graphs:
+
+    - ``encoder.onnx``: ``embedding`` and, for variational models, ``concentration``
+    - ``decoder.onnx``: ``reconstruction``
+    - ``reconstruction.onnx``: ``reconstruction`` and, for variational models, ``concentration``
+
+    The ``concentration`` of shape ``(batch,)`` is the scale of the PowerSpherical distribution, i.e. the
+    confidence of the embedding.
 
     Args:
         ckpt_file (str): Path to the checkpoint file.
@@ -111,42 +126,45 @@ def export_onnx(
     os.makedirs(export_path, exist_ok=False)
 
     batch = torch.export.Dim("batch")
+    variational = getattr(model, "is_variational", True)
+    concentration = ["concentration"] if variational else []
+    and_concentration = " and concentration" if variational else ""
 
-    # (name, wrapper, example shape, forward argument name, output name, description)
+    # (name, wrapper, example shape, forward argument name, output names, description)
     graphs = [
         (
             "encoder",
-            _EncoderWrapper(model),
+            _EncoderWrapper(model, variational),
             input_shape,
             "x",
-            "embedding",
-            "Backbone + sphere head → unit-normalised location vector",
+            ["embedding", *concentration],
+            f"Backbone + sphere head → unit-normalised location vector{and_concentration}",
         ),
         (
             "decoder",
             _DecoderWrapper(model),
             latent_shape,
             "z",
-            "reconstruction",
+            ["reconstruction"],
             "Latent vector → reconstructed output",
         ),
         (
             "reconstruction",
-            _ReconstructionWrapper(model),
+            _ReconstructionWrapper(model, variational),
             input_shape,
             "x",
-            "reconstruction",
-            "End-to-end encode → decode pipeline",
+            ["reconstruction", *concentration],
+            f"End-to-end encode → decode pipeline{and_concentration}",
         ),
     ]
 
     exported = []
-    for name, wrapper, shape, arg_name, output_name, description in graphs:
+    for name, wrapper, shape, arg_name, output_names, description in graphs:
         program = torch.onnx.export(
             wrapper.eval(),
             torch.randn(shape, device="cpu"),
             input_names=["input"],
-            output_names=[output_name],
+            output_names=output_names,
             dynamic_shapes={arg_name: {0: batch}},
             dynamo=True,
             opset_version=opset_version,

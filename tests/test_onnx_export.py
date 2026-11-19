@@ -10,7 +10,13 @@ import torch.nn.functional as F
 import yaml
 from power_spherical import PowerSpherical
 from spdx3_validate import validate
-from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D, export_onnx
+from spherinator.models import (
+    Autoencoder,
+    ConvolutionalDecoder1D,
+    ConvolutionalEncoder1D,
+    VariationalAutoencoder,
+    export_onnx,
+)
 from torch import nn
 
 
@@ -117,10 +123,13 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
 
     for name in ("encoder", "decoder", "reconstruction"):
         onnx.checker.check_model(onnx.load(export_path / f"{name}.onnx"))
+        session = ort.InferenceSession(export_path / f"{name}.onnx", providers=["CPUExecutionProvider"])
+        assert len(session.get_outputs()) == 1
 
     assert_valid_spdx(export_path / "aibom.spdx.json")
     aibom = json.loads((export_path / "aibom.spdx.json").read_text())
     assert not any(e["type"] in ("dataset_DatasetPackage", "Relationship") for e in aibom["@graph"])
+    assert not any("concentration" in e.get("description", "") for e in aibom["@graph"])
 
     session = ort.InferenceSession(export_path / "reconstruction.onnx", providers=["CPUExecutionProvider"])
     for batch_size in (1, 3):
@@ -129,6 +138,75 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
         expected = model.reconstruct(inputs).detach().numpy()
         assert actual.shape == expected.shape
         assert torch.allclose(torch.from_numpy(actual), torch.from_numpy(expected), atol=1e-5, rtol=1e-4)
+
+
+def test_export_onnx_variational(tmp_path):
+    """Encoder and reconstruction graphs of a VAE also output the concentration."""
+    config = {
+        "model": {
+            "class_path": "spherinator.models.VariationalAutoencoder",
+            "init_args": {
+                "encoder": {
+                    "class_path": "spherinator.models.ConvolutionalEncoder1D",
+                    "init_args": {"input_dim": [1, 12], "output_dim": 3},
+                },
+                "decoder": {
+                    "class_path": "spherinator.models.ConvolutionalDecoder1D",
+                    "init_args": {"input_dim": 3, "output_dim": [1, 12], "cnn_input_dim": [1, 12]},
+                },
+                "encoder_out_dim": 3,
+                "z_dim": 3,
+            },
+        }
+    }
+    model = VariationalAutoencoder(
+        ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]), encoder_out_dim=3
+    )
+    model(torch.randn(2, 1, 12))
+    model.eval()
+    checkpoint = tmp_path / "model.ckpt"
+    config_path = tmp_path / "model.yaml"
+    export_path = tmp_path / "onnx"
+    torch.save({"state_dict": model.state_dict()}, checkpoint)
+    config_path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    export_onnx(str(checkpoint), str(config_path), str(export_path), (2, 1, 12), (2, 3))
+
+    expected_outputs = {
+        "encoder": ["embedding", "concentration"],
+        "decoder": ["reconstruction"],
+        "reconstruction": ["reconstruction", "concentration"],
+    }
+    sessions = {}
+    for name, output_names in expected_outputs.items():
+        onnx.checker.check_model(onnx.load(export_path / f"{name}.onnx"))
+        sessions[name] = ort.InferenceSession(export_path / f"{name}.onnx", providers=["CPUExecutionProvider"])
+        assert [output.name for output in sessions[name].get_outputs()] == output_names
+
+    aibom = json.loads((export_path / "aibom.spdx.json").read_text())
+    descriptions = {p["name"]: p["description"] for p in aibom["@graph"] if p["type"] == "ai_AIPackage"}
+    assert descriptions["Spherinator encoder"].endswith("and concentration")
+    assert descriptions["Spherinator reconstruction"].endswith("and concentration")
+    assert "concentration" not in descriptions["Spherinator decoder"]
+
+    def assert_close(actual, expected):
+        assert actual.shape == expected.shape
+        assert torch.allclose(torch.from_numpy(actual), expected.detach(), atol=1e-5, rtol=1e-4)
+
+    for batch_size in (1, 3):
+        inputs = torch.randn(batch_size, 1, 12)
+        z_location, z_scale = model.encode(inputs)
+        concentration = z_scale.squeeze(-1)
+
+        embedding, encoder_concentration = sessions["encoder"].run(None, {"input": inputs.numpy()})
+        assert_close(embedding, z_location)
+        assert_close(encoder_concentration, concentration)
+        assert encoder_concentration.shape == (batch_size,)
+        assert (encoder_concentration >= 1).all()
+
+        reconstruction, reconstruction_concentration = sessions["reconstruction"].run(None, {"input": inputs.numpy()})
+        assert_close(reconstruction, model.reconstruct(inputs))
+        assert_close(reconstruction_concentration, concentration)
 
 
 @pytest.mark.parametrize(

@@ -104,7 +104,8 @@ from huggingface_hub import hf_hub_download
 
 session = ort.InferenceSession(hf_hub_download("{repo_id}", "{prefix}{files[0]}"))
 x = np.zeros({hyperparameters["input_shape"]}, dtype=np.float32)
-(output,) = session.run(None, {{"input": x}})
+# outputs[0] is the embedding, followed by the concentration for variational models
+outputs = session.run(None, {{"input": x}})
 ```
 
 ## AI-BOM
