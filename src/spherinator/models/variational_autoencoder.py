@@ -51,7 +51,7 @@ class VariationalAutoencoder(pl.LightningModule):
         max_scale: Optional maximum scale for the PowerSpherical distribution to prevent numerical issues.
     """
 
-    # Indicates to the export code that this model is a VAE and should be exported without scale parameters.
+    # Indicates to the ONNX export that this model is a VAE, whose encoder also outputs the concentration.
     is_variational = True
 
     def __init__(

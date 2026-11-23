@@ -1,4 +1,5 @@
 import hashlib
+import json
 import subprocess
 import sys
 
@@ -11,18 +12,28 @@ REPO_ID = "HITS-AIN/spherinator-test"
 DATASET_ID = "HITS-AIN/test-dataset"
 
 
-def _write_export(path, dataset):
+SIGNATURES = {
+    "encoder": "ONNX opset 19. Inputs: input float32[batch, 1, 12] (input data). "
+    "Outputs: embedding float32[batch, 3] (latent vector).",
+    "decoder": "ONNX opset 19. Inputs: input float32[batch, 3] (latent vector). "
+    "Outputs: reconstruction float32[batch, 1, 12] (reconstructed input).",
+    "reconstruction": "ONNX opset 19. Inputs: input float32[batch, 1, 12] (input data). "
+    "Outputs: reconstruction float32[batch, 1, 12] (reconstructed input).",
+}
+
+
+def _write_export(path, dataset, hyperparameters=None):
     exported = []
-    for name in ("encoder", "decoder", "reconstruction"):
+    for name, signature in SIGNATURES.items():
         onnx_file = path / f"{name}.onnx"
         onnx_file.write_bytes(name.encode())
-        exported.append((name, str(onnx_file), f"{name} description"))
+        exported.append((name, str(onnx_file), f"{name} description", signature))
     write_spdx_aibom(
         aibom_path=str(path / "aibom.spdx.json"),
         aibom_uri=f"https://huggingface.co/{REPO_ID}/resolve/main/aibom.spdx.json",
         exported=exported,
         model_type="Autoencoder",
-        hyperparameters={"input_shape": (2, 1, 12), "latent_shape": (2, 3), "opset_version": 19},
+        hyperparameters={"z_dim": 3, "beta": 1.0} if hyperparameters is None else hyperparameters,
         model_version="1.2.3",
         supplier="HITS",
         dataset=dataset,
@@ -68,7 +79,12 @@ def test_create_model_card(export_path):
     assert "`Autoencoder`" in card.text
     assert "version 1.2.3, supplied by HITS" in card.text
     assert f'hf_hub_download("{REPO_ID}", "encoder.onnx")' in card.text
-    assert "np.zeros((2, 1, 12), dtype=np.float32)" in card.text
+    assert "np.zeros((1, 1, 12), dtype=np.float32)" in card.text
+    for name, signature in SIGNATURES.items():
+        assert f"- `{name}.onnx`: {signature}\n" in card.text
+    assert (
+        "## Hyperparameters\n\n| Name | Value |\n|------|-------|\n| `z_dim` | `3` |\n| `beta` | `1.0` |\n" in card.text
+    )
     assert f"## Training data\n\n- [{DATASET_ID}](https://huggingface.co/datasets/{DATASET_ID})\n" in card.text
 
     assert ModelCard(str(card)).data.to_dict() == card.data.to_dict()
@@ -86,6 +102,24 @@ def test_create_model_card_without_dataset(tmp_path):
 
     assert card.data.datasets is None
     assert "Training data" not in card.text
+
+
+def test_create_model_card_without_hyperparameters(tmp_path):
+    card = create_model_card(str(_write_export(tmp_path, None, hyperparameters={})), repo_id=REPO_ID)
+
+    assert "Hyperparameters" not in card.text
+
+
+def test_create_model_card_requires_inputs(tmp_path):
+    """AI-BOMs of older exports don't describe the inputs, which the usage example needs."""
+    aibom_path = _write_export(tmp_path, None) / "aibom.spdx.json"
+    aibom = json.loads(aibom_path.read_text())
+    for element in aibom["@graph"]:
+        element.pop("ai_informationAboutApplication", None)
+    aibom_path.write_text(json.dumps(aibom))
+
+    with pytest.raises(ValueError, match="doesn't describe the input of encoder.onnx"):
+        create_model_card(str(tmp_path), repo_id=REPO_ID)
 
 
 def test_upload_to_huggingface_with_model_card(export_path, hub_calls):

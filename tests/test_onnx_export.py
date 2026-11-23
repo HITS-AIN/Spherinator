@@ -10,8 +10,18 @@ import torch.nn.functional as F
 import yaml
 from power_spherical import PowerSpherical
 from spdx3_validate import validate
-from spherinator.models import Autoencoder, ConvolutionalDecoder1D, ConvolutionalEncoder1D, export_onnx
+from spherinator.models import (
+    Autoencoder,
+    ConvolutionalDecoder1D,
+    ConvolutionalEncoder1D,
+    VariationalAutoencoder,
+    export_onnx,
+)
 from torch import nn
+
+# Importing the submodule by name would shadow the lazily loaded function in spherinator.models
+_signature = sys.modules[export_onnx.__module__]._signature
+_hyperparameters = sys.modules[export_onnx.__module__]._hyperparameters
 
 
 def assert_valid_spdx(path):
@@ -117,10 +127,23 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
 
     for name in ("encoder", "decoder", "reconstruction"):
         onnx.checker.check_model(onnx.load(export_path / f"{name}.onnx"))
+        session = ort.InferenceSession(export_path / f"{name}.onnx", providers=["CPUExecutionProvider"])
+        assert len(session.get_outputs()) == 1
 
     assert_valid_spdx(export_path / "aibom.spdx.json")
     aibom = json.loads((export_path / "aibom.spdx.json").read_text())
     assert not any(e["type"] in ("dataset_DatasetPackage", "Relationship") for e in aibom["@graph"])
+    packages = {p["name"]: p for p in aibom["@graph"] if p["type"] == "ai_AIPackage"}
+    for package in packages.values():
+        assert "concentration" not in package["description"]
+        assert "concentration" not in package["ai_informationAboutApplication"]
+    assert packages["Spherinator encoder"]["description"] == "Backbone → latent vector"
+    assert packages["Spherinator encoder"]["ai_informationAboutApplication"] == (
+        "ONNX opset 19. Inputs: input float32[batch, 1, 12] (input data). "
+        "Outputs: embedding float32[batch, 3] (latent vector)."
+    )
+    # An Autoencoder has no scalar constructor arguments
+    assert not any("ai_hyperparameter" in package for package in packages.values())
 
     session = ort.InferenceSession(export_path / "reconstruction.onnx", providers=["CPUExecutionProvider"])
     for batch_size in (1, 3):
@@ -129,6 +152,172 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
         expected = model.reconstruct(inputs).detach().numpy()
         assert actual.shape == expected.shape
         assert torch.allclose(torch.from_numpy(actual), torch.from_numpy(expected), atol=1e-5, rtol=1e-4)
+
+
+def test_export_onnx_variational(tmp_path):
+    """Encoder and reconstruction graphs of a VAE also output the concentration."""
+    config = {
+        "model": {
+            "class_path": "spherinator.models.VariationalAutoencoder",
+            "init_args": {
+                "encoder": {
+                    "class_path": "spherinator.models.ConvolutionalEncoder1D",
+                    "init_args": {"input_dim": [1, 12], "output_dim": 3},
+                },
+                "decoder": {
+                    "class_path": "spherinator.models.ConvolutionalDecoder1D",
+                    "init_args": {"input_dim": 3, "output_dim": [1, 12], "cnn_input_dim": [1, 12]},
+                },
+                "encoder_out_dim": 3,
+                "z_dim": 3,
+            },
+        }
+    }
+    model = VariationalAutoencoder(
+        ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]), encoder_out_dim=3
+    )
+    model(torch.randn(2, 1, 12))
+    model.eval()
+    checkpoint = tmp_path / "model.ckpt"
+    config_path = tmp_path / "model.yaml"
+    export_path = tmp_path / "onnx"
+    torch.save({"state_dict": model.state_dict()}, checkpoint)
+    config_path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    export_onnx(str(checkpoint), str(config_path), str(export_path), (2, 1, 12), (2, 3))
+
+    expected_outputs = {
+        "encoder": ["embedding", "concentration"],
+        "decoder": ["reconstruction"],
+        "reconstruction": ["reconstruction", "concentration"],
+    }
+    sessions = {}
+    for name, output_names in expected_outputs.items():
+        onnx.checker.check_model(onnx.load(export_path / f"{name}.onnx"))
+        sessions[name] = ort.InferenceSession(export_path / f"{name}.onnx", providers=["CPUExecutionProvider"])
+        assert [output.name for output in sessions[name].get_outputs()] == output_names
+
+    assert_valid_spdx(export_path / "aibom.spdx.json")
+    aibom = json.loads((export_path / "aibom.spdx.json").read_text())
+    packages = {p["name"].removeprefix("Spherinator "): p for p in aibom["@graph"] if p["type"] == "ai_AIPackage"}
+    assert packages["encoder"]["description"].endswith("and concentration")
+    assert packages["reconstruction"]["description"].endswith("and concentration")
+    assert "concentration" not in packages["decoder"]["description"]
+
+    info = {name: package["ai_informationAboutApplication"] for name, package in packages.items()}
+    assert info["encoder"].startswith("ONNX opset 19. Inputs: input float32[batch, 1, 12] (input data). Outputs: ")
+    assert "embedding float32[batch, 3] (unit-normalised location vector on the hypersphere)" in info["encoder"]
+    assert "concentration float32[batch] (scale κ ≥ 1 of the Power Spherical distribution" in info["encoder"]
+    assert info["decoder"] == (
+        "ONNX opset 19. Inputs: input float32[batch, 3] (latent vector). "
+        "Outputs: reconstruction float32[batch, 1, 12] (reconstructed input)."
+    )
+    outputs = "Outputs: reconstruction float32[batch, 1, 12] (reconstructed input), concentration float32[batch]"
+    assert outputs in info["reconstruction"]
+    for package in packages.values():
+        hyperparameters = {entry["key"]: entry["value"] for entry in package["ai_hyperparameter"]}
+        assert hyperparameters == {"z_dim": "3", "encoder_out_dim": "3", "beta": "1.0"}
+
+    def assert_close(actual, expected):
+        assert actual.shape == expected.shape
+        assert torch.allclose(torch.from_numpy(actual), expected.detach(), atol=1e-5, rtol=1e-4)
+
+    for batch_size in (1, 3):
+        inputs = torch.randn(batch_size, 1, 12)
+        z_location, z_scale = model.encode(inputs)
+        concentration = z_scale.squeeze(-1)
+
+        embedding, encoder_concentration = sessions["encoder"].run(None, {"input": inputs.numpy()})
+        assert_close(embedding, z_location)
+        assert_close(encoder_concentration, concentration)
+        assert encoder_concentration.shape == (batch_size,)
+        assert (encoder_concentration >= 1).all()
+
+        reconstruction, reconstruction_concentration = sessions["reconstruction"].run(None, {"input": inputs.numpy()})
+        assert_close(reconstruction, model.reconstruct(inputs))
+        assert_close(reconstruction_concentration, concentration)
+
+
+def _write_autoencoder(tmp_path):
+    """Writes checkpoint and config of an untrained Autoencoder and returns their paths."""
+    config = {
+        "model": {
+            "class_path": "spherinator.models.Autoencoder",
+            "init_args": {
+                "encoder": {
+                    "class_path": "spherinator.models.ConvolutionalEncoder1D",
+                    "init_args": {"input_dim": [1, 12], "output_dim": 3},
+                },
+                "decoder": {
+                    "class_path": "spherinator.models.ConvolutionalDecoder1D",
+                    "init_args": {"input_dim": 3, "output_dim": [1, 12], "cnn_input_dim": [1, 12]},
+                },
+            },
+        }
+    }
+    model = Autoencoder(ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]))
+    model(torch.randn(2, 1, 12))
+    checkpoint = tmp_path / "model.ckpt"
+    config_path = tmp_path / "model.yaml"
+    torch.save({"state_dict": model.state_dict()}, checkpoint)
+    config_path.write_text(yaml.safe_dump(config), encoding="utf-8")
+    return str(checkpoint), str(config_path)
+
+
+def test_export_onnx_requires_is_variational(tmp_path, monkeypatch):
+    """Models that don't tell whether they are variational are rejected before anything is written."""
+    checkpoint, config_path = _write_autoencoder(tmp_path)
+    monkeypatch.delattr(Autoencoder, "is_variational")
+    export_path = tmp_path / "onnx"
+
+    with pytest.raises(TypeError, match="is_variational"):
+        export_onnx(checkpoint, config_path, str(export_path), (2, 1, 12), (2, 3))
+    assert not export_path.exists()
+
+
+def test_export_onnx_rejects_external_data(tmp_path, monkeypatch):
+    """ONNX external data files aren't listed in the AI-BOM, so the export fails instead of writing it."""
+    checkpoint, config_path = _write_autoencoder(tmp_path)
+    save = torch.onnx.ONNXProgram.save
+    monkeypatch.setattr(
+        torch.onnx.ONNXProgram, "save", lambda self, destination, **kwargs: save(self, destination, external_data=True)
+    )
+    export_path = tmp_path / "onnx"
+
+    with pytest.raises(RuntimeError, match="external data"):
+        export_onnx(checkpoint, config_path, str(export_path), (2, 1, 12), (2, 3))
+    assert not (export_path / "aibom.spdx.json").exists()
+
+
+def test_hyperparameters():
+    """Config values override constructor defaults; submodules and unset values are skipped."""
+    model = VariationalAutoencoder(ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]), 3)
+    init_args = {
+        "encoder": {"class_path": "spherinator.models.ConvolutionalEncoder1D", "init_args": {"output_dim": 3}},
+        "reconstruction_loss": {"class_path": "torch.nn.L1Loss"},
+        "encoder_out_dim": [3],
+        "z_dim": 4,
+        "max_scale": 50.0,
+    }
+
+    assert _hyperparameters(model, init_args) == {"z_dim": 4, "beta": 1.0, "max_scale": 50.0, "encoder_out_dim": [3]}
+
+
+def test_signature_rejects_unexpected_outputs(tmp_path):
+    graph = onnx.helper.make_graph(
+        [onnx.helper.make_node("Identity", ["input"], ["y"])],
+        "identity",
+        [onnx.helper.make_tensor_value_info("input", onnx.TensorProto.FLOAT, ["batch", 3])],
+        [onnx.helper.make_tensor_value_info("y", onnx.TensorProto.FLOAT, ["batch", 3])],
+    )
+    path = tmp_path / "identity.onnx"
+    onnx.save(onnx.helper.make_model(graph, opset_imports=[onnx.helper.make_opsetid("", 19)]), path)
+
+    assert _signature(str(path), {"input": "input data"}, {"y": "output"}) == (
+        "ONNX opset 19. Inputs: input float32[batch, 3] (input data). Outputs: y float32[batch, 3] (output)."
+    )
+    with pytest.raises(RuntimeError, match=r"has outputs \['y'\], expected \['embedding', 'concentration'\]"):
+        _signature(str(path), {"input": "input data"}, {"embedding": "", "concentration": ""})
 
 
 @pytest.mark.parametrize(
