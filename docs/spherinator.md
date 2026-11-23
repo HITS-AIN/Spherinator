@@ -522,8 +522,13 @@ The `concentration` is the scale κ ≥ 1 of the Power Spherical distribution ar
 a higher value means a more confident embedding. Only a `VariationalAutoencoder` has a
 concentration, so an exported `Autoencoder` has just the first output of each graph.
 
-The AI-BOM lists every ONNX file as an AI package, including its SHA-256 hash. The ONNX files don't
-embed the AI-BOM itself. Instead, each one stores a link to it in the `aibom.uri` metadata property,
+The AI-BOM lists every ONNX file as an AI package, including its SHA-256 hash. Each package also
+records the inputs and outputs of its graph with their data types and shapes, for example
+`concentration float32[batch]`, in `ai_informationAboutApplication`. They're read back from the
+saved ONNX file, and the export fails if they differ from the expected names. A model must fit
+into a single ONNX file (< 2 GB), because the AI-BOM doesn't cover ONNX external data files.
+
+The ONNX files don't embed the AI-BOM itself. Instead, each one stores a link to it in the `aibom.uri` metadata property,
 along with `aibom.format`. By default the link is the relative file name `aibom.spdx.json`. Pass
 `aibom_uri` to use an absolute URL instead, for example the file's location in a Hugging Face
 repository. To read the link:

@@ -16,7 +16,7 @@ def _write_export(path, dataset):
     for name in ("encoder", "decoder", "reconstruction"):
         onnx_file = path / f"{name}.onnx"
         onnx_file.write_bytes(name.encode())
-        exported.append((name, str(onnx_file), f"{name} description"))
+        exported.append((name, str(onnx_file), f"{name} description", f"{name} inputs and outputs"))
     write_spdx_aibom(
         aibom_path=str(path / "aibom.spdx.json"),
         aibom_uri=f"https://huggingface.co/{REPO_ID}/resolve/main/aibom.spdx.json",

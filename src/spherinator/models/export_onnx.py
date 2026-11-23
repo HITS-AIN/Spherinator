@@ -1,6 +1,7 @@
 import os
 import re
 
+import onnx
 import torch
 import yaml
 from torch import nn
@@ -31,6 +32,37 @@ def _dataset(model_file: str) -> tuple[str, str | None] | None:
     ):
         return path, HF_DATASETS_URL + path
     return os.path.basename(os.path.normpath(path)), None
+
+
+def _signature(path: str, inputs: dict[str, str], outputs: dict[str, str]) -> str:
+    """Describes the inputs and outputs of a saved ONNX file with their data types and shapes.
+
+    Args:
+        path (str): Path of the ONNX file.
+        inputs (dict): Expected input names, in order, mapped to their meaning.
+        outputs (dict): Expected output names, in order, mapped to their meaning.
+
+    Returns:
+        str: Description like ``Inputs: input float32[batch, 1, 12] (input data). Outputs: …``.
+
+    Raises:
+        RuntimeError: If the input or output names of the file differ from the expected ones.
+    """
+    graph = onnx.load(path, load_external_data=False).graph
+
+    def describe(kind: str, values, expected: dict[str, str]) -> str:
+        names = [value.name for value in values]
+        if names != list(expected):
+            raise RuntimeError(f"{os.path.basename(path)} has {kind} {names}, expected {list(expected)}")
+        descriptions = []
+        for value in values:
+            tensor = value.type.tensor_type
+            dtype = onnx.helper.tensor_dtype_to_np_dtype(tensor.elem_type).name
+            shape = ", ".join(dim.dim_param or str(dim.dim_value) for dim in tensor.shape.dim)
+            descriptions.append(f"{value.name} {dtype}[{shape}] ({expected[value.name]})")
+        return f"{kind.capitalize()}: {', '.join(descriptions)}."
+
+    return f"{describe('inputs', graph.input, inputs)} {describe('outputs', graph.output, outputs)}"
 
 
 class _EncoderWrapper(nn.Module):
@@ -99,7 +131,8 @@ def export_onnx(
     - ``reconstruction.onnx``: ``reconstruction`` and, for variational models, ``concentration``
 
     The ``concentration`` of shape ``(batch,)`` is the scale of the PowerSpherical distribution, i.e. the
-    confidence of the embedding.
+    confidence of the embedding. The AI-BOM records the inputs and outputs of each graph, with their data types and
+    shapes, in ``ai_informationAboutApplication``.
 
     Args:
         ckpt_file (str): Path to the checkpoint file.
@@ -113,8 +146,16 @@ def export_onnx(
         model_version (str, optional): Version of the exported models in the AI-BOM. Defaults to "1.0.0".
         supplier (str, optional): Organization supplying the models in the AI-BOM.
             Defaults to "Heidelberg Institute for Theoretical Studies (HITS)".
+
+    Raises:
+        TypeError: If the model doesn't define ``is_variational``.
+        RuntimeError: If a graph doesn't have the expected inputs and outputs, or if the export writes files that the
+            AI-BOM doesn't list, e.g. ONNX external data of models larger than 2 GB.
     """
     model = yaml2model(model_file)
+    variational = getattr(model, "is_variational", None)
+    if not isinstance(variational, bool):
+        raise TypeError(f"{type(model).__name__} doesn't define is_variational and can't be exported to ONNX")
     checkpoint = torch.load(ckpt_file, weights_only=True, map_location="cpu")
     model.load_state_dict(checkpoint["state_dict"])
     model.eval()
@@ -126,26 +167,38 @@ def export_onnx(
     os.makedirs(export_path, exist_ok=False)
 
     batch = torch.export.Dim("batch")
-    variational = getattr(model, "is_variational", True)
-    concentration = ["concentration"] if variational else []
+    if variational:
+        encoder_description = "Backbone + sphere head → unit-normalised location vector and concentration"
+        embedding = "unit-normalised location vector on the hypersphere"
+        concentration = {
+            "concentration": "scale κ ≥ 1 of the Power Spherical distribution around the embedding; "
+            "higher means a more confident embedding"
+        }
+    else:
+        encoder_description = "Backbone → latent vector"
+        embedding = "latent vector"
+        concentration = {}
     and_concentration = " and concentration" if variational else ""
 
-    # (name, wrapper, example shape, forward argument name, output names, description)
+    # (name, wrapper, example shape, forward argument name, inputs, outputs, description). Inputs and outputs map
+    # the names of the graph to their meaning.
     graphs = [
         (
             "encoder",
             _EncoderWrapper(model, variational),
             input_shape,
             "x",
-            ["embedding", *concentration],
-            f"Backbone + sphere head → unit-normalised location vector{and_concentration}",
+            {"input": "input data"},
+            {"embedding": embedding, **concentration},
+            encoder_description,
         ),
         (
             "decoder",
             _DecoderWrapper(model),
             latent_shape,
             "z",
-            ["reconstruction"],
+            {"input": "latent vector"},
+            {"reconstruction": "reconstructed input"},
             "Latent vector → reconstructed output",
         ),
         (
@@ -153,18 +206,19 @@ def export_onnx(
             _ReconstructionWrapper(model, variational),
             input_shape,
             "x",
-            ["reconstruction", *concentration],
+            {"input": "input data"},
+            {"reconstruction": "reconstructed input", **concentration},
             f"End-to-end encode → decode pipeline{and_concentration}",
         ),
     ]
 
     exported = []
-    for name, wrapper, shape, arg_name, output_names, description in graphs:
+    for name, wrapper, shape, arg_name, inputs, outputs, description in graphs:
         program = torch.onnx.export(
             wrapper.eval(),
             torch.randn(shape, device="cpu"),
-            input_names=["input"],
-            output_names=output_names,
+            input_names=list(inputs),
+            output_names=list(outputs),
             dynamic_shapes={arg_name: {0: batch}},
             dynamo=True,
             opset_version=opset_version,
@@ -174,7 +228,15 @@ def export_onnx(
         program.model.metadata_props["aibom.format"] = f"SPDX-{SPDX_VERSION}"
         path = os.path.join(export_path, f"{name}.onnx")
         program.save(path)
-        exported.append((name, path, description))
+        exported.append((name, path, description, _signature(path, inputs, outputs)))
+
+    # export_path was created empty, so any other file comes from the export and would be missing in the AI-BOM
+    unlisted = sorted(set(os.listdir(export_path)) - {os.path.basename(path) for _, path, *_ in exported})
+    if unlisted:
+        raise RuntimeError(
+            f"The ONNX export wrote {unlisted}, which the AI-BOM doesn't cover. "
+            "ONNX external data of models larger than 2 GB isn't supported."
+        )
 
     write_spdx_aibom(
         aibom_path=os.path.join(export_path, AIBOM_FILENAME),
