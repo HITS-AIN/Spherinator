@@ -1,3 +1,4 @@
+import inspect
 import os
 import re
 
@@ -10,15 +11,13 @@ from .aibom import AIBOM_FILENAME, HF_DATASETS_URL, SPDX_VERSION, write_spdx_aib
 from .yaml2model import yaml2model
 
 
-def _dataset(model_file: str) -> tuple[str, str | None] | None:
+def _dataset(config: dict) -> tuple[str, str | None] | None:
     """Returns name and download location of the training dataset in the ``data`` section of a CLI config.
 
     A ``path`` that doesn't exist locally and looks like ``owner/name`` is a Hugging Face Hub dataset, as in
     :class:`~spherinator.data.DataModule`. Parquet files and explicit relative paths (``./``, ``../``) are
     always local, even if they don't exist on the export machine. Local paths are reduced to their last component.
     """
-    with open(model_file) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
     init_args = (config.get("data") or {}).get("init_args") or {}
     path = init_args.get("path") or init_args.get("data_directory")
     if path is None:
@@ -34,8 +33,28 @@ def _dataset(model_file: str) -> tuple[str, str | None] | None:
     return os.path.basename(os.path.normpath(path)), None
 
 
+def _hyperparameters(model: nn.Module, init_args: dict) -> dict:
+    """Returns the hyperparameters of a model, i.e. the scalar arguments of its constructor like ``z_dim`` or ``beta``.
+
+    Values in ``init_args`` of the config take precedence over the defaults of the constructor. Submodules like
+    encoder and decoder, and unset values (None) are skipped.
+    """
+    parameters = inspect.signature(type(model).__init__).parameters.values()
+    values = {p.name: p.default for p in parameters if p.default is not inspect.Parameter.empty}
+    values.update(init_args)
+
+    def is_scalar(value) -> bool:
+        return isinstance(value, (bool, int, float, str))
+
+    return {
+        key: value
+        for key, value in values.items()
+        if is_scalar(value) or (isinstance(value, (list, tuple)) and value and all(map(is_scalar, value)))
+    }
+
+
 def _signature(path: str, inputs: dict[str, str], outputs: dict[str, str]) -> str:
-    """Describes the inputs and outputs of a saved ONNX file with their data types and shapes.
+    """Describes the ONNX opset and the inputs and outputs of a saved ONNX file with their data types and shapes.
 
     Args:
         path (str): Path of the ONNX file.
@@ -43,12 +62,14 @@ def _signature(path: str, inputs: dict[str, str], outputs: dict[str, str]) -> st
         outputs (dict): Expected output names, in order, mapped to their meaning.
 
     Returns:
-        str: Description like ``Inputs: input float32[batch, 1, 12] (input data). Outputs: …``.
+        str: Description like ``ONNX opset 19. Inputs: input float32[batch, 1, 12] (input data). Outputs: …``.
 
     Raises:
         RuntimeError: If the input or output names of the file differ from the expected ones.
     """
-    graph = onnx.load(path, load_external_data=False).graph
+    model = onnx.load(path, load_external_data=False)
+    opset = next(o.version for o in model.opset_import if o.domain in ("", "ai.onnx"))
+    graph = model.graph
 
     def describe(kind: str, values, expected: dict[str, str]) -> str:
         names = [value.name for value in values]
@@ -62,7 +83,7 @@ def _signature(path: str, inputs: dict[str, str], outputs: dict[str, str]) -> st
             descriptions.append(f"{value.name} {dtype}[{shape}] ({expected[value.name]})")
         return f"{kind.capitalize()}: {', '.join(descriptions)}."
 
-    return f"{describe('inputs', graph.input, inputs)} {describe('outputs', graph.output, outputs)}"
+    return f"ONNX opset {opset}. {describe('inputs', graph.input, inputs)} {describe('outputs', graph.output, outputs)}"
 
 
 class _EncoderWrapper(nn.Module):
@@ -131,8 +152,9 @@ def export_onnx(
     - ``reconstruction.onnx``: ``reconstruction`` and, for variational models, ``concentration``
 
     The ``concentration`` of shape ``(batch,)`` is the scale of the PowerSpherical distribution, i.e. the
-    confidence of the embedding. The AI-BOM records the inputs and outputs of each graph, with their data types and
-    shapes, in ``ai_informationAboutApplication``.
+    confidence of the embedding. The AI-BOM records the ONNX opset and the inputs and outputs of each graph, with
+    their data types and shapes, in ``ai_informationAboutApplication``. Its ``ai_hyperparameter`` entries are the
+    scalar arguments of the model constructor, e.g. ``z_dim``, ``beta``, and ``max_scale``.
 
     Args:
         ckpt_file (str): Path to the checkpoint file.
@@ -152,6 +174,8 @@ def export_onnx(
         RuntimeError: If a graph doesn't have the expected inputs and outputs, or if the export writes files that the
             AI-BOM doesn't list, e.g. ONNX external data of models larger than 2 GB.
     """
+    with open(model_file, encoding="utf-8") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
     model = yaml2model(model_file)
     variational = getattr(model, "is_variational", None)
     if not isinstance(variational, bool):
@@ -243,8 +267,8 @@ def export_onnx(
         aibom_uri=aibom_uri,
         exported=exported,
         model_type=type(model).__name__,
-        hyperparameters={"input_shape": input_shape, "latent_shape": latent_shape, "opset_version": opset_version},
+        hyperparameters=_hyperparameters(model, config["model"].get("init_args") or {}),
         model_version=model_version,
         supplier=supplier,
-        dataset=_dataset(model_file),
+        dataset=_dataset(config),
     )

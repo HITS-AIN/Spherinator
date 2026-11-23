@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from urllib.parse import urlparse
 
 from huggingface_hub import ModelCard, ModelCardData
@@ -17,7 +18,8 @@ def create_model_card(
 ) -> ModelCard:
     """Creates a Hugging Face model card for a directory written by :func:`~spherinator.models.export_onnx`.
 
-    The files, SHA-256 hashes, version, supplier, hyperparameters, and training dataset are read from the AI-BOM
+    The files, SHA-256 hashes, inputs and outputs, version, supplier, hyperparameters, and training dataset are read
+    from the AI-BOM
     (``aibom.spdx.json``) in ``export_path``, so the card always matches the exported ONNX files. Hugging Face Hub
     datasets are also added to the ``datasets`` metadata.
 
@@ -33,6 +35,10 @@ def create_model_card(
 
     Returns:
         ModelCard: Model card to pass to :func:`~spherinator.models.upload_to_huggingface`.
+
+    Raises:
+        ValueError: If the AI-BOM doesn't describe the input of the first ONNX file, e.g. because it was written by
+            an older version of :func:`~spherinator.models.export_onnx`.
     """
     with open(os.path.join(export_path, AIBOM_FILENAME), encoding="utf-8") as f:
         graph = json.load(f)["@graph"]
@@ -43,7 +49,13 @@ def create_model_card(
     hashes = [
         next(h["hashValue"] for h in package["verifiedUsing"] if h["algorithm"] == "sha256") for package in packages
     ]
-    hyperparameters = {entry["key"]: entry["value"] for entry in packages[0]["ai_hyperparameter"]}
+    hyperparameters = {entry["key"]: entry["value"] for entry in packages[0].get("ai_hyperparameter", [])}
+    # Example input of the usage section, with batch size 1 for the dynamic batch axis
+    match = re.search(r"Inputs: input (\w+)\[([^\]]*)\]", packages[0].get("ai_informationAboutApplication", ""))
+    if match is None:
+        raise ValueError(f"The AI-BOM doesn't describe the input of {files[0]}, export the models again")
+    input_dtype, dims = match.groups()
+    input_shape = tuple(int(dim) if dim.isdigit() else 1 for dim in dims.split(", ") if dim)
     datasets = [element for element in graph if element["type"] == "dataset_DatasetPackage"]
     hub_datasets = [
         dataset["name"]
@@ -73,7 +85,16 @@ def create_model_card(
         f"| `{file}` | {package['description']} | `{sha256}` |"
         for file, package, sha256 in zip(files, packages, hashes, strict=True)
     )
+    signature_rows = "\n".join(
+        f"- `{file}`: {package['ai_informationAboutApplication']}"
+        for file, package in zip(files, packages, strict=True)
+    )
     hyperparameter_rows = "\n".join(f"| `{key}` | `{value}` |" for key, value in hyperparameters.items())
+    hyperparameter_section = (
+        f"## Hyperparameters\n\n| Name | Value |\n|------|-------|\n{hyperparameter_rows}\n\n"
+        if hyperparameters
+        else ""
+    )
 
     body = f"""# {model_name}
 
@@ -87,15 +108,13 @@ version {packages[0]["software_packageVersion"]}, supplied by {supplier}.
 {file_rows}
 | `{AIBOM_FILENAME}` | SPDX {SPDX_VERSION} AI-BOM of the ONNX files | |
 
-## Hyperparameters
+## Inputs and outputs
 
-| Name | Value |
-|------|-------|
-{hyperparameter_rows}
+{signature_rows}
 
-All graphs have a dynamic batch axis, so the first dimension of the shapes is only the batch size used for the export.
+All graphs have a dynamic batch axis `batch`, so they accept any batch size.
 
-## Usage
+{hyperparameter_section}## Usage
 
 ```python
 import numpy as np
@@ -103,7 +122,7 @@ import onnxruntime as ort
 from huggingface_hub import hf_hub_download
 
 session = ort.InferenceSession(hf_hub_download("{repo_id}", "{prefix}{files[0]}"))
-x = np.zeros({hyperparameters["input_shape"]}, dtype=np.float32)
+x = np.zeros({input_shape}, dtype=np.{input_dtype})
 # outputs[0] is the embedding, followed by the concentration for variational models
 outputs = session.run(None, {{"input": x}})
 ```

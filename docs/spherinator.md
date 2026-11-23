@@ -523,10 +523,15 @@ a higher value means a more confident embedding. Only a `VariationalAutoencoder`
 concentration, so an exported `Autoencoder` has just the first output of each graph.
 
 The AI-BOM lists every ONNX file as an AI package, including its SHA-256 hash. Each package also
-records the inputs and outputs of its graph with their data types and shapes, for example
-`concentration float32[batch]`, in `ai_informationAboutApplication`. They're read back from the
-saved ONNX file, and the export fails if they differ from the expected names. A model must fit
-into a single ONNX file (< 2 GB), because the AI-BOM doesn't cover ONNX external data files.
+records the ONNX opset and the inputs and outputs of its graph with their data types and shapes,
+for example `concentration float32[batch]`, in `ai_informationAboutApplication`. They're read back
+from the saved ONNX file, and the export fails if they differ from the expected names. A model must
+fit into a single ONNX file (< 2 GB), because the AI-BOM doesn't cover ONNX external data files.
+
+The model outputs aren't hyperparameters, since they're computed for every input. The
+`ai_hyperparameter` entries are the scalar arguments of the model's constructor, such as `z_dim`,
+`beta` and `max_scale`. Values set in the config take precedence over the constructor's defaults.
+Submodules such as the encoder and decoder, and unset values, aren't listed.
 
 The ONNX files don't embed the AI-BOM itself. Instead, each one stores a link to it in the `aibom.uri` metadata property,
 along with `aibom.format`. By default the link is the relative file name `aibom.spdx.json`. Pass
@@ -556,8 +561,8 @@ select Python classes to import and construct; checkpoints are loaded in weights
 
 With the `huggingface` extra installed, an export directory can be published as a Hugging Face
 model repository. {py:func}`~spherinator.models.create_model_card` builds a model card from the
-AI-BOM, listing every file with its SHA-256 hash, the hyperparameters, the training dataset and a
-usage example. A Hub dataset is also added to the card's `datasets` metadata, so the Hub links the
+AI-BOM, listing every file with its SHA-256 hash, the inputs and outputs of each graph, the
+hyperparameters, the training dataset and a usage example. A Hub dataset is also added to the card's `datasets` metadata, so the Hub links the
 model to the dataset page.
 {py:func}`~spherinator.models.upload_to_huggingface` uploads the directory and stores the card as
 `README.md` in the repository root:

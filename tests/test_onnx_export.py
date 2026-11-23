@@ -21,6 +21,7 @@ from torch import nn
 
 # Importing the submodule by name would shadow the lazily loaded function in spherinator.models
 _signature = sys.modules[export_onnx.__module__]._signature
+_hyperparameters = sys.modules[export_onnx.__module__]._hyperparameters
 
 
 def assert_valid_spdx(path):
@@ -138,8 +139,11 @@ def test_package_exporter_produces_dynamic_equivalent_models(tmp_path):
         assert "concentration" not in package["ai_informationAboutApplication"]
     assert packages["Spherinator encoder"]["description"] == "Backbone → latent vector"
     assert packages["Spherinator encoder"]["ai_informationAboutApplication"] == (
-        "Inputs: input float32[batch, 1, 12] (input data). Outputs: embedding float32[batch, 3] (latent vector)."
+        "ONNX opset 19. Inputs: input float32[batch, 1, 12] (input data). "
+        "Outputs: embedding float32[batch, 3] (latent vector)."
     )
+    # An Autoencoder has no scalar constructor arguments
+    assert not any("ai_hyperparameter" in package for package in packages.values())
 
     session = ort.InferenceSession(export_path / "reconstruction.onnx", providers=["CPUExecutionProvider"])
     for batch_size in (1, 3):
@@ -201,15 +205,18 @@ def test_export_onnx_variational(tmp_path):
     assert "concentration" not in packages["decoder"]["description"]
 
     info = {name: package["ai_informationAboutApplication"] for name, package in packages.items()}
-    assert info["encoder"].startswith("Inputs: input float32[batch, 1, 12] (input data). Outputs: ")
+    assert info["encoder"].startswith("ONNX opset 19. Inputs: input float32[batch, 1, 12] (input data). Outputs: ")
     assert "embedding float32[batch, 3] (unit-normalised location vector on the hypersphere)" in info["encoder"]
     assert "concentration float32[batch] (scale κ ≥ 1 of the Power Spherical distribution" in info["encoder"]
     assert info["decoder"] == (
-        "Inputs: input float32[batch, 3] (latent vector). "
+        "ONNX opset 19. Inputs: input float32[batch, 3] (latent vector). "
         "Outputs: reconstruction float32[batch, 1, 12] (reconstructed input)."
     )
     outputs = "Outputs: reconstruction float32[batch, 1, 12] (reconstructed input), concentration float32[batch]"
     assert outputs in info["reconstruction"]
+    for package in packages.values():
+        hyperparameters = {entry["key"]: entry["value"] for entry in package["ai_hyperparameter"]}
+        assert hyperparameters == {"z_dim": "3", "encoder_out_dim": "3", "beta": "1.0"}
 
     def assert_close(actual, expected):
         assert actual.shape == expected.shape
@@ -282,6 +289,20 @@ def test_export_onnx_rejects_external_data(tmp_path, monkeypatch):
     assert not (export_path / "aibom.spdx.json").exists()
 
 
+def test_hyperparameters():
+    """Config values override constructor defaults; submodules and unset values are skipped."""
+    model = VariationalAutoencoder(ConvolutionalEncoder1D([1, 12], 3), ConvolutionalDecoder1D(3, [1, 12], [1, 12]), 3)
+    init_args = {
+        "encoder": {"class_path": "spherinator.models.ConvolutionalEncoder1D", "init_args": {"output_dim": 3}},
+        "reconstruction_loss": {"class_path": "torch.nn.L1Loss"},
+        "encoder_out_dim": [3],
+        "z_dim": 4,
+        "max_scale": 50.0,
+    }
+
+    assert _hyperparameters(model, init_args) == {"z_dim": 4, "beta": 1.0, "max_scale": 50.0, "encoder_out_dim": [3]}
+
+
 def test_signature_rejects_unexpected_outputs(tmp_path):
     graph = onnx.helper.make_graph(
         [onnx.helper.make_node("Identity", ["input"], ["y"])],
@@ -290,10 +311,10 @@ def test_signature_rejects_unexpected_outputs(tmp_path):
         [onnx.helper.make_tensor_value_info("y", onnx.TensorProto.FLOAT, ["batch", 3])],
     )
     path = tmp_path / "identity.onnx"
-    onnx.save(onnx.helper.make_model(graph), path)
+    onnx.save(onnx.helper.make_model(graph, opset_imports=[onnx.helper.make_opsetid("", 19)]), path)
 
     assert _signature(str(path), {"input": "input data"}, {"y": "output"}) == (
-        "Inputs: input float32[batch, 3] (input data). Outputs: y float32[batch, 3] (output)."
+        "ONNX opset 19. Inputs: input float32[batch, 3] (input data). Outputs: y float32[batch, 3] (output)."
     )
     with pytest.raises(RuntimeError, match=r"has outputs \['y'\], expected \['embedding', 'concentration'\]"):
         _signature(str(path), {"input": "input data"}, {"embedding": "", "concentration": ""})

@@ -69,7 +69,8 @@ def write_spdx_aibom(
         exported (list): Tuples of (name, ONNX file path, description, information about application). The
             information about application describes the inputs and outputs of the graph.
         model_type (str): Type of the exported model, e.g. the class name.
-        hyperparameters (dict): Key-value pairs listed as hyperparameters of each model.
+        hyperparameters (dict): Key-value pairs listed as hyperparameters of each model, e.g. ``z_dim``. Omitted
+            if empty.
         model_version (str): Version of the exported models.
         supplier (str): Name of the organization supplying the models.
         dataset (tuple, optional): Name and download location (or None) of the training dataset, added as
@@ -101,9 +102,16 @@ def write_spdx_aibom(
             "suppliedBy": supplier_id,
             "verifiedUsing": [{"type": "Hash", "algorithm": "sha256", "hashValue": _sha256(path)}],
             "ai_typeOfModel": [model_type],
-            "ai_hyperparameter": [
-                {"type": "DictionaryEntry", "key": key, "value": str(value)} for key, value in hyperparameters.items()
-            ],
+            **(
+                {
+                    "ai_hyperparameter": [
+                        {"type": "DictionaryEntry", "key": key, "value": str(value)}
+                        for key, value in hyperparameters.items()
+                    ]
+                }
+                if hyperparameters
+                else {}
+            ),
             "ai_autonomyType": "no",
             "ai_informationAboutApplication": information,
         }
